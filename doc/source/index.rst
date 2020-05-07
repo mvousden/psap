@@ -1,20 +1,9 @@
-.. Parallel Simulated Annealer for Placement documentation master file, created by
-   sphinx-quickstart on Thu May  7 12:02:22 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+PSAP (Parallel Simulated Annealer for Placement) Documentation
+==============================================================
 
-Welcome to Parallel Simulated Annealer for Placement's documentation!
-=====================================================================
+Welcome to :term:`PSAP` (Parallel Simulated Annealer for Placement)
+documentation, which implements a solver for the placement problem in the
+context of distributed computing.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   sa
