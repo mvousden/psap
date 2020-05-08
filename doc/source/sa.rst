@@ -1,5 +1,5 @@
-Review on Parallel Simulated Annealing
-======================================
+Review on Simulated Annealing
+=============================
 
 Simulated annealing is a stochastic global optimisation metaheuristic [1]_
 [2]_. Simulated annealing is a search method that allows, in the general case,
@@ -42,14 +42,14 @@ Or, more formally:
 
       - set :math:`s=s_{\mathrm{new}}`.
 
- 6. **Termination**: If not :math:`F(s,n)`, then increment :math:`n` and go
+ 6. **Termination**: If not :math:`X(s,n)`, then increment :math:`n` and go
     to 2.
 
  7. The output is :math:`s`.
 
 where:
 
- - :math:`n\in\mathbb{N}_0`, :math:`n\in[0,n_\mathrm{max}]` is a step
+ - :math:`n\in\mathbb{N}_0`, :math:`n\in[0,n_\mathrm{MAX}]` is a step
    (iteration) counter.
 
  - :math:`S` is the set of possible mappings (i.e. the state space). In the
@@ -68,7 +68,7 @@ where:
 
  - :math:`T(n)\in\mathbb{R}` is some disorder parameter analogous to
    temperature in traditional annealing. Must decrease monotonically from one
-   to zero as :math:`n` increases from 0 to :math:`n_\mathrm{max}`. A high
+   to zero as :math:`n` increases from 0 to :math:`n_\mathrm{MAX}`. A high
    :math:`T` value corresponds to exploratory behaviour, and a low :math:`T`
    value corresponds to exploitary behaviour.
 
@@ -76,7 +76,7 @@ where:
    probability function, which determines whether or not a worse solution is
    accepted as a function of the disorder parameter.
 
- - :math:`F(s,n)\in\{\text{true},\text{false}\}` is a termination condition
+ - :math:`X(s,n)\in\{\text{true},\text{false}\}` is a termination condition
    (could be bound by a maximum step, a derivative of the state, or something
    else).
 
