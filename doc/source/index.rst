@@ -8,3 +8,4 @@ problem in the context of distributed computing.
 .. toctree::
    placement_problem
    sa
+   algorithm
