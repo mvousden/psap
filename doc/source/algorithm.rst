@@ -133,10 +133,6 @@ values for :math:`W_\mathrm{AGG}`.
 Method
 ++++++
 
-Fortunately, the fact that the domain of :math:`W_\mathrm{AGG}` is discrete
-(its arguments are members of a finite set), so the function can be treated as
-a matrix, where the...
-
 .. _Data Structures:
 
 Data Structure Considerations
