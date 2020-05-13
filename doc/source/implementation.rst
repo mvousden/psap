@@ -1,5 +1,5 @@
-Implementation Considerations
-=============================
+Implementation
+==============
 
 For reference, the simulated annealing algorithm consists of five steps:
 initialisation, selection, fitness evaluation, determination, and
@@ -20,7 +20,7 @@ implementation of simulated annealing:
    application graph :math:`A`, and solution structure :math:`s`. Appropriate
    selection of these structures will optimise the lookup and modification
    operations necessary for simulated annealing to function. This is discussed
-   in the :ref:`Data Structures` section.
+   in the :ref:`Data Structure` section.
 
 .. _Selection:
 
@@ -169,7 +169,212 @@ of the fitness delta :math:`\Delta F` requires no graph traversal,
 significantly improving the execution time of each iteration in the simulated
 annealing process.
 
-.. _Data Structures:
+.. _Data Structure:
 
-Data Structure Considerations
------------------------------
+PSAP Data Structure
+-------------------
+
+The primary driver for data structure types in PSAP is the iteration loop in
+the simulated annealing process, as this loop consumes the majority of
+execution time for large problems. Consideration must also be paid to the
+structure used to define the problem. PSAP uses the Standard Template Library
+(STL) available in C++17, so container types available in this standard will be
+considered.
+
+Simulated Annealing Loop
+++++++++++++++++++++++++
+
+The following table shows how the loop of simulated annealing needs to interact
+with a putative data structure.
+
+.. csv-table:: Data Structure Operations in the Inner Simulated Annealing Loop
+   :widths: 5 35 60
+   :file: data_structure_table.csv
+   :header-rows: 1
+
+One approach to efficiently implementing a data structure with the above
+requirements would be an array-based approach, where nodes are defined by
+natural-number indeces, and states are defined as entries in the arrays. This
+approach is effective because the number of hardware and application nodes in
+the problem does not change. The primary benefit of array-based approaches is
+that they exploit spatial locality when fetching blocks from memory into the
+caching system on the CPU. However, this is of negligible benefit here; spatial
+locality plays little part when data is being selected at random. For improved
+readability, an object-oriented approach is used in PSAP. The following UML
+graph illustrates the data structure used by the annealer.
+
+.. graphviz::
+
+   digraph G {
+   fontname="Inconsolata"
+   fontsize=11;
+
+   /* Class definitions (as graph nodes) */
+   node[color="#005500",
+        fillcolor="#DBFFDE:#A8FF8F",
+        fontname="Inconsolata",
+        fontsize=11,
+        gradientangle=270,
+        margin=0,
+        shape="rect",
+        style="filled"];
+
+   NodeH[label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+   <TR><TD>NodeH</TD></TR>
+   <TR><TD ALIGN="LEFT">
+   + contents: set&lt;weak_ptr&lt;NodeA&gt;&gt;<BR ALIGN="LEFT"/>
+   + name: string<BR ALIGN="LEFT"/>
+   + index: unsigned<BR ALIGN="LEFT"/>
+   </TD></TR>
+   <TR><TD ALIGN="TEXT">
+   None<BR ALIGN="TEXT"/>
+   </TD></TR>
+   <TR><TD ALIGN="TEXT">
+   Node in the Hardware graph.<BR ALIGN="TEXT"/>
+   </TD></TR></TABLE>>];
+
+   NodeA[label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+   <TR><TD>NodeA</TD></TR>
+   <TR><TD ALIGN="LEFT">
+   + location: weak_ptr&lt;NodeH&gt;<BR ALIGN="LEFT"/>
+   + name: string<BR ALIGN="LEFT"/>
+   + neighbours: vector&lt;weak_ptr&lt;NodeA&gt;&gt;<BR ALIGN="LEFT"/>
+   </TD></TR>
+   <TR><TD ALIGN="TEXT">
+   None<BR ALIGN="TEXT"/>
+   </TD></TR>
+   <TR><TD ALIGN="TEXT">
+   Node in the Application graph.<BR ALIGN="TEXT"/>
+   </TD></TR></TABLE>>];
+
+   Problem[label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+   <TR><TD>Problem</TD></TR>
+   <TR><TD ALIGN="LEFT">
+   + nodeAs: array&lt;shared_ptr&lt;NodeA&gt;,X&gt;<BR ALIGN="LEFT"/>
+   + nodeHs: array&lt;shared_ptr&lt;NodeH&gt;,Y&gt;<BR ALIGN="LEFT"/>
+   + edgeCacheH: array&lt;array&lt;float,X&gt;,X&gt;<BR ALIGN="LEFT"/>
+   + pMax: unsigned<BR ALIGN="LEFT"/>
+   </TD></TR>
+   <TR><TD ALIGN="TEXT">
+   None<BR ALIGN="TEXT"/>
+   </TD></TR>
+   <TR><TD ALIGN="TEXT">
+   Problem definition. X and Y define<BR ALIGN="TEXT"/>
+   the problem size, and are known at<BR ALIGN="TEXT"/>
+   compile time.<BR ALIGN="TEXT"/>
+   </TD></TR></TABLE>>];
+
+   /* Relationships */
+   edge[color="#000000",
+        fontname="Inconsolata",
+        fontsize=11];
+
+   /* One-to-many containment definitions. */
+   {
+       edge[arrowhead="diamond"];
+       Problem -> NodeH;
+       Problem -> NodeA;
+   }
+
+   /* Weak references (one-to-many) */
+   {
+       edge[arrowhead="odiamond"];
+       NodeH -> NodeA[constraint=false];
+   }
+
+   /* Weak references (one-to-one) */
+   {
+       edge[arrowhead="vee"];
+       NodeA -> NodeH[constraint=false];
+   }
+
+   }
+
+Items in the data structure above map to the mathematical formulation in the
+following manner:
+
+.. csv-table:: Mapping between symbols in the mathematical model to data
+               structures
+   :widths: 10 25 65
+   :file: math_data_mapping.csv
+   :header-rows: 1
+
+Notes:
+
+ - Nodes for both the application and hardware graph are stored on the heap in
+   shared pointers held in the problem structure. These pointers are stored in
+   arrays, exploiting the fact that the problem size is known at compile time,
+   supporting random access and indexing.
+
+ - The weight cache, computed by the Floyd-Warshall algorithm, is stored as an
+   array of arrays, again exploiting the fact that the problem size is known at
+   compile time, while also providing fast lookup given the indices.
+
+ - Each hardware node is aware of its index from the perspective of the
+   problem, which makes looking up entries in the edge cache more efficient in
+   time, while slightly increasing memory usage.
+
+ - Each hardware node has a set of application nodes, as removal of an entry is
+   fast (O(1), aside from binary tree rebalancing), and random access is
+   supported. While an ``unordered_set`` would be superior for removal, it is
+   not possible to define a safe hashing function on a weak pointer
+   template. I'm not sure about that last point, but would be delighted to be
+   proven wrong.
+
+ - Each application node holds a reference to the hardware node that contains
+   it, to facilitate operation 6 in the data structure operations table.
+
+ - Each application node holds a vector of references to its neighbours in the
+   application graph. A vector is chosen here because, while the size of this
+   container is known for each node at compile time, there is no (reasonable)
+   common size. Furthermore, resizing will not happen inside the simulated
+   annealing loop because the neighbours are defined during problem
+   definition. Consequently, since items are never removed from this container
+   (it is only iterated over during operation 7 in the data structure
+   operations table to obtain :math:`N_H` elements to iterate over), a vector
+   incurs no time complexity penalty over a list (or similar structure).
+
+ - The mapping component of the solution :math:`m_N(n_A):N_A\to N_H`, which
+   identifies the hardware node that holds an application node, can be
+   constructed by from the ``location`` member of each element of
+   ``Problem::nodeAs``. The name component of each hardware node and
+   application node is used to exfiltrate the data in a human-readable format.
+
+Populating the Data Structure from a Problem Definition
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The problem definition file ``includes/problem_definition.hpp`` defines the
+placement problem, and is written by the user. This file is read at
+compile-time by the C preprocessor, and is used to initialise the problem
+structure for PSAP. The reasoning behind this unusual way of reading in a
+configuration file is that I want to save time writing a file reader for an
+arbitrary case. Doing it properly would take longer than the total amount of
+time I have to spend on this project. The context of the file has access to a
+single variable: ``Problem problem``, whose elements can be freely
+populated. The rest of PSAP expects the problem definition file to populate:
+
+ - ``problem.nodeAs`` with shared pointers to application nodes created on the
+   heap, with appropriate definitions for the ``index`` and ``name``
+   fields. The ``contents`` field is expected to remain empty; this field is
+   populated by the simulated annealing initialiser.
+
+ - ``problem.nodeHs`` with shared pointers to hardware nodes created on the
+   heap, with appropriate definitions for the ``neighbours`` and ``name``
+   fields. The ``location`` field is expected to remain empty; this field is
+   populated by the simulated annealing initialiser.
+
+ - ``problem.pMax`` with a value limiting the number of application nodes that
+   can be placed on hardware nodes.
+
+ - ``problem.edgeCacheH`` elements with weights of nodes that are adjacent in
+   the hardware graph. Prior to the problem definition, PSAP initialises all
+   matrix elements with value ``std::numeric_limits<float>::max``, aside from
+   the diagonal elements which are initialised to zero.
+
+The integrity of the data structure (i.e. whether the indeces in arrays line up
+with the nodes they refer to, whether lengths in the edge cache are
+non-negative, or whether the names of nodes are unique) is not checked. The
+onus is on the author of the problem definition file to do this, again, because
+I wish to save time.
+
+Example problem definition files exist in ``problem_definition_examples/``.
