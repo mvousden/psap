@@ -118,7 +118,7 @@ hardware node with an application node on them that is adjacent to the selected
 application node, with the hardware node that contains the selected application
 node after the move (:math:`-\sum_{j\in N_+(n_a)}W_\mathrm{AGG}(n_{H,+},j)`),
 with the same case before the move (:math:`\sum_{j\in
-N_-(n_a)}W_\mathrm{AGG}(n_{H,-},j)`). The difference in their clusting
+N_-(n_a)}W_\mathrm{AGG}(n_{H,-},j)`). The difference in their clustering
 fitnesses is equal to the sum of the square of the loading of the source
 hardware node before the move (:math:`c_{H-}(n_{H-})^2`) with the square of the
 loading of the target node after the move (:math:`c_{H-}(n_{H+})^2`), all
