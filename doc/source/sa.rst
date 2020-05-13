@@ -190,6 +190,19 @@ application, and :math:`E_A` denotes the set of edges):
    entire hardware graph. Effectively relaxes the system akin to our current
    approach.
 
+Context for PSAP
+----------------
+
+For a placement problem of a large-enough size, collisions will be
+infrequent. For a non-stiff placement problem, collisions will be
+inconsequential. PSAP is primarily concerned with parallel simulated annealing
+using an error algorithm over such problems, without locking colliding
+operations. PSAP is also concerned with understanding how the frequency of
+collisions changes as a function of the problem size and parallelism-level
+space. A hybrid placement approach with partitioning is likely to be superior
+in the general case, however there is still benefit in exploring the
+aforementioned space to parameterise a high-performance implementation.
+
 .. rubric:: References
 .. [1] Scott Kirkpatrick, Daniel C. Gelatt, and Mario P. Vecchi. "Optimization
    by Simulated Annealing". In: Science 220.4598 (1983), pp. 671–680. DOI:
