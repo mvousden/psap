@@ -15,9 +15,10 @@ provided a legal problem definition file? This is needed at compile time."
 
 class Problem
 {
-    std::array<NodeA, APPLICATION_SIZE> nodeAs;
-    std::array<NodeH, HARDWARE_SIZE> nodeHs;
-    std::array<std::array<NodeH, HARDWARE_SIZE>, HARDWARE_SIZE> edgeCacheH;
+public:
+    std::array<std::shared_ptr<NodeA>, APPLICATION_SIZE> nodeAs;
+    std::array<std::shared_ptr<NodeH>, HARDWARE_SIZE> nodeHs;
+    std::array<std::array<float, HARDWARE_SIZE>, HARDWARE_SIZE> edgeCacheH;
     unsigned pMax = std::numeric_limits<unsigned>::max();
 };
 
