@@ -133,6 +133,42 @@ values for :math:`W_\mathrm{AGG}`.
 Method
 ++++++
 
+Let :math:`\mathbf{E}_H\in\mathbb{R}^{+}` be a matrix of size
+:math:`|N_H|\times|N_H|`, which contains precomputed shortest path data after
+the Floyd-Warshall algorithm has been completed. Each element in the matrix
+defines the shortest path between two nodes in the hardware graph. The
+Floyd-Warshall algorithm populates this matrix in two stages:
+
+ 1. **Initialisation**:
+
+    1-1. Set the value of each entry on the diagonal equal to zero (each node
+         has an implicit zero-length connection to itself).
+
+    1-2. For each pair of nodes in the graph, if there is an edge connecting
+         them together, set each value corresponding to an edge in the graph
+         equal to its weight. If there is no such edge, set the value equal to
+         "infinity". Generally, if :math:`i` and :math:`j` denote the indices
+         of two nodes :math:`n_H` connected by an edge, then
+         :math:`\mathbf{E}_H(i, j)` is set equal to the weight of that edge.
+
+ 2. **Iteration**: Given indices :math:`i`, :math:`j`, and :math:`k`:
+
+    .. code-block::
+
+       for k over each index,
+           for i over each index,
+               for j over each index,
+                   set trial path <- E_H(i, k) + E_H(k, j)
+                   if E_H(i, j) > trial path,
+                       set E_H(i, j) <- trial path
+
+Once the values have been computed in this way, the function
+:math:`W_\mathrm{AGG}` can return the corresponding value from
+:math:`\mathbf{E}_H` without further computation. Consequently, the computation
+of the fitness delta :math:`\Delta F` requires no graph traversal,
+significantly improving the execution time of each iteration in the simulated
+annealing process.
+
 .. _Data Structures:
 
 Data Structure Considerations
