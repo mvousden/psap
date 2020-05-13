@@ -171,23 +171,24 @@ This approach fits well with the architecture considered by Sergey, as they
 have both inter- and intra-logic block routing, better justifying the
 discretisation of placement into independent subproblems. A similar approach
 could be used for the placement problem, for example, given application graph
-:math:`A(D, E)`, (where :math:`D` denotes the set of devices in the
-application, and :math:`E` denotes the set of edges):
+:math:`A(N_A, E_A)`, (where :math:`N_A` denotes the set of devices in the
+application, and :math:`E_A` denotes the set of edges):
 
  - Partitioning: Partition the problem :math:`A` into smaller subproblems
-   :math:`A_i` , such that :math:`A(D,E)=\bigcup\limits_{i=1}^{N} A_i(D_i,E_i)`
-   possibly using Fiduccia-Mattheyses, Kernighan-Lin, or one of its derivatives
-   [9]_, [10]_, [11]_
+ :math:`A_i` , such that :math:`A(N_A,E_A)=\bigcup\limits_{i=1}^{N}
+ A_i(N_{A,i},E_{A,i})` possibly using Fiduccia-Mattheyses, Kernighan-Lin, or
+ one of its derivatives [9]_, [10]_, [11]_
 
- - Inter-partition placement: Placement of the devices :math:`D_i` within each
-   of the subproblems :math:`A_i` (in parallel).
+ - Inter-partition placement: Placement of the devices :math:`N_{A,i}` within
+   each of the subproblems :math:`A_i` (in parallel).
 
  - Intra-partition placement: Position the individiual partitions :math:`A_i`
    across the compute fabric, accounting for the "spatial" requirements of each
    subproblem, and of the hardware graph.
 
- - Refinement: Annealing placement of :math:`D` in :math:`A` across the entire
-   hardware graph. Effectively relaxes the system akin to our current approach.
+ - Refinement: Annealing placement of :math:`N_A` in :math:`A` across the
+   entire hardware graph. Effectively relaxes the system akin to our current
+   approach.
 
 .. rubric:: References
 .. [1] Scott Kirkpatrick, Daniel C. Gelatt, and Mario P. Vecchi. "Optimization
