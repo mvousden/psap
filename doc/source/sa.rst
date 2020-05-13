@@ -175,9 +175,9 @@ could be used for the placement problem, for example, given application graph
 application, and :math:`E_A` denotes the set of edges):
 
  - Partitioning: Partition the problem :math:`A` into smaller subproblems
- :math:`A_i` , such that :math:`A(N_A,E_A)=\bigcup\limits_{i=1}^{N}
- A_i(N_{A,i},E_{A,i})` possibly using Fiduccia-Mattheyses, Kernighan-Lin, or
- one of its derivatives [9]_, [10]_, [11]_
+   :math:`A_i` , such that :math:`A(N_A,E_A)=\bigcup\limits_{i=1}^{N}
+   A_i(N_{A,i},E_{A,i})` possibly using Fiduccia-Mattheyses, Kernighan-Lin, or
+   one of its derivatives [9]_, [10]_, [11]_
 
  - Inter-partition placement: Placement of the devices :math:`N_{A,i}` within
    each of the subproblems :math:`A_i` (in parallel).
