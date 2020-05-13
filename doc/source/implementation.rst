@@ -351,25 +351,34 @@ configuration file is that I want to save time writing a file reader for an
 arbitrary case. Doing it properly would take longer than the total amount of
 time I have to spend on this project. The context of the file has access to a
 single variable: ``Problem problem``, whose elements can be freely
-populated. The rest of PSAP expects the problem definition file to populate:
+populated. The rest of PSAP expects the problem definition file to define:
 
- - ``problem.nodeAs`` with shared pointers to application nodes created on the
-   heap, with appropriate definitions for the ``index`` and ``name``
-   fields. The ``contents`` field is expected to remain empty; this field is
-   populated by the simulated annealing initialiser.
+ - ``APPLICATION_SIZE`` using the C preprocessor, with a natural number equal
+   to the number of application nodes.
 
- - ``problem.nodeHs`` with shared pointers to hardware nodes created on the
-   heap, with appropriate definitions for the ``neighbours`` and ``name``
-   fields. The ``location`` field is expected to remain empty; this field is
-   populated by the simulated annealing initialiser.
+ - ``HARDWARE_SIZE`` using the C preprocessor, with a natural number equal
+   to the number of hardware nodes.
 
- - ``problem.pMax`` with a value limiting the number of application nodes that
-   can be placed on hardware nodes.
+ - A free function ``void populate_problem(Problem& problem)``, which
+   populates:
 
- - ``problem.edgeCacheH`` elements with weights of nodes that are adjacent in
-   the hardware graph. Prior to the problem definition, PSAP initialises all
-   matrix elements with value ``std::numeric_limits<float>::max``, aside from
-   the diagonal elements which are initialised to zero.
+   - ``problem.nodeAs`` with shared pointers to application nodes created on
+     the heap, with appropriate definitions for the ``index`` and ``name``
+     fields. The ``contents`` field is expected to remain empty; this field is
+     populated by the simulated annealing initialiser.
+
+   - ``problem.nodeHs`` with shared pointers to hardware nodes created on the
+     heap, with appropriate definitions for the ``neighbours`` and ``name``
+     fields. The ``location`` field is expected to remain empty; this field is
+     populated by the simulated annealing initialiser.
+
+   - ``problem.pMax`` with a value limiting the number of application nodes
+     that can be placed on hardware nodes.
+
+   - ``problem.edgeCacheH`` elements with weights of nodes that are adjacent in
+     the hardware graph. Prior to the problem definition, PSAP initialises all
+     matrix elements with value ``std::numeric_limits<float>::max``, aside from
+     the diagonal elements which are initialised to zero.
 
 The integrity of the data structure (i.e. whether the indeces in arrays line up
 with the nodes they refer to, whether lengths in the edge cache are
