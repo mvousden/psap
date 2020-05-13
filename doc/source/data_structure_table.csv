@@ -1,0 +1,10 @@
+ID,Stage,Operation/Query
+0,Selection (decide),Select random :math:`n_A` from :math:`N_A`.
+1,Selection (decide),Select random :math:`n_H` from :math:`N_H`.
+2,Selection (decide),Number of :math:`n_A` attached to a given :math:`n_H`.
+3,Selection (decide),Selection of a :math:`n_A` attached to a given :math:`n_H` either by index or at random.
+4,Selection (move :math:`n_A` to :math:`n_H`),Remove :math:`n_A` from containing :math:`n_H`.
+5,Selection (move :math:`n_A` to :math:`n_H`),Append :math:`n_A` to a :math:`n_H`.
+6,Fitness (delta) Evaluation,Obtain the :math:`n_H` containing a given :math:`n_A`.
+7,Fitness (delta) Evaluation,Obtain precomputed weight between two elements of :math:`N_H`.
+8,Fitness (delta) Evaluation,Number of :math:`n_A` attached to a given :math:`n_H`.

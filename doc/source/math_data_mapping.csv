@@ -1,0 +1,5 @@
+Symbol,Data Item,Meaning
+:math:`N_H`,``Problem::nodeHs``,The set of nodes in the hardware graph :math:`G`.
+:math:`N_A`,``Problem::nodeAs``,The set of nodes in the application graph :math:`A`.
+:math:`P_\mathrm{MAX}`,``Problem::pMax``,The maximum number of application nodes that can be mapped to a hardware node. This is constant for all hardware and application nodes.
+:math:`\mathbf{E}_H`,``Problem::edgeCacheH``,A matrix storing the weights between two hardware nodes. This is precomputed by the Floyd-Warshall algorithm.
