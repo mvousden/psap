@@ -35,7 +35,7 @@ S` must choose a neighbouring state. One such selection mechanism would be:
     hardware node that currently contains :math:`n_A`.
 
  2. Select a random hardware node :math:`n_{H+}` in the hardware graph (the
- :math:`\{\cdot\}_+` suffix means "new").
+    :math:`\{\cdot\}_+` suffix means "new").
 
  3. Select a random number :math:`i\in\mathbb{N}_0` from the range
     :math:`[0,P_\mathrm{MAX}]`.
