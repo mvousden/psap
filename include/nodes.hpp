@@ -1,8 +1,8 @@
 #ifndef NODES_HPP
 #define NODES_HPP
 
+#include <list>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -21,7 +21,7 @@ class NodeH
 {
 public:
     NodeH(std::string name, unsigned index): name(name), index(index){}
-    std::set<std::weak_ptr<NodeA>> contents;
+    std::list<std::weak_ptr<NodeA>> contents;
     std::string name;
     unsigned index;
 };

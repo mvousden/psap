@@ -222,7 +222,7 @@ graph illustrates the data structure used by the annealer.
    NodeH[label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
    <TR><TD>NodeH</TD></TR>
    <TR><TD ALIGN="LEFT">
-   + contents: set&lt;weak_ptr&lt;NodeA&gt;&gt;<BR ALIGN="LEFT"/>
+   + contents: list&lt;weak_ptr&lt;NodeA&gt;&gt;<BR ALIGN="LEFT"/>
    + name: string<BR ALIGN="LEFT"/>
    + index: unsigned<BR ALIGN="LEFT"/>
    </TD></TR>
