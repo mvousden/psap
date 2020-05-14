@@ -250,18 +250,16 @@ graph illustrates the data structure used by the annealer.
    Problem[label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
    <TR><TD>Problem</TD></TR>
    <TR><TD ALIGN="LEFT">
-   + nodeAs: array&lt;shared_ptr&lt;NodeA&gt;,X&gt;<BR ALIGN="LEFT"/>
-   + nodeHs: array&lt;shared_ptr&lt;NodeH&gt;,Y&gt;<BR ALIGN="LEFT"/>
-   + edgeCacheH: array&lt;array&lt;float,X&gt;,X&gt;<BR ALIGN="LEFT"/>
+   + nodeAs: vector&lt;shared_ptr&lt;NodeA&gt;&gt;<BR ALIGN="LEFT"/>
+   + nodeHs: vector&lt;shared_ptr&lt;NodeH&gt;&gt;<BR ALIGN="LEFT"/>
+   + edgeCacheH: vector&lt;vector&lt;float&gt;&gt;<BR ALIGN="LEFT"/>
    + pMax: unsigned<BR ALIGN="LEFT"/>
    </TD></TR>
    <TR><TD ALIGN="TEXT">
    None<BR ALIGN="TEXT"/>
    </TD></TR>
    <TR><TD ALIGN="TEXT">
-   Problem definition. X and Y define<BR ALIGN="TEXT"/>
-   the problem size, and are known at<BR ALIGN="TEXT"/>
-   compile time.<BR ALIGN="TEXT"/>
+   Problem definition.<BR ALIGN="TEXT"/>
    </TD></TR></TABLE>>];
 
    /* Relationships */
@@ -303,12 +301,13 @@ Notes:
 
  - Nodes for both the application and hardware graph are stored on the heap in
    shared pointers held in the problem structure. These pointers are stored in
-   arrays, exploiting the fact that the problem size is known at compile time,
-   supporting random access and indexing.
+   vectors. Note that they could be stored in arrays, exploiting the fact that
+   the problem size is known at compile time, but I struggled getting it to
+   work without making the problem definition file more obtuse than it already
+   is. Both vectors and arrays support efficient random access and indexing.
 
  - The weight cache, computed by the Floyd-Warshall algorithm, is stored as an
-   array of arrays, again exploiting the fact that the problem size is known at
-   compile time, while also providing fast lookup given the indices.
+   vector of vectors for the same reasons as the above.
 
  - Each hardware node is aware of its index from the perspective of the
    problem, which makes looking up entries in the edge cache more efficient in
@@ -351,37 +350,28 @@ configuration file is that I want to save time writing a file reader for an
 arbitrary case. Doing it properly would take longer than the total amount of
 time I have to spend on this project. The context of the file has access to a
 single variable: ``Problem problem``, whose elements can be freely
-populated. The rest of PSAP expects the problem definition file to define:
+populated. PSAP expects the problem definition file to define:
 
- - ``APPLICATION_SIZE`` using the C preprocessor, with a natural number equal
-   to the number of application nodes.
+ - ``problem.nodeAs`` with shared pointers to application nodes, with
+   appropriate definitions for the ``index`` and ``name`` fields. The
+   ``contents`` field is expected to remain empty; this field is populated by
+   the simulated annealing initialiser.
 
- - ``HARDWARE_SIZE`` using the C preprocessor, with a natural number equal
-   to the number of hardware nodes.
+ - ``problem.nodeHs`` with shared pointers to hardware nodes, with appropriate
+   definitions for the ``neighbours`` and ``name`` fields. The ``location``
+   field is expected to remain empty; this field is populated by the simulated
+   annealing initialiser.
 
- - A free function ``void populate_problem(Problem& problem)``, which
-   populates:
+ - ``problem.pMax`` with a value limiting the number of application nodes that
+   can be placed on hardware nodes.
 
-   - ``problem.nodeAs`` with shared pointers to application nodes created on
-     the heap, with appropriate definitions for the ``index`` and ``name``
-     fields. The ``contents`` field is expected to remain empty; this field is
-     populated by the simulated annealing initialiser.
+ - ``problem.edgeCacheH`` elements with weights of nodes that are adjacent in
+   the hardware graph. Prior to the problem definition, PSAP initialises all
+   matrix elements with value ``std::numeric_limits<float>::max``, aside from
+   the diagonal elements which are initialised to zero.
 
-   - ``problem.nodeHs`` with shared pointers to hardware nodes created on the
-     heap, with appropriate definitions for the ``neighbours`` and ``name``
-     fields. The ``location`` field is expected to remain empty; this field is
-     populated by the simulated annealing initialiser.
-
-   - ``problem.pMax`` with a value limiting the number of application nodes
-     that can be placed on hardware nodes.
-
-   - ``problem.edgeCacheH`` elements with weights of nodes that are adjacent in
-     the hardware graph. Prior to the problem definition, PSAP initialises all
-     matrix elements with value ``std::numeric_limits<float>::max``, aside from
-     the diagonal elements which are initialised to zero.
-
-The integrity of the data structure (i.e. whether the indeces in arrays line up
-with the nodes they refer to, whether lengths in the edge cache are
+The integrity of the data structure (i.e. whether the indeces in vectors line
+up with the nodes they refer to, whether lengths in the edge cache are
 non-negative, or whether the names of nodes are unique) is not checked. The
 onus is on the author of the problem definition file to do this, again, because
 I wish to save time.
