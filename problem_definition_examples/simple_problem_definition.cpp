@@ -9,6 +9,23 @@ unsigned nodeHSize = 4;
 problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
+/* Reserve space in the edge cache, and define default values as per the
+ * specification - zeroes on the diagonals, and a huge number everywhere
+ * else. */
+std::vector<std::vector<float>>::size_type eOuterIndex;
+std::vector<float>::size_type eInnerIndex;
+problem.edgeCacheH.reserve(nodeHSize);
+for (eOuterIndex = 0; eOuterIndex < nodeHSize; eOuterIndex++)
+{
+    auto inner = problem.edgeCacheH[eOuterIndex];
+    inner.reserve(nodeHSize);
+    for (eInnerIndex = 0; eInnerIndex < nodeHSize; eInnerIndex++)
+    {
+        if (eOuterIndex == eInnerIndex) inner[eInnerIndex] = 0;
+        else inner[eInnerIndex] = std::numeric_limits<float>::max();
+    }
+}
+
 /* Define maximum number of application nodes permitted on a hardware node. */
 problem.pMax = 2;
 

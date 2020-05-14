@@ -365,10 +365,15 @@ populated. PSAP expects the problem definition file to define:
  - ``problem.pMax`` with a value limiting the number of application nodes that
    can be placed on hardware nodes.
 
- - ``problem.edgeCacheH`` elements with weights of nodes that are adjacent in
-   the hardware graph. Prior to the problem definition, PSAP initialises all
-   matrix elements with value ``std::numeric_limits<float>::max``, aside from
-   the diagonal elements which are initialised to zero.
+ - ``problem.edgeCacheH`` elements, as follows:
+
+   - For node pairs that are adjacent in the hardware graph, the elements must
+     be initialised with the weight of the edge.
+
+   - Elements "on the diagonal" must be initialised to zero.
+
+   - Other elements must be initialised to
+     ``std::numeric_limits<float>::max()``.
 
 The integrity of the data structure (i.e. whether the indeces in vectors line
 up with the nodes they refer to, whether lengths in the edge cache are
