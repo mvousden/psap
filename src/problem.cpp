@@ -28,16 +28,13 @@ void Problem::initialise_edge_cache(unsigned diameter)
  * result to be meaningful, populated with edge data. */
 void Problem::populate_edge_cache()
 {
-    unsigned i, j, k;
-    float trialPathWeight;
     auto size = edgeCacheH.size();
-
-    for (k = 0; k < size; k++)
-        for (i = 0; i < size; i++)
-            for (j = 0; j < size; j++)
+    for (auto k = 0; k < size; k++)
+        for (auto i = 0; i < size; i++)
+            for (auto j = 0; j < size; j++)
             {
-                trialPathWeight = edgeCacheH[i][k] + edgeCacheH[k][j];
-                edgeCacheH[i][j] = std::max(edgeCacheH[i][j], trialPathWeight);
+                auto trialPathWeight = edgeCacheH[i][k] + edgeCacheH[k][j];
+                edgeCacheH[i][j] = std::min(edgeCacheH[i][j], trialPathWeight);
             }
 }
 
