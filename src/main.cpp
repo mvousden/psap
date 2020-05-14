@@ -1,10 +1,10 @@
-#include "problem.hpp"
+#include "problem_definition_wrapper.hpp"
 
 int main(int argc, char** argv)
 {
-    NodeH mine("mine", 0);
-    NodeA yours("yours");
     Problem problem;
-    problem.nodeAs[0] = std::make_shared<NodeA>("yours");
-    return 1;
+    problem_definition::define(problem);
+    problem.populate_edge_cache();
+    problem.initial_condition_random();
+    return 0;
 }
