@@ -27,10 +27,13 @@ public:
     /* Initial conditions for the annealer. */
     void initial_condition_random();
 
-    /* Annealing methods */
+    /* Neighbouring state selection and (un)transformation */
     void select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
                 std::vector<std::shared_ptr<NodeH>>::iterator& selH,
                 std::list<std::weak_ptr<NodeA>>::iterator& selHA);
+    void transform(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
+                   std::vector<std::shared_ptr<NodeH>>::iterator& selH,
+                   std::list<std::weak_ptr<NodeA>>::iterator& selHA);
 };
 
 #endif

@@ -126,3 +126,26 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
         std::advance(selHA, roll);
     }
 }
+
+/* Transforms the state in accordance with the selected iterators:
+ *
+ * 1. If selHA points to a non-end application node, moves the application node
+ *    to the hardware node selA is attached to (swap only).
+ *
+ * 2. Moves selA to selH. */
+void Problem::transform(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
+                        std::vector<std::shared_ptr<NodeH>>::iterator& selH,
+                        std::list<std::weak_ptr<NodeA>>::iterator& selHA)
+{
+    /* Do the second-half of the swap operation first. Does nothing if we're
+     * doing a move operation */
+    if (selHA != (*selH)->contents.end())
+    {
+        (*selA)->location.lock()->contents.push_back(*selHA);
+        (*selHA).lock()->location = (*selA)->location;
+    }
+
+    /* Do the move (or the move-component of the swap) */
+    (*selA)->location = std::weak_ptr(*selH);
+    (*selH)->contents.push_back(std::weak_ptr(*selA));
+}
