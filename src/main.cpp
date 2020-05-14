@@ -7,7 +7,7 @@ int main(int argc, char** argv)
     Problem problem;
     problem_definition::define(problem);
     problem.populate_edge_cache();
-    problem.initial_condition_random();
+    problem.initial_condition_bucket();
     std::cout << "The fitness for the initial solution is "
               << problem.compute_total_fitness()
               << "."

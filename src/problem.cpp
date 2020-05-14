@@ -38,6 +38,36 @@ void Problem::populate_edge_cache()
             }
 }
 
+/* Defines an initial state for the annealer, but populating the location field
+ * in each application node, and the contents field in each hardware
+ * node. Application nodes are assigned to hardware nodes in the order they are
+ * in the problem stucture; each hardware node is "filled up" to pMax entries
+ * in turn.
+ *
+ * Falls over violently if there are too many application nodes for the
+ * hardware graph to hold.
+ *
+ * This initialiser assumes that the location and contents fields have not been
+ * defined. */
+void Problem::initial_condition_bucket()
+{
+    /* Start from the first hardware node. */
+    auto selHIt = nodeHs.begin();
+
+    /* Place each application node in turn. */
+    for (auto selA : nodeAs)
+    {
+        /* If the hardware node is full, move to the next one. */
+        if ((*selHIt)->contents.size() >= pMax)
+            selHIt++;  /* Falls over violently if there are too many
+                        * application nodes for the hardware graph to hold. */
+
+        /* Map */
+        selA->location = std::weak_ptr(*selHIt);
+        (*selHIt)->contents.push_back(std::weak_ptr(selA));
+    }
+}
+
 /* Defines an initial state for the annealer, by populating the location field
  * in each application node, and the contents field in each hardware
  * node. Assignments of application nodes to hardware nodes is done at random,

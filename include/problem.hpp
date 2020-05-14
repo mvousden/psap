@@ -25,6 +25,7 @@ public:
     void populate_edge_cache();
 
     /* Initial conditions for the annealer. */
+    void initial_condition_bucket();
     void initial_condition_random();
 
     /* Neighbouring state selection and transformation */
