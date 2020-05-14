@@ -17,9 +17,9 @@ void Problem::initialise_edge_cache(unsigned diameter)
     {
         edgeCacheH.push_back(
             std::vector<float>(diameter, std::numeric_limits<float>::max()));
-        auto inner = edgeCacheH[eOuterIndex];
         for (eInnerIndex = 0; eInnerIndex < diameter; eInnerIndex++)
-            if (eOuterIndex == eInnerIndex) inner[eInnerIndex] = 0;
+            if (eOuterIndex == eInnerIndex)
+                edgeCacheH[eOuterIndex][eInnerIndex] = 0;
     }
 }
 
