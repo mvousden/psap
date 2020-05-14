@@ -20,7 +20,7 @@ public:
 
     Problem();
 
-    /* Methods that play with edgeCachceH. */
+    /* Methods that play with edgeCacheH. */
     void initialise_edge_cache(unsigned diameter);
     void populate_edge_cache();
 
