@@ -342,7 +342,7 @@ Notes:
 Populating the Data Structure from a Problem Definition
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The problem definition file ``includes/problem_definition.hpp`` defines the
+The problem definition file ``src/problem_definition.cpp`` defines the
 placement problem, and is written by the user. This file is read at
 compile-time by the C preprocessor, and is used to initialise the problem
 structure for PSAP. The reasoning behind this unusual way of reading in a

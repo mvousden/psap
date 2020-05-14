@@ -1,24 +1,17 @@
 #ifndef PROBLEM_HPP
 #define PROBLEM_HPP
 
-#include "problem_definition.hpp"
 #include "nodes.hpp"
 
-/* Complain loudly if we don't know how large the application or hardware sizes
- * are. This indicates a malformed problem definition file. */
-#if !defined(APPLICATION_SIZE) || !defined(HARDWARE_SIZE)
-#error "Application graph or hardware graph size is not defined. Have you \
-provided a legal problem definition file? This is needed at compile time."
-#endif
-
-#include <array>
+#include <limits>
+#include <vector>
 
 class Problem
 {
 public:
-    std::array<std::shared_ptr<NodeA>, APPLICATION_SIZE> nodeAs;
-    std::array<std::shared_ptr<NodeH>, HARDWARE_SIZE> nodeHs;
-    std::array<std::array<float, HARDWARE_SIZE>, HARDWARE_SIZE> edgeCacheH;
+    std::vector<std::shared_ptr<NodeA>> nodeAs;
+    std::vector<std::shared_ptr<NodeH>> nodeHs;
+    std::vector<std::vector<float>> edgeCacheH;
     unsigned pMax = std::numeric_limits<unsigned>::max();
 };
 
