@@ -37,3 +37,50 @@ void Problem::populate_edge_cache()
                 edgeCacheH[i][j] = std::max(edgeCacheH[i][j], trialPathWeight);
             }
 }
+
+/* Defines an initial state for the annealer, by populating the location field
+ * in each application node, and the contents field in each hardware
+ * node. Assignments of application nodes to hardware nodes is done at random,
+ * but data structure integrity is not compromised. This method also respects
+ * the pMax field defined in the problem.
+ *
+ * This initialiser assumes that the aforementioned fields have not been
+ * defined. */
+void Problem::initial_condition_random()
+{
+    /* To make random selection faster, define a container of hardware nodes
+     * that can fit more application nodes in them. Elements will leave this
+     * container as they become populated. */
+    std::list<std::weak_ptr<NodeH>> nonEmpty;
+
+    /* Populate the container with all nodes. */
+    for (auto hNode : nodeHs) nonEmpty.push_back(hNode);
+
+    /* Likewise for application nodes. */
+    std::list<std::weak_ptr<NodeA>> toPlace;
+    for (auto aNode : nodeAs) toPlace.push_back(aNode);
+
+    /* Select a random application node, until there are no more application
+     * nodes to place. */
+    while (!toPlace.empty())
+    {
+        /* Select an application node that has not yet been placed. */
+        auto selA = toPlace.begin();
+        std::sample(toPlace.begin(), toPlace.end(), selA, 1,
+                    std::mt19937{std::random_device{}()});
+
+        /* Select a hardware node that is not yet full. */
+        auto selH = nonEmpty.begin();
+        std::sample(nonEmpty.begin(), nonEmpty.end(), selH, 1,
+                    std::mt19937{std::random_device{}()});
+
+        /* Map */
+        selA->lock()->location = *selH;
+        selH->lock()->contents.push_back(*selA);
+
+        /* Remove the selected application node from the selection, and remove
+         * the hardware node if it is full. */
+        toPlace.erase(selA);
+        if (selH->lock()->contents.size() >= pMax) nonEmpty.erase(selH);
+    }
+}
