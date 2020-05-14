@@ -9,3 +9,10 @@ problem in the context of distributed computing.
    placement_problem
    sa
    implementation
+
+.. git_commit_detail::
+    :branch:
+    :commit:
+    :sha_length: 8
+    :uncommitted:
+    :untracked:
