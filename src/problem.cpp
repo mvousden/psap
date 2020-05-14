@@ -183,7 +183,7 @@ float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
  * node. */
 float Problem::compute_hw_node_clustering_fitness(NodeH& nodeH)
 {
-    auto size = nodeH.contents.size();
+    float size = nodeH.contents.size();
     return -size * size;
 }
 
