@@ -9,6 +9,7 @@
 class Problem
 {
 public:
+    void initialise_edge_cache(unsigned diameter);
     std::vector<std::shared_ptr<NodeA>> nodeAs;
     std::vector<std::shared_ptr<NodeH>> nodeHs;
     std::vector<std::vector<float>> edgeCacheH;

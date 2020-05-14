@@ -375,6 +375,10 @@ populated. PSAP expects the problem definition file to define:
    - Other elements must be initialised to
      ``std::numeric_limits<float>::max()``.
 
+   The latter two requirements can be performed by calling the ``void
+   Problem::initialise_edge_cache(unsigned)`` method, passing in the number of
+   nodes in the hardware graph as an argument.
+
 The integrity of the data structure (i.e. whether the indeces in vectors line
 up with the nodes they refer to, whether lengths in the edge cache are
 non-negative, or whether the names of nodes are unique) is not checked. The
