@@ -90,14 +90,9 @@ void Problem::initial_condition_random()
  *
  *  - One hardware node at random, and places it in selH.
  *
- *  - Either one application node attached to the selected hardware node at
- *    random and places it in selHA (swap), or sets selHA to the end of the
- *    contents container for that hardware node (move).
- *
- * Does not modify the state in any way. */
+ * Does not modify the state in any way. Swap selection not supported yet. */
 void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
-                     std::vector<std::shared_ptr<NodeH>>::iterator& selH,
-                     std::list<std::weak_ptr<NodeA>>::iterator& selHA)
+                     std::vector<std::shared_ptr<NodeH>>::iterator& selH)
 {
     /* Application node */
     selA = nodeAs.begin();
@@ -106,17 +101,26 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
         distributionSelA(0, nodeAs.size() - 1);
     std::advance(selA, distributionSelA(rng));
 
-    /* Hardware node */
-    selH = nodeHs.begin();
-    std::uniform_int_distribution<
-        std::vector<std::shared_ptr<NodeH>>::size_type>
-        distributionSelH(0, nodeHs.size() - 1);
-    std::advance(selH, distributionSelH(rng));
+    /* Hardware node. Reselect if the hardware node selected is full. This
+     * extra functionality isn't needed if a swap operation is defined, and is
+     * pretty inefficient if the application graph "just fits" in the hardware
+     * graph. If this is the case, consider increasing pMax instead. */
+    do
+    {
+        selH = nodeHs.begin();
+        std::uniform_int_distribution<
+            std::vector<std::shared_ptr<NodeH>>::size_type>
+            distributionSelH(0, nodeHs.size() - 1);
+        std::advance(selH, distributionSelH(rng));
+    } while ((*selH)->contents.size() != pMax);
 
     /* Application node in hardware node - if the number we select is greater
      * than the number of elements currently attached to the hardware node, we
      * do a move operation. Otherwise, we do a swap operation with the
-     * application node with index equal to the randomly selected number. */
+     * application node with index equal to the randomly selected number.
+     *
+     * Except that we're not doing swap selection for now. I've left this here
+     * anyway in case its useful later.
     std::uniform_int_distribution<unsigned> distributionSelHA(0, pMax);
     auto roll = distributionSelHA(rng);
     if (roll >= (*selH)->contents.size()) selHA = (*selH)->contents.end();
@@ -125,27 +129,26 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
         selHA = (*selH)->contents.begin();
         std::advance(selHA, roll);
     }
+    */
 }
 
-/* Transforms the state in accordance with the selected iterators:
- *
- * 1. If selHA points to a non-end application node, moves the application node
- *    to the hardware node selA is attached to (swap only).
- *
- * 2. Moves selA to selH. */
+/* Transforms the state by moving the selected application node to the selected
+ * hardware node. The iterators pass as arguments are unchanged, and are not
+ * checked for validity. */
 void Problem::transform(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
-                        std::vector<std::shared_ptr<NodeH>>::iterator& selH,
-                        std::list<std::weak_ptr<NodeA>>::iterator& selHA)
+                        std::vector<std::shared_ptr<NodeH>>::iterator& selH)
 {
-    /* Do the second-half of the swap operation first. Does nothing if we're
-     * doing a move operation */
-    if (selHA != (*selH)->contents.end())
-    {
-        (*selA)->location.lock()->contents.push_back(*selHA);
-        (*selHA).lock()->location = (*selA)->location;
-    }
+    /* Remove this application node from its current hardware node. Note that
+     * the shared pointers will not be emptied - they are only emptied on
+     * destruction of the Problem object. */
+    (*selA)->location.lock()->contents.remove_if(
+        [selA](std::weak_ptr<NodeA> cmp){return (*selA) == cmp.lock();});
 
-    /* Do the move (or the move-component of the swap) */
+    /* Assign the selected hardware node to the location field of the selected
+     * application node. */
     (*selA)->location = std::weak_ptr(*selH);
+
+    /* Append the selected application node to the contents field of the
+     * selected hardware node. */
     (*selH)->contents.push_back(std::weak_ptr(*selA));
 }
