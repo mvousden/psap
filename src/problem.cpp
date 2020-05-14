@@ -7,16 +7,13 @@ void Problem::initialise_edge_cache(unsigned diameter)
 {
     std::vector<std::vector<float>>::size_type eOuterIndex;
     std::vector<float>::size_type eInnerIndex;
-    edgeCacheH.reserve(diameter);
     for (eOuterIndex = 0; eOuterIndex < diameter; eOuterIndex++)
     {
+        edgeCacheH.push_back(
+            std::vector<float>(diameter, std::numeric_limits<float>::max()));
         auto inner = edgeCacheH[eOuterIndex];
-        inner.reserve(diameter);
         for (eInnerIndex = 0; eInnerIndex < diameter; eInnerIndex++)
-        {
             if (eOuterIndex == eInnerIndex) inner[eInnerIndex] = 0;
-            else inner[eInnerIndex] = std::numeric_limits<float>::max();
-        }
     }
 }
 
@@ -48,6 +45,9 @@ void Problem::populate_edge_cache()
  * defined. */
 void Problem::initial_condition_random()
 {
+    /* Define our random number generator. */
+    std::mt19937 rng(std::random_device{}());
+
     /* To make random selection faster, define a container of hardware nodes
      * that can fit more application nodes in them. Elements will leave this
      * container as they become populated. */
@@ -56,31 +56,27 @@ void Problem::initial_condition_random()
     /* Populate the container with all nodes. */
     for (auto hNode : nodeHs) nonEmpty.push_back(hNode);
 
-    /* Likewise for application nodes. */
-    std::list<std::weak_ptr<NodeA>> toPlace;
+    /* Likewise for application nodes, though we don't select from this
+     * container - we shuffle it. */
+    std::vector<std::weak_ptr<NodeA>> toPlace;
     for (auto aNode : nodeAs) toPlace.push_back(aNode);
+    std::shuffle(toPlace.begin(), toPlace.end(), rng);
 
-    /* Select a random application node, until there are no more application
-     * nodes to place. */
-    while (!toPlace.empty())
+    /* Place each application node in turn. */
+    for (auto selA : toPlace)
     {
-        /* Select an application node that has not yet been placed. */
-        auto selA = toPlace.begin();
-        std::sample(toPlace.begin(), toPlace.end(), selA, 1,
-                    std::mt19937{std::random_device{}()});
-
-        /* Select a hardware node that is not yet full. */
+        /* Select a hardware node at random that is not yet full. */
         auto selH = nonEmpty.begin();
-        std::sample(nonEmpty.begin(), nonEmpty.end(), selH, 1,
-                    std::mt19937{std::random_device{}()});
+        std::uniform_int_distribution<
+            std::list<std::weak_ptr<NodeH>>::size_type>
+            distribution(0, nonEmpty.size() - 1);
+        std::advance(selH, distribution(rng));
 
         /* Map */
-        selA->lock()->location = *selH;
-        selH->lock()->contents.push_back(*selA);
+        selA.lock()->location = *selH;
+        selH->lock()->contents.push_back(selA);
 
-        /* Remove the selected application node from the selection, and remove
-         * the hardware node if it is full. */
-        toPlace.erase(selA);
+        /* Remove the hardware node if it is full. */
         if (selH->lock()->contents.size() >= pMax) nonEmpty.erase(selH);
     }
 }
