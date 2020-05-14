@@ -19,3 +19,21 @@ void Problem::initialise_edge_cache(unsigned diameter)
         }
     }
 }
+
+/* Populate the infinite members of the edge cache, using the Floyd-Warshall
+ * algorithm. Requires the edge cache to be first initialised and, for the
+ * result to be meaningful, populated with edge data. */
+void Problem::populate_edge_cache()
+{
+    unsigned i, j, k;
+    float trialPathWeight;
+    auto size = edgeCacheH.size();
+
+    for (k = 0; k < size; k++)
+        for (i = 0; i < size; i++)
+            for (j = 0; j < size; j++)
+            {
+                trialPathWeight = edgeCacheH[i][k] + edgeCacheH[k][j];
+                edgeCacheH[i][j] = std::max(edgeCacheH[i][j], trialPathWeight);
+            }
+}
