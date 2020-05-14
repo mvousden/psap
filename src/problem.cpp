@@ -152,3 +152,57 @@ void Problem::transform(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
      * selected hardware node. */
     (*selH)->contents.push_back(std::weak_ptr(*selA));
 }
+
+/* Computes and returns the locality fitness associated with a given
+ * application node. Note that locality fitness, in terms of the problem
+ * specification, is associated with an edge. Since all edges in this
+ * implementation are "double-counted", this method divides the fitness
+ * contribution by half. */
+float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
+{
+    float returnValue = 0;
+
+    /* Hardware node index associated with this application node */
+    auto rootHIndex = nodeA.location.lock()->index;
+
+    /* Edge cache row for this hardware node (to avoid getting it multiple
+     * times) */
+    auto edgeCacheRow = edgeCacheH[rootHIndex];
+
+    /* Iterate over each application node. */
+    for (auto neighbourPtr : nodeA.neighbours)
+    {
+        /* Get the hardware node index associated with that neighbour. */
+        auto neighbourHIndex = neighbourPtr.lock()->location.lock()->index;
+
+        /* Impose fitness penalty from the edgeCache. */
+        returnValue -= edgeCacheRow[neighbourHIndex];
+    }
+
+    return returnValue;
+}
+
+/* Computes and returns the clustering fitness associated with a given hardware
+ * node. */
+float Problem::compute_hw_node_clustering_fitness(NodeH& nodeH)
+{
+    auto size = nodeH.contents.size();
+    return -size * size;
+}
+
+/* Computes and returns the total fitness of the current mapping for this
+ * solution. */
+float Problem::compute_total_fitness()
+{
+    float returnValue = 0;
+
+    /* Locality fitness! */
+    for (auto nodeA : nodeAs)
+        returnValue += compute_app_node_locality_fitness(*nodeA);
+
+    /* Clustering fitness! */
+    for (auto nodeH : nodeHs)
+        returnValue += compute_hw_node_clustering_fitness(*nodeH);
+
+    return returnValue;
+}
