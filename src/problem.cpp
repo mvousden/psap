@@ -1,5 +1,11 @@
 #include "problem.hpp"
 
+Problem::Problem()
+{
+    /* Define our random number generator. */
+    rng = std::mt19937(std::random_device{}());
+}
+
 /* Reserve space in the edge cache as a function of the diameter, and define
  * default values as per the specification - zeroes on the diagonals, and a
  * huge number everywhere else. */
@@ -45,9 +51,6 @@ void Problem::populate_edge_cache()
  * defined. */
 void Problem::initial_condition_random()
 {
-    /* Define our random number generator. */
-    std::mt19937 rng(std::random_device{}());
-
     /* To make random selection faster, define a container of hardware nodes
      * that can fit more application nodes in them. Elements will leave this
      * container as they become populated. */
@@ -78,5 +81,48 @@ void Problem::initial_condition_random()
 
         /* Remove the hardware node if it is full. */
         if (selH->lock()->contents.size() >= pMax) nonEmpty.erase(selH);
+    }
+}
+
+/* Selects:
+ *
+ *  - One application node at random, and places it in selA.
+ *
+ *  - One hardware node at random, and places it in selH.
+ *
+ *  - Either one application node attached to the selected hardware node at
+ *    random and places it in selHA (swap), or sets selHA to the end of the
+ *    contents container for that hardware node (move).
+ *
+ * Does not modify the state in any way. */
+void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
+                     std::vector<std::shared_ptr<NodeH>>::iterator& selH,
+                     std::list<std::weak_ptr<NodeA>>::iterator& selHA)
+{
+    /* Application node */
+    selA = nodeAs.begin();
+    std::uniform_int_distribution<
+        std::vector<std::shared_ptr<NodeA>>::size_type>
+        distributionSelA(0, nodeAs.size() - 1);
+    std::advance(selA, distributionSelA(rng));
+
+    /* Hardware node */
+    selH = nodeHs.begin();
+    std::uniform_int_distribution<
+        std::vector<std::shared_ptr<NodeH>>::size_type>
+        distributionSelH(0, nodeHs.size() - 1);
+    std::advance(selH, distributionSelH(rng));
+
+    /* Application node in hardware node - if the number we select is greater
+     * than the number of elements currently attached to the hardware node, we
+     * do a move operation. Otherwise, we do a swap operation with the
+     * application node with index equal to the randomly selected number. */
+    std::uniform_int_distribution<unsigned> distributionSelHA(0, pMax);
+    auto roll = distributionSelHA(rng);
+    if (roll >= (*selH)->contents.size()) selHA = (*selH)->contents.end();
+    else
+    {
+        selHA = (*selH)->contents.begin();
+        std::advance(selHA, roll);
     }
 }
