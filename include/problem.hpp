@@ -3,16 +3,12 @@
 
 #include "nodes.hpp"
 
-#include <algorithm>
-#include <fstream>
 #include <limits>
-#include <list>
-#include <map>
+#include <memory>
 #include <random>
 #include <string>
+#include <tuple>
 #include <vector>
-
-#include <iostream>
 
 class Problem
 {

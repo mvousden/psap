@@ -1,5 +1,10 @@
 #include "problem.hpp"
 
+#include <algorithm>
+#include <fstream>
+#include <list>
+#include <map>
+
 Problem::Problem()
 {
     /* Define our random number generator. */
