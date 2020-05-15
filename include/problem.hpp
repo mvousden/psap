@@ -21,12 +21,10 @@ public:
     std::vector<std::shared_ptr<NodeH>> nodeHs;
     std::vector<std::tuple<unsigned, unsigned, float>> edgeHs;
     unsigned pMax = std::numeric_limits<unsigned>::max();
-    std::vector<std::vector<float>> edgeCacheH;
-    std::mt19937 rng;
 
     Problem();
 
-    /* Methods that play with edgeCacheH. */
+    /* Methods that interact with edgeCacheH. */
     void initialise_edge_cache(unsigned diameter);
     void populate_edge_cache();
 
@@ -41,9 +39,15 @@ public:
                    std::vector<std::shared_ptr<NodeH>>::iterator& selH);
 
     /* Fitness calculators */
+    float compute_total_fitness();
+
+private:
+    std::vector<std::vector<float>> edgeCacheH;
+    std::mt19937 rng;
+
+    /* Fitness calculators */
     float compute_app_node_locality_fitness(NodeA& nodeA);
     float compute_hw_node_clustering_fitness(NodeH& nodeH);
-    float compute_total_fitness();
 
     /* State dumps */
     void write_a_h_graph(std::string path);
