@@ -4,18 +4,24 @@
 #include "nodes.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <limits>
 #include <list>
+#include <map>
 #include <random>
+#include <string>
 #include <vector>
+
+#include <iostream>
 
 class Problem
 {
 public:
     std::vector<std::shared_ptr<NodeA>> nodeAs;
     std::vector<std::shared_ptr<NodeH>> nodeHs;
-    std::vector<std::vector<float>> edgeCacheH;
+    std::vector<std::tuple<unsigned, unsigned, float>> edgeHs;
     unsigned pMax = std::numeric_limits<unsigned>::max();
+    std::vector<std::vector<float>> edgeCacheH;
     std::mt19937 rng;
 
     Problem();
@@ -38,6 +44,12 @@ public:
     float compute_app_node_locality_fitness(NodeA& nodeA);
     float compute_hw_node_clustering_fitness(NodeH& nodeH);
     float compute_total_fitness();
+
+    /* State dumps */
+    void write_a_h_graph(std::string path);
+    void write_a_to_h_map(std::string path);
+    void write_h_graph(std::string path);
+    void write_h_node_loading(std::string path);
 };
 
 #endif

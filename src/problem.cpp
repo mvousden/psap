@@ -8,11 +8,14 @@ Problem::Problem()
 
 /* Reserve space in the edge cache as a function of the diameter, and define
  * default values as per the specification - zeroes on the diagonals, and a
- * huge number everywhere else. */
+ * huge number everywhere else. Also reads edgeHs to populate entries that
+ * have edges. */
 void Problem::initialise_edge_cache(unsigned diameter)
 {
     std::vector<std::vector<float>>::size_type eOuterIndex;
     std::vector<float>::size_type eInnerIndex;
+
+    /* Populate zeroes and infinites. */
     for (eOuterIndex = 0; eOuterIndex < diameter; eOuterIndex++)
     {
         edgeCacheH.push_back(
@@ -21,6 +24,10 @@ void Problem::initialise_edge_cache(unsigned diameter)
             if (eOuterIndex == eInnerIndex)
                 edgeCacheH[eOuterIndex][eInnerIndex] = 0;
     }
+
+    /* Populate edges. */
+    for (auto edge : edgeHs)
+        edgeCacheH[std::get<0>(edge)][std::get<1>(edge)] = std::get<2>(edge);
 }
 
 /* Populate the infinite members of the edge cache, using the Floyd-Warshall
@@ -232,4 +239,82 @@ float Problem::compute_total_fitness()
         returnValue += compute_hw_node_clustering_fitness(*nodeH);
 
     return returnValue;
+}
+
+/* Writes, for each application edge, an entry to the CSV file at path passed
+ * to by argument connecting nodes in the hardware graph. Each line is of the
+ * form '<FROM_H_NODE_NAME>,<TO_H_NODE_NAME>,<COUNT>', where <COUNT> indicates
+ * the number of application edges traversing this edge. Any existing file is
+ * clobbered. Does no filesystem checking of any kind. */
+void Problem::write_a_h_graph(std::string path)
+{
+    /* The primary data structure for this routine is a map of maps, which
+     * represents the sparse matrix of hardware nodes to hardware nodes, where
+     * the keys of the maps are the names of the nodes. Note that not all
+     * hardware nodes are guaranteed to exist in this map.
+     *
+     * Note that this map double-counts for non-directional application
+     * graphs. */
+    std::map<std::string, std::map<std::string, unsigned>> edges;
+
+    for (const auto& nodeA : nodeAs)
+    {
+        for (auto neighbourPtr : nodeA->neighbours)
+        {
+            std::string neighbourName = neighbourPtr.lock()->name;
+
+            /* If the entry in the submap doesn't exist, create it and
+             * initialise the value to one. Otherwise, increment it. */
+            if (edges[nodeA->name].find(neighbourName) ==
+                edges[nodeA->name].end())
+                edges[nodeA->name][neighbourName] = 1;
+            else edges[nodeA->name][neighbourName]++;
+        }
+    }
+
+    /* Write out each entry in the map. */
+    std::ofstream out(path, std::ofstream::trunc);
+    for (const auto& someEdges : edges)
+        for (const auto& edge : someEdges.second)
+            out << someEdges.first << ","
+                << edge.first << ","
+                << edge.second << std::endl;
+    out.close();
+}
+
+/* Writes the mapping of each application node to their hardware node into the
+ * CSV file at path passed to by argument. Each line is of the form
+ * '<A_NODE_NAME>,<H_NODE_NAME>'. Any existing file is clobbered. Does no
+ * filesystem checking of any kind. */
+void Problem::write_a_to_h_map(std::string path)
+{
+    std::ofstream out(path, std::ofstream::trunc);
+    for (const auto& nodeA : nodeAs)
+        out << nodeA->name << "," << nodeA->location.lock()->name << std::endl;
+    out.close();
+}
+
+/* Writes the hardware graph to a CSV file at path passed to by argument. Each
+ * line is of the form '<H_NODE_NAME>,<H_NODE_NAME>'. No weights are
+ * written. Any existing file is clobbered. Does no filesystem checking of any
+ * kind. */
+void Problem::write_h_graph(std::string path)
+{
+    std::ofstream out(path, std::ofstream::trunc);
+    for (const auto& edge : edgeHs)
+        out << nodeHs[std::get<0>(edge)]->name << ","
+            << nodeHs[std::get<1>(edge)]->name << std::endl;
+    out.close();
+}
+
+/* Writes the loading of each hardware node to the CSV file at path passed to
+ * by argument. Each line is of the form
+ * '<H_NODE_NAME>,<NUMBER_OF_A_NODES>'. Any existing file is clobbered. Does no
+ * filesystem checking of any kind. */
+void Problem::write_h_node_loading(std::string path)
+{
+    std::ofstream out(path, std::ofstream::trunc);
+    for (const auto& nodeH : nodeHs)
+        out << nodeH->name << "," << nodeH->contents.size() << std::endl;
+    out.close();
 }

@@ -9,9 +9,6 @@ unsigned nodeHSize = 4;
 problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
-/* Reserve space in the edge cache, and initialise it. */
-problem.initialise_edge_cache(nodeHSize);
-
 /* Define maximum number of application nodes permitted on a hardware node. */
 problem.pMax = 2;
 
@@ -80,6 +77,6 @@ for (hIndex = 0; hIndex < nodeHSize; hIndex++)
     }
 
     /* Track both. */
-    problem.edgeCacheH[hIndex][fwNeighbour] = weight;
-    problem.edgeCacheH[hIndex][bwNeighbour] = weight;
+    problem.edgeHs.push_back(std::tuple(hIndex, fwNeighbour, weight));
+    problem.edgeHs.push_back(std::tuple(hIndex, bwNeighbour, weight));
 }

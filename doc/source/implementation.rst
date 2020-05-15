@@ -252,11 +252,13 @@ graph illustrates the data structure used by the annealer.
    <TR><TD ALIGN="LEFT">
    + nodeAs: vector&lt;shared_ptr&lt;NodeA&gt;&gt;<BR ALIGN="LEFT"/>
    + nodeHs: vector&lt;shared_ptr&lt;NodeH&gt;&gt;<BR ALIGN="LEFT"/>
-   + edgeCacheH: vector&lt;vector&lt;float&gt;&gt;<BR ALIGN="LEFT"/>
+   + edgeHs: std::vector&lt;std::tuple&lt;<BR ALIGN="LEFT"/>
+         unsigned, unsigned, float&gt;&gt;<BR ALIGN="LEFT"/>
+   - edgeCacheH: vector&lt;vector&lt;float&gt;&gt;<BR ALIGN="LEFT"/>
    + pMax: unsigned<BR ALIGN="LEFT"/>
    </TD></TR>
    <TR><TD ALIGN="TEXT">
-   None<BR ALIGN="TEXT"/>
+   ...<BR ALIGN="TEXT"/>
    </TD></TR>
    <TR><TD ALIGN="TEXT">
    Problem definition.<BR ALIGN="TEXT"/>
@@ -306,8 +308,12 @@ Notes:
    work without making the problem definition file more obtuse than it already
    is. Both vectors and arrays support efficient random access and indexing.
 
+ - The vector of hardware edges connect two hardware nodes by indices with a
+   given weight (the float). This vector is later used to populate the weight
+   cache.
+
  - The weight cache, computed by the Floyd-Warshall algorithm, is stored as an
-   vector of vectors for the same reasons as the above.
+   vector of vectors for the same reasons as the first point.
 
  - Each hardware node is aware of its index from the perspective of the
    problem, which makes looking up entries in the edge cache more efficient in
@@ -352,32 +358,21 @@ time I have to spend on this project. The context of the file has access to a
 single variable: ``Problem problem``, whose elements can be freely
 populated. PSAP expects the problem definition file to define:
 
- - ``problem.nodeAs`` with shared pointers to application nodes, with
-   appropriate definitions for the ``index`` and ``name`` fields. The
-   ``contents`` field is expected to remain empty; this field is populated by
-   the simulated annealing initialiser.
-
  - ``problem.nodeHs`` with shared pointers to hardware nodes, with appropriate
-   definitions for the ``neighbours`` and ``name`` fields. The ``location``
-   field is expected to remain empty; this field is populated by the simulated
-   annealing initialiser.
+   definitions for the ``index`` and ``name`` fields. The ``contents`` field is
+   expected to remain empty; this field is populated by the simulated annealing
+   initialiser.
+
+ - ``problem.edgeHs`` elements, where the first two elements denote the indices
+   of the hardware nodes connect, and the final element denotes the weight.
+
+ - ``problem.nodeAs`` with shared pointers to application nodes, with
+   appropriate definitions for the ``neighbours`` and ``name`` fields. The
+   ``location`` field is expected to remain empty; this field is populated by
+   the simulated annealing initialiser.
 
  - ``problem.pMax`` with a value limiting the number of application nodes that
    can be placed on hardware nodes.
-
- - ``problem.edgeCacheH`` elements, as follows:
-
-   - For node pairs that are adjacent in the hardware graph, the elements must
-     be initialised with the weight of the edge.
-
-   - Elements "on the diagonal" must be initialised to zero.
-
-   - Other elements must be initialised to
-     ``std::numeric_limits<float>::max()``.
-
-   The latter two requirements can be performed by calling the ``void
-   Problem::initialise_edge_cache(unsigned)`` method, passing in the number of
-   nodes in the hardware graph as an argument.
 
 The integrity of the data structure (i.e. whether the indeces in vectors line
 up with the nodes they refer to, whether lengths in the edge cache are
