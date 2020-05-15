@@ -20,7 +20,7 @@ std::vector<std::shared_ptr<NodeA>>::size_type aIndex;
 for (aIndex = 0; aIndex < nodeASize; aIndex++)
 {
     std::string name = "appNode" + std::to_string(aIndex);
-    problem.nodeAs[aIndex] = std::make_shared<NodeA>(name);
+    problem.nodeAs.push_back(std::make_shared<NodeA>(name));
 }
 
 /* Application neighbours. */
@@ -54,7 +54,7 @@ std::vector<std::shared_ptr<NodeH>>::size_type hIndex;
 for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 {
     std::string name = "hwNode" + std::to_string(hIndex);
-    problem.nodeHs[hIndex] = std::make_shared<NodeH>(name, hIndex);
+    problem.nodeHs.push_back(std::make_shared<NodeH>(name, hIndex));
 }
 
 /* Hardware neighbours */
