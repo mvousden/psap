@@ -18,6 +18,4 @@ private:
     Iteration iteration = 0;
 };
 
-#include "serial_annealer.tpp"
-
 #endif

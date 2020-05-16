@@ -1,10 +1,10 @@
+#include "serial_annealer.hpp"
+
 /* Initialise disorder. */
 template<class DisorderT>
 SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg):
-    disorder(maxIterationArg)
-{
-    maxIteration = maxIterationArg;
-}
+    maxIteration(maxIterationArg),
+    disorder(maxIterationArg){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */
@@ -67,3 +67,5 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         if (iteration == maxIteration) break;  /* How boring. */
     }
 }
+
+#include "serial_annealer-impl.hpp"
