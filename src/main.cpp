@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <iostream>
 
-int main(int argc, char** argv)
+int main()
 {
     /* Setup problem */
     Problem problem;

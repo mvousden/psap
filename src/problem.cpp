@@ -41,9 +41,9 @@ void Problem::initialise_edge_cache(unsigned diameter)
 void Problem::populate_edge_cache()
 {
     auto size = edgeCacheH.size();
-    for (auto k = 0; k < size; k++)
-        for (auto i = 0; i < size; i++)
-            for (auto j = 0; j < size; j++)
+    for (decltype(size) k = 0; k < size; k++)
+        for (decltype(size) i = 0; i < size; i++)
+            for (decltype(size) j = 0; j < size; j++)
             {
                 auto trialPathWeight = edgeCacheH[i][k] + edgeCacheH[k][j];
                 edgeCacheH[i][j] = std::min(edgeCacheH[i][j], trialPathWeight);

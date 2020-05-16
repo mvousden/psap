@@ -51,8 +51,7 @@ bool LinearDecayDisorder::determine(float oldFitness, float newFitness,
     return distribution(rng) < acceptProb;
 }
 
-bool NoDisorder::determine(float oldFitness, float newFitness,
-                           Iteration iteration)
+bool NoDisorder::determine(float oldFitness, float newFitness, Iteration)
 {
     return oldFitness < newFitness;
 }
