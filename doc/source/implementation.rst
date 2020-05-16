@@ -374,6 +374,9 @@ populated. PSAP expects the problem definition file to define:
  - ``problem.pMax`` with a value limiting the number of application nodes that
    can be placed on hardware nodes.
 
+ - ``problem.name`` (optionally) defines a colloquial name for the problem,
+   used for writing results.
+
 The integrity of the data structure (i.e. whether the indeces in vectors line
 up with the nodes they refer to, whether lengths in the edge cache are
 non-negative, or whether the names of nodes are unique) is not checked. The

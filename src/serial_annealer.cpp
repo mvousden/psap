@@ -2,15 +2,30 @@
 
 /* Initialise disorder. */
 template<class DisorderT>
-SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg):
+SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
+                                          std::string csvPathArg):
     maxIteration(maxIterationArg),
-    disorder(maxIterationArg){}
+    disorder(maxIterationArg),
+    csvPath(csvPathArg){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */
 template<class DisorderT>
 void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 {
+    /* If no output path has been defined for logging operations, then don't
+     * log them. Otherwise, do so. Logging clobbers previous anneals. Note the
+     * use of '\n' over std::endl to reduce flushing (possibly at the cost of
+     * portability). Main will flush everything at the end.
+     *
+     * Each row in the CSV corresponds to a new iteration. */
+    bool log = !csvPath.empty();
+    if (log) csvOut.open(csvPath.c_str(), std::ofstream::trunc);
+    csvOut << "Selected application node index,"
+           << "Selected hardware node index,"
+           << "Transformed Fitness,"
+           << "Determination\n";
+
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();
     auto oldH = *selH;  /* Note - not an iterator */
@@ -24,6 +39,8 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
         /* Selection */
         problem.select(selA, selH);
+        if (log) csvOut << selA - problem.nodeAs.begin() << ","
+                        << selH - problem.nodeHs.begin() << ",";
 
         /* Fitness of components before transformation. */
         oldH = problem.nodeHs[(*selA)->location.lock()->index];
@@ -44,27 +61,32 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         /* Determination */
         auto newFitness = oldFitness - oldFitnessComponents +
             newFitnessComponents;
+        if (log) csvOut << newFitness << ",";
 
         /* Always accept a better solution. */
-        bool sufficientlyDetermined = true;
-        if (oldFitness >= newFitness)
-        {
-            sufficientlyDetermined = disorder.determine(oldFitness, newFitness,
-                                                        iteration);
-            if (not sufficientlyDetermined)  /* Almost looks like Python. */
-            {
-                /* Revert the solution */
-                auto oldHIt = problem.nodeHs.begin() + oldH->index;
-                problem.transform(selA, oldHIt);
-            }
-        }
+        bool sufficientlyDetermined;
+        if (oldFitness < newFitness) sufficientlyDetermined = true;
+        else sufficientlyDetermined =
+                 disorder.determine(oldFitness, newFitness, iteration);
 
         /* If the solution was sufficiently determined to be chosen, update the
-         * base fitness to support computation for the next iteration. */
-        if (sufficientlyDetermined) oldFitness = newFitness;
+         * base fitness to support computation for the next
+         * iteration. Otherwise, revert the solution. */
+        if (sufficientlyDetermined)
+        {
+            if (log) csvOut << 1 << '\n';
+            oldFitness = newFitness;
+        }
+
+        else
+        {
+            if (log) csvOut << 0 << '\n';
+            auto oldHIt = problem.nodeHs.begin() + oldH->index;
+            problem.transform(selA, oldHIt);
+        }
 
         /* Termination */
-        if (iteration == maxIteration) break;  /* How boring. */
+        if (iteration == maxIteration) break;
     }
 }
 

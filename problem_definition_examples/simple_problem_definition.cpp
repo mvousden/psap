@@ -3,6 +3,8 @@
  * nodes associated with them), and with eight application nodes connected in a
  * ring. */
 
+problem.name = "simple_ring_problem";
+
 /* Reserve space in the vectors for nodes. */
 unsigned nodeASize = 8;
 unsigned nodeHSize = 4;

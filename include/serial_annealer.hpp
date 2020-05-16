@@ -4,18 +4,26 @@
 #include "disorder_schedules.hpp"
 #include "problem.hpp"
 
+#include <fstream>
+#include <string>
+
 template <class DisorderT=ExpDecayDisorder>
 class SerialAnnealer
 {
 public:
-    SerialAnnealer(Iteration maxIteration);
+    SerialAnnealer(Iteration maxIteration=100,
+                   std::string csvPath="");
     void operator()(Problem& problem){anneal(problem);}
-    Iteration maxIteration;
 
 private:
     Iteration iteration = 0;
+    Iteration maxIteration;
     DisorderT disorder;
     void anneal(Problem& problem);
+
+    /* Output stream to a file. If none is provided, no output is written. */
+    std::string csvPath;
+    std::ofstream csvOut;
 };
 
 #endif

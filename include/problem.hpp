@@ -17,6 +17,7 @@ public:
     std::vector<std::shared_ptr<NodeH>> nodeHs;
     std::vector<std::tuple<unsigned, unsigned, float>> edgeHs;
     unsigned pMax = std::numeric_limits<unsigned>::max();
+    std::string name = "unnamed_problem";
 
     Problem();
 
@@ -39,15 +40,15 @@ public:
     float compute_hw_node_clustering_fitness(NodeH& nodeH);
     float compute_total_fitness();
 
-private:
-    std::vector<std::vector<float>> edgeCacheH;
-    std::mt19937 rng;
-
     /* State dumps */
     void write_a_h_graph(std::string path);
     void write_a_to_h_map(std::string path);
     void write_h_graph(std::string path);
     void write_h_node_loading(std::string path);
+
+private:
+    std::vector<std::vector<float>> edgeCacheH;
+    std::mt19937 rng;
 };
 
 #endif
