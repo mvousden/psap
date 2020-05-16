@@ -1,16 +1,15 @@
-#include "serial_annealer.hpp"
-
-#include <math.h>
-
-SerialAnnealer::SerialAnnealer()
+/* Initialise disorder. */
+template<class DisorderT>
+SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg):
+    disorder(maxIterationArg)
 {
-    /* Define our random number generator. */
-    rng = std::mt19937(std::random_device{}());
+    maxIteration = maxIterationArg;
 }
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */
-void SerialAnnealer::anneal(Problem& problem)
+template<class DisorderT>
+void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 {
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();
@@ -50,7 +49,8 @@ void SerialAnnealer::anneal(Problem& problem)
         bool sufficientlyDetermined = true;
         if (oldFitness >= newFitness)
         {
-            sufficientlyDetermined = determination(oldFitness, newFitness);
+            sufficientlyDetermined = disorder.determine(oldFitness, newFitness,
+                                                        iteration);
             if (not sufficientlyDetermined)  /* Almost looks like Python. */
             {
                 /* Revert the solution */
@@ -66,14 +66,4 @@ void SerialAnnealer::anneal(Problem& problem)
         /* Termination */
         if (iteration == maxIteration) break;  /* How boring. */
     }
-}
-
-/* Determines whether to select a new solution, given values for the old
- * fitness and the new fitness. */
-bool SerialAnnealer::determination(float oldFitness, float newFitness)
-{
-    auto fitnessRatio = oldFitness / newFitness;
-    auto disorderDecay = log(0.5) / (maxIteration / 3.0);
-    auto acceptProb = fitnessRatio * 0.5 * exp(disorderDecay * iteration);
-    return distribution(rng) > acceptProb;
 }

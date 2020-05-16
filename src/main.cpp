@@ -5,10 +5,8 @@
 
 int main(int argc, char** argv)
 {
-    Problem problem;
-    SerialAnnealer annealer;
-
     /* Setup problem */
+    Problem problem;
     problem_definition::define(problem);
     problem.initialise_edge_cache(problem.nodeHs.size());
     problem.populate_edge_cache();
@@ -20,9 +18,13 @@ int main(int argc, char** argv)
               << std::endl;
 
     /* Solve problem */
+    Iteration maxIteration = 100;
+    auto annealer = SerialAnnealer(maxIteration);
     annealer(problem);
 
-    std::cout << "The fitness for the annealed solution is "
+    std::cout << "The fitness for the solution after "
+              << maxIteration
+              << " rounds of annealing is "
               << problem.compute_total_fitness()
               << "."
               << std::endl;
