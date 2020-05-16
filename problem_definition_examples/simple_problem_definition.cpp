@@ -10,7 +10,7 @@ problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
 /* Define maximum number of application nodes permitted on a hardware node. */
-problem.pMax = 2;
+problem.pMax = 3;
 
 /* Application nodes */
 std::vector<std::shared_ptr<NodeA>>::size_type aIndex;

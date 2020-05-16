@@ -140,10 +140,11 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
         distributionSelA(0, nodeAs.size() - 1);
     std::advance(selA, distributionSelA(rng));
 
-    /* Hardware node. Reselect if the hardware node selected is full. This
-     * extra functionality isn't needed if a swap operation is defined, and is
-     * pretty inefficient if the application graph "just fits" in the hardware
-     * graph. If this is the case, consider increasing pMax instead. */
+    /* Hardware node. Reselect if the hardware node selected is full, or if it
+     * already contains the application node. This extra functionality isn't
+     * needed if a swap operation is defined, and is pretty inefficient if the
+     * application graph "just fits" in the hardware graph. If this is the
+     * case, consider increasing pMax instead. */
     do
     {
         selH = nodeHs.begin();
@@ -151,7 +152,8 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
             std::vector<std::shared_ptr<NodeH>>::size_type>
             distributionSelH(0, nodeHs.size() - 1);
         std::advance(selH, distributionSelH(rng));
-    } while ((*selH)->contents.size() != pMax);
+    } while ((*selH)->contents.size() >= pMax or
+             (*selA)->location.lock() == (*selH));
 
     /* Application node in hardware node - if the number we select is greater
      * than the number of elements currently attached to the hardware node, we
