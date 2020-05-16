@@ -8,6 +8,7 @@
 
 class NodeH;
 
+/* Node in the application graph. */
 class NodeA
 {
 public:
@@ -17,6 +18,7 @@ public:
     std::vector<std::weak_ptr<NodeA>> neighbours;
 };
 
+/* Node in the hardware graph. */
 class NodeH
 {
 public:
