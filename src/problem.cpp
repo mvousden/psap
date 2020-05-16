@@ -271,14 +271,18 @@ void Problem::write_a_h_graph(std::string path)
     {
         for (auto neighbourPtr : nodeA->neighbours)
         {
-            std::string neighbourName = neighbourPtr.lock()->name;
+            std::string fromHName = nodeA->location.lock()->name;
+            std::string toHName = neighbourPtr.lock()->location.lock()->name;
+
+            /* Don't write anything if the two application nodes are on the
+             * same hardware node. */
+            if (fromHName == toHName) continue;
 
             /* If the entry in the submap doesn't exist, create it and
              * initialise the value to one. Otherwise, increment it. */
-            if (edges[nodeA->name].find(neighbourName) ==
-                edges[nodeA->name].end())
-                edges[nodeA->name][neighbourName] = 1;
-            else edges[nodeA->name][neighbourName]++;
+            if (edges[fromHName].find(toHName) == edges[fromHName].end())
+                edges[fromHName][toHName] = 1;
+            else edges[fromHName][toHName]++;
         }
     }
 
