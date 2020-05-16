@@ -288,6 +288,8 @@ void Problem::write_a_h_graph(std::string path)
 
     /* Write out each entry in the map. */
     std::ofstream out(path, std::ofstream::trunc);
+    out << "Hardware node name (first),Hardware node name (second),Loading"
+        << std::endl;
     for (const auto& someEdges : edges)
         for (const auto& edge : someEdges.second)
             out << someEdges.first << ","
@@ -303,6 +305,7 @@ void Problem::write_a_h_graph(std::string path)
 void Problem::write_a_to_h_map(std::string path)
 {
     std::ofstream out(path, std::ofstream::trunc);
+    out << "Application node name,Hardware node name" << std::endl;
     for (const auto& nodeA : nodeAs)
         out << nodeA->name << "," << nodeA->location.lock()->name << std::endl;
     out.close();
@@ -315,6 +318,8 @@ void Problem::write_a_to_h_map(std::string path)
 void Problem::write_h_graph(std::string path)
 {
     std::ofstream out(path, std::ofstream::trunc);
+    out << "Hardware node name (first),Hardware node name (second)"
+        << std::endl;
     for (const auto& edge : edgeHs)
         out << nodeHs[std::get<0>(edge)]->name << ","
             << nodeHs[std::get<1>(edge)]->name << std::endl;
@@ -328,6 +333,8 @@ void Problem::write_h_graph(std::string path)
 void Problem::write_h_node_loading(std::string path)
 {
     std::ofstream out(path, std::ofstream::trunc);
+    out << "Hardware node name,Number of contained application nodes"
+        << std::endl;
     for (const auto& nodeH : nodeHs)
         out << nodeH->name << "," << nodeH->contents.size() << std::endl;
     out.close();
