@@ -13,9 +13,9 @@ public:
     Iteration maxIteration;
 
 private:
+    Iteration iteration = 0;
     DisorderT disorder;
     void anneal(Problem& problem);
-    Iteration iteration = 0;
 };
 
 #endif
