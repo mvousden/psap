@@ -14,9 +14,10 @@ int main()
     problem.initial_condition_random();
     auto initialFitness = problem.compute_total_fitness();
 
-    /* Directory to write to */
+    /* Directory to write to - clear it. */
     std::filesystem::path outRootDir = "output";
     std::filesystem::path outDir = outRootDir / problem.name;
+    std::filesystem::remove_all(outDir);
     std::filesystem::create_directories(outDir);
 
     /* Write initial stuff */
