@@ -364,7 +364,9 @@ populated. PSAP expects the problem definition file to define:
    initialiser.
 
  - ``problem.edgeHs`` elements, where the first two elements denote the indices
-   of the hardware nodes connect, and the final element denotes the weight.
+   of the hardware nodes connect, and the final element denotes the
+   weight. Since the hardware graph is undirected, each edge should be defined
+   exactly once (do not define reverse edges).
 
  - ``problem.nodeAs`` with shared pointers to application nodes, with
    appropriate definitions for the ``neighbours`` and ``name`` fields. The

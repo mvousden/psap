@@ -56,29 +56,14 @@ for (hIndex = 0; hIndex < nodeHSize; hIndex++)
     problem.nodeHs.push_back(std::make_shared<NodeH>(name, hIndex));
 }
 
-/* Hardware neighbours */
+/* Hardware neighbours. It's an undirected graph, so only neighbours in one
+ * direction should be tracked. */
 float weight = 2;
 for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 {
-    /* Identify neighbours */
-    unsigned fwNeighbour, bwNeighbour;
-    if (hIndex == nodeHSize - 1)
-    {
-        fwNeighbour = 0;
-        bwNeighbour = hIndex - 1;
-    }
-    else if (hIndex == 0)
-    {
-        fwNeighbour = hIndex + 1;
-        bwNeighbour = nodeHSize - 1;
-    }
-    else
-    {
-        fwNeighbour = hIndex + 1;
-        bwNeighbour = hIndex - 1;
-    }
-
-    /* Track both. */
+    /* Identify forward neighbour and track. */
+    unsigned fwNeighbour;
+    if (hIndex == nodeHSize - 1) fwNeighbour = 0;
+    else fwNeighbour = hIndex + 1;
     problem.edgeHs.push_back(std::tuple(hIndex, fwNeighbour, weight));
-    problem.edgeHs.push_back(std::tuple(hIndex, bwNeighbour, weight));
 }

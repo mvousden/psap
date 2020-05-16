@@ -32,7 +32,10 @@ void Problem::initialise_edge_cache(unsigned diameter)
 
     /* Populate edges. */
     for (auto edge : edgeHs)
+    {
         edgeCacheH[std::get<0>(edge)][std::get<1>(edge)] = std::get<2>(edge);
+        edgeCacheH[std::get<1>(edge)][std::get<0>(edge)] = std::get<2>(edge);
+    }
 }
 
 /* Populate the infinite members of the edge cache, using the Floyd-Warshall
