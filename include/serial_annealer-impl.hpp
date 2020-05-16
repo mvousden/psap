@@ -9,3 +9,4 @@
  * that's fine too. If you're in a Git repository, look at 0dfc24f. */
 template class SerialAnnealer<ExpDecayDisorder>;
 template class SerialAnnealer<LinearDecayDisorder>;
+template class SerialAnnealer<NoDisorder>;

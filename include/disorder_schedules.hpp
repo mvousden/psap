@@ -21,6 +21,7 @@ protected:
     std::uniform_real_distribution<> distribution{0, 1};
 };
 
+/* Disorder decays exponentially. */
 class ExpDecayDisorder: public Disorder
 {
 public:
@@ -31,6 +32,7 @@ private:
     float disorderDecay;
 };
 
+/* Disorder decays linearly. */
 class LinearDecayDisorder: public Disorder
 {
 public:
@@ -39,6 +41,14 @@ public:
 private:
     float gradient;
     float intercept;
+};
+
+/* There is no disorder (only superior solutions are ever accepted) */
+class NoDisorder: public Disorder
+{
+public:
+    NoDisorder(Iteration maxIteration);
+    bool determine(float, float, Iteration);
 };
 
 #endif

@@ -58,16 +58,13 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(*oldH);
 
-        /* Determination */
         auto newFitness = oldFitness - oldFitnessComponents +
             newFitnessComponents;
         if (log) csvOut << newFitness << ",";
 
-        /* Always accept a better solution. */
-        bool sufficientlyDetermined;
-        if (oldFitness < newFitness) sufficientlyDetermined = true;
-        else sufficientlyDetermined =
-                 disorder.determine(oldFitness, newFitness, iteration);
+        /* Determination */
+        bool sufficientlyDetermined =
+            disorder.determine(oldFitness, newFitness, iteration);
 
         /* If the solution was sufficiently determined to be chosen, update the
          * base fitness to support computation for the next
