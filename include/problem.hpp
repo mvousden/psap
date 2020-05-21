@@ -44,6 +44,7 @@ public:
     void write_a_h_graph(std::string path);
     void write_a_to_h_map(std::string path);
     void write_h_graph(std::string path);
+    void write_h_nodes(std::string path);
     void write_h_node_loading(std::string path);
 
 private:

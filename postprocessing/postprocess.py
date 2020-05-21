@@ -14,6 +14,7 @@ filePaths = {"anneal_ops": "anneal_ops.csv",
              "final_a_h_graph": "final_a_h_graph.csv",
              "final_a_to_h_map": "final_a_to_h_map.csv",
              "h_graph": "h_graph.csv",
+             "h_nodes": "h_nodes.csv",
              "initial_a_h_graph": "initial_a_h_graph.csv",
              "initial_a_to_h_map": "initial_a_to_h_map.csv"}
 

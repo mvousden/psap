@@ -39,6 +39,7 @@ int main()
     problem.write_a_h_graph(outDir / "final_a_h_graph.csv");
     problem.write_a_to_h_map(outDir / "final_a_to_h_map.csv");
     problem.write_h_graph(outDir / "h_graph.csv");
+    problem.write_h_nodes(outDir / "h_nodes.csv");
 
     /* This one isn't needed, but makes creating histograms easier.
     problem.write_h_node_loading(outDir / "h_node_loading.csv"); */

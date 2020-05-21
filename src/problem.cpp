@@ -326,6 +326,19 @@ void Problem::write_h_graph(std::string path)
     out.close();
 }
 
+/* Writes the ordering of nodes to a CSV file at path passed to by
+ * argument. Each line is of the form '<H_NODE_NAME>' (the index is implied,
+ * and begins at zero). Any existing file is clobbered. Does no filesystem
+ * checking of any kind. */
+void Problem::write_h_nodes(std::string path)
+{
+    std::ofstream out(path, std::ofstream::trunc);
+    out << "Hardware node name" << std::endl;
+    for (const auto& node : nodeHs) out << node->name << std::endl;
+    out.close();
+}
+
+
 /* Writes the loading of each hardware node to the CSV file at path passed to
  * by argument. Each line is of the form
  * '<H_NODE_NAME>,<NUMBER_OF_A_NODES>'. Any existing file is clobbered. Does no
