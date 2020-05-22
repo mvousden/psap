@@ -76,41 +76,19 @@ def doit(inputDir):
     graphAH = pd.read_csv(os.path.join(inputDir,
                                        filePaths["initial_a_h_graph"]))
 
-    # Create a datastructure holding all neighbours given an edge, only holding
-    # the edges in one direction (by comparing the name strings with '>'). We
-    # create this data structure to avoid overlaying application-mapped
-    # hardware graph edges (AH edges) on top of edges in the hardware graph (H
-    # edges).
-    #
-    # Firstly, populate the hardware edges
-    edgeFromNode = {}
-    for edge in edgeHs:
-        primary = min(*edge)
-        secondary = max(*edge)
-        for node in edge:  # Import to add both primary and secondary, because
-                           # it's possible that a node only appears as a
-                           # secondary node.
-            if node not in edgeFromNode.keys():
-                edgeFromNode[node] = set()
-        edgeFromNode[primary].add(secondary)
-
     # For each edge in the AH graph, store it in the edgeAHs array if it is not
-    # a duplicate of either an H edge or an AH edge.
+    # a duplicate.
     edgeAHs = []
     for index, edge in graphAH.iterrows():  # Sorry Pandas purists
         nodes = [edge["Hardware node name (first)"],
                  edge["Hardware node name (second)"]]
         primary = min(*nodes)
         secondary = max(*nodes)
-
-        # Only draw AH edges if there is no overlapping H edge, and if there is
-        # no reverse AH edge.
-        if secondary not in edgeFromNode[primary]:
-            edgeAHs.append(nodes + [edge["Loading"]])
-            edgeFromNode[primary].add(secondary)
+        edgeAHs.append(nodes + [edge["Loading"]])
 
     # Draw pretty picture.
-    graph = gv.Graph("G", filename="postprocess.gv", engine="circo")
+    graph = gv.Graph("G", filename="postprocess.gv", engine="circo",
+                     strict=True)
     graph.attr(margin="0")
     graph.attr("node", shape="square", style="filled", label="",
                fillcolor="#000000", margin="0")
