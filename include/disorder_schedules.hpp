@@ -21,7 +21,15 @@ protected:
     std::uniform_real_distribution<> distribution{0, 1};
 };
 
-/* Disorder decays exponentially. */
+/* There is no disorder and no acceptance - the state never changes. */
+class AbsoluteZero
+{
+public:
+    AbsoluteZero(Iteration){};
+    bool determine(float, float, Iteration){return false;}
+};
+
+/* Disorder decays exponentially. Better solutions are always accepted. */
 class ExpDecayDisorder: public Disorder
 {
 public:
@@ -32,18 +40,19 @@ private:
     float disorderDecay;
 };
 
-/* Disorder decays linearly. */
+/* Disorder decays linearly. Better solutions are always accepted. */
 class LinearDecayDisorder: public Disorder
 {
 public:
     LinearDecayDisorder(Iteration maxIteration);
     bool determine(float, float, Iteration);
+
 private:
     float gradient;
     float intercept;
 };
 
-/* There is no disorder (only superior solutions are ever accepted) */
+/* There is no disorder. Better solutions are always accepted. */
 class NoDisorder: public Disorder
 {
 public:
