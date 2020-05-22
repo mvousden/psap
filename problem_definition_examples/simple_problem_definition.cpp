@@ -1,7 +1,10 @@
 /* This file defines a simple problem, with four hardware nodes connected in a
- * ring with equal edge weights (each permitted to have at most two application
- * nodes associated with them), and with eight application nodes connected in a
- * ring. */
+ * ring with equal edge weights (each permitted to have at most three
+ * application nodes associated with them), and with eight application nodes
+ * connected in a ring.
+ *
+ * The optimal solution to this problem has a fitness of -32, given an edge
+ * weight of 2 and an alpha (ratio of clustering and locality fitness) of 1. */
 
 problem.name = "simple_ring_problem";
 
