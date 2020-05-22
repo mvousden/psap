@@ -5,6 +5,7 @@
 
 import os
 import graphviz as gv
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sys
@@ -110,6 +111,20 @@ def doit(inputDir, state="initial"):
         graph.edge(*edgeHs[edgeIndex], color="#000000", label="")
 
     graph.render()
+
+    # Load simulated annealing transition data
+    ops = pd.read_csv(os.path.join(inputDir, filePaths["anneal_ops"]))
+    fitnessChanges = ops.loc[ops["Determination"] == 1]\
+      ["Transformed Fitness"].to_dict()
+
+    # Draw pretty figure
+    figure, axes = plt.subplots()
+    axes.plot(list(fitnessChanges.keys()), list(fitnessChanges.values()),
+              'rx')
+    axes.set_xlabel("Iteration")
+    axes.set_ylabel("Fitness")
+    axes.set_title("Simulated Annealing Relaxation")
+    figure.savefig("fitness.pdf")
 
 
 if __name__ == "__main__":
