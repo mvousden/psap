@@ -33,6 +33,9 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
     /* Base fitness "used" from the start of each iteration. */
     auto oldFitness = problem.compute_total_fitness();
 
+    /* Write data for iteration zero to deploy initial fitness. */
+    if (log) csvOut << "-1,-1," << oldFitness << ",1\n";
+
     while (true)
     {
         iteration++;
