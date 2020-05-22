@@ -48,7 +48,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         /* Fitness of components before transformation. */
         oldH = problem.nodeHs[(*selA)->location.lock()->index];
         auto oldFitnessComponents =
-            problem.compute_app_node_locality_fitness(**selA) +
+            problem.compute_app_node_locality_fitness(**selA) * 2 +
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(*oldH);
 
@@ -57,7 +57,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
         /* Fitness of components before transformation. */
         auto newFitnessComponents =
-            problem.compute_app_node_locality_fitness(**selA) +
+            problem.compute_app_node_locality_fitness(**selA) * 2 +
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(*oldH);
 
