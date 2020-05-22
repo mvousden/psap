@@ -45,7 +45,7 @@ def colour_from_loadings(loadings, maxLoading=None, baseColor="#FF0000"):
             for loading in loadings]
 
 
-def doit(inputDir):
+def doit(inputDir, state="initial"):
     """Loads data and draws graphs."""
 
     # Load hardware graph data
@@ -57,9 +57,9 @@ def doit(inputDir):
     # All hardware edges (we don't care about weight)
     edgeHs = graphH.values.tolist()
 
-    # Load initial mapping data
+    # Load mapping data
     mapAToH = pd.read_csv(os.path.join(inputDir,
-                                       filePaths["initial_a_to_h_map"]))
+                                       filePaths[state + "_a_to_h_map"]))
 
     # Initial hardware node loading - derive node colours from that loading.
     nodeHLoad = [len(mapAToH[mapAToH["Hardware node name"] == nodeH])
@@ -74,7 +74,7 @@ def doit(inputDir):
 
     # Initial application node mapping - defines application edges.
     graphAH = pd.read_csv(os.path.join(inputDir,
-                                       filePaths["initial_a_h_graph"]))
+                                       filePaths[state + "_a_h_graph"]))
 
     # For each edge in the AH graph, store it in the edgeAHs array if it is not
     # a duplicate.
@@ -98,16 +98,16 @@ def doit(inputDir):
         graph.node(nodeHs[nodeIndex], fillcolor=nodeColours[nodeIndex],
                    label=str(nodeHLoad[nodeIndex]))
 
-    # Hardware edges
-    for edgeIndex in range(len(edgeHs)):
-        graph.edge(*edgeHs[edgeIndex])
-
     # Application-hardware edges
     edgeAHColour = "#FF0000"
     for edgeIndex in range(len(edgeAHs)):
         graph.edge(*edgeAHs[edgeIndex][:2], color=edgeAHColour,
                    label=str(edgeAHs[edgeIndex][2]), fontcolor=edgeAHColour,
                    constraint="false")
+
+    # Hardware edges
+    for edgeIndex in range(len(edgeHs)):
+        graph.edge(*edgeHs[edgeIndex], color="#000000", label="")
 
     graph.render()
 
@@ -116,4 +116,4 @@ if __name__ == "__main__":
     rc = check_expected_files(sys.argv[1])
     if (rc != 0):
         sys.exit(rc)
-    doit(sys.argv[1])  # Sorry
+    doit(sys.argv[1], state="final")  # Sorry
