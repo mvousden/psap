@@ -361,7 +361,8 @@ populated. PSAP expects the problem definition file to define:
  - ``problem.nodeHs`` with shared pointers to hardware nodes, with appropriate
    definitions for the ``index`` and ``name`` fields. The ``contents`` field is
    expected to remain empty; this field is populated by the simulated annealing
-   initialiser.
+   initialiser. The ``posHoriz`` and ``posVerti`` fields may optionally be
+   defined, which is used by the postprocessing (visualisation) software.
 
  - ``problem.edgeHs`` elements, where the first two elements denote the indices
    of the hardware nodes connect, and the final element denotes the

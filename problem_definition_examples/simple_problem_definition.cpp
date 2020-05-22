@@ -1,16 +1,16 @@
-/* This file defines a simple problem, with four hardware nodes connected in a
+/* This file defines a simple problem, with eight hardware nodes connected in a
  * ring with equal edge weights (each permitted to have at most three
- * application nodes associated with them), and with eight application nodes
- * connected in a ring.
+ * application nodes associated with them), and with sixteen application nodes,
+ * also connected in a ring in both directions.
  *
- * The optimal solution to this problem has a fitness of -32, given an edge
- * weight of 2 and an alpha (ratio of clustering and locality fitness) of 1. */
+ * The optimal solution to this problem has a clustering fitness of -32, and a
+ * locality fitness of -32, giving a total fitness of -64. */
 
 problem.name = "simple_ring_problem";
 
 /* Reserve space in the vectors for nodes. */
-unsigned nodeASize = 8;
-unsigned nodeHSize = 4;
+unsigned nodeASize = 16;
+unsigned nodeHSize = 8;
 problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
@@ -51,12 +51,26 @@ for (aIndex = 0; aIndex < nodeASize; aIndex++)
     problem.nodeAs[aIndex]->neighbours.push_back(bwNeighbour);
 }
 
-/* Hardware nodes */
+/* Hardware nodes, positioned in a nice little hardcoded ring. */
 std::vector<std::shared_ptr<NodeH>>::size_type hIndex;
 for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 {
     std::string name = "hwNode" + std::to_string(hIndex);
-    problem.nodeHs.push_back(std::make_shared<NodeH>(name, hIndex));
+    if (nodeASize == 8)
+    {
+        float posHoriz, posVerti = -1;
+        if (hIndex == 0){posHoriz = 0; posVerti = 0;}
+        else if (hIndex == 1){posHoriz = 0; posVerti = 1;}
+        else if (hIndex == 2){posHoriz = 0; posVerti = 2;}
+        else if (hIndex == 3){posHoriz = 1; posVerti = 2;}
+        else if (hIndex == 4){posHoriz = 2; posVerti = 2;}
+        else if (hIndex == 5){posHoriz = 2; posVerti = 1;}
+        else if (hIndex == 6){posHoriz = 2; posVerti = 0;}
+        else if (hIndex == 7){posHoriz = 1; posVerti = 0;}
+        problem.nodeHs.push_back(std::make_shared<NodeH>(name, hIndex,
+                                                         posHoriz, posVerti));
+    }
+    else problem.nodeHs.push_back(std::make_shared<NodeH>(name, hIndex));
 }
 
 /* Hardware neighbours. It's an undirected graph, so only neighbours in one

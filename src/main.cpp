@@ -25,7 +25,7 @@ int main()
     problem.write_a_to_h_map(outDir / "initial_a_to_h_map.csv");
 
     /* Solve problem */
-    Iteration maxIteration = 1000;
+    Iteration maxIteration = 1e5;
     auto annealer = SerialAnnealer(maxIteration, outDir / "anneal_ops.csv");
     annealer(problem);
 

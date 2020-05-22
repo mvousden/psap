@@ -23,9 +23,13 @@ class NodeH
 {
 public:
     NodeH(std::string name, unsigned index): name(name), index(index){}
+    NodeH(std::string name, unsigned index, float posHoriz, float posVerti):
+        name(name), index(index), posHoriz(posHoriz), posVerti(posVerti){}
     std::list<std::weak_ptr<NodeA>> contents;
     std::string name;
     unsigned index;
+    float posHoriz = -1;
+    float posVerti = -1;
 };
 
 #endif
