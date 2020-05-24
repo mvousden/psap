@@ -117,13 +117,34 @@ def doit(inputDir, state="initial"):
     fitnessChanges = ops.loc[ops["Determination"] == 1]\
       ["Transformed Fitness"].to_dict()
 
-    # Draw pretty figure
+    ## Draw pretty figure
     figure, axes = plt.subplots()
+
+    # Draw relaxation data
+    maxIteration = list(fitnessChanges.keys())[-1]
+    relaxAlpha = min(1, 1000. / maxIteration)
     axes.plot(list(fitnessChanges.keys()), list(fitnessChanges.values()),
-              'rx')
+              'kx', alpha=relaxAlpha)
+
+    # Special points and their lines
+    firstPoint = (0, list(fitnessChanges.values())[0])
+    lastPoint = (maxIteration, list(fitnessChanges.values())[-1])
+    axes.plot(*firstPoint, 'rx')
+    axes.plot(*lastPoint, 'bx')
+    axes.plot([0, lastPoint[0]], [firstPoint[1], firstPoint[1]], 'r--')
+    axes.plot([0, lastPoint[0]], [lastPoint[1], lastPoint[1]], 'b--')
+
+    # Formatting
+    axes.ticklabel_format(axis="x", scilimits=(0, 0), style="sci")
+    axes.set_xlim(0, lastPoint[0] * 1.05)
     axes.set_xlabel("Iteration")
     axes.set_ylabel("Fitness")
     axes.set_title("Simulated Annealing Relaxation")
+    axes.spines["right"].set_visible(False)
+    axes.spines["top"].set_visible(False)
+    axes.yaxis.set_ticks_position("left")
+    axes.xaxis.set_ticks_position("bottom")
+    figure.tight_layout()
     figure.savefig("fitness.pdf")
 
 
