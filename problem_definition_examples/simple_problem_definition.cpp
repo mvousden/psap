@@ -9,8 +9,8 @@
 problem.name = "simple_ring_problem";
 
 /* Reserve space in the vectors for nodes. */
-unsigned nodeASize = 16;
-unsigned nodeHSize = 8;
+std::vector<std::shared_ptr<NodeA>>::size_type nodeASize = 16;
+std::vector<std::shared_ptr<NodeH>>::size_type nodeHSize = 8;
 problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
@@ -67,10 +67,11 @@ for (hIndex = 0; hIndex < nodeHSize; hIndex++)
         else if (hIndex == 5){posHoriz = 2; posVerti = 1;}
         else if (hIndex == 6){posHoriz = 2; posVerti = 0;}
         else if (hIndex == 7){posHoriz = 1; posVerti = 0;}
-        problem.nodeHs.push_back(std::make_shared<NodeH>(name, hIndex,
-                                                         posHoriz, posVerti));
+        problem.nodeHs.push_back(std::make_shared<NodeH>(
+            name, static_cast<unsigned>(hIndex), posHoriz, posVerti));
     }
-    else problem.nodeHs.push_back(std::make_shared<NodeH>(name, hIndex));
+    else problem.nodeHs.push_back(std::make_shared<NodeH>(
+        name, static_cast<unsigned>(hIndex)));
 }
 
 /* Hardware neighbours. It's an undirected graph, so only neighbours in one
@@ -79,8 +80,10 @@ float weight = 2;
 for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 {
     /* Identify forward neighbour and track. */
-    unsigned fwNeighbour;
+    decltype(hIndex) fwNeighbour;
     if (hIndex == nodeHSize - 1) fwNeighbour = 0;
     else fwNeighbour = hIndex + 1;
-    problem.edgeHs.push_back(std::tuple(hIndex, fwNeighbour, weight));
+    problem.edgeHs.push_back(std::tuple(static_cast<unsigned>(hIndex),
+                                        static_cast<unsigned>(fwNeighbour),
+                                        weight));
 }

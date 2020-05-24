@@ -37,7 +37,7 @@ public:
     bool determine(float, float, Iteration);
 
 private:
-    float disorderDecay;
+    double disorderDecay;
 };
 
 /* Disorder decays linearly. Better solutions are always accepted. */
@@ -48,8 +48,8 @@ public:
     bool determine(float, float, Iteration);
 
 private:
-    float gradient;
-    float intercept;
+    double gradient;
+    double intercept;
 };
 
 /* There is no disorder. Better solutions are always accepted. */
