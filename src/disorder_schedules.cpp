@@ -30,15 +30,14 @@ LinearDecayDisorder::LinearDecayDisorder(Iteration maxIteration):
  * values for the old fitness and the new fitness, and the current
  * iteration. Always accept a superior solution.
  *
- * When calculating fitness ratio, recall that fitnesses are negative - a
- * fitness ratio grater than less than one indicates an inferior solution. If
- * they were not negative, the ratio would need to be reciprocated. */
+ * Recall that fitnesses are negative. */
 bool ExpDecayDisorder::determine(float oldFitness, float newFitness,
                                  Iteration iteration)
 {
     if (oldFitness < newFitness) return true;
-    auto fitnessRatio = oldFitness / newFitness;
-    auto acceptProb = fitnessRatio * 0.5 * std::exp(disorderDecay * iteration);
+    auto fitnessDifference = oldFitness - newFitness;
+    auto temperatureReciprocal = disorderDecay * iteration;
+    auto acceptProb = std::exp(fitnessDifference * temperatureReciprocal);
     return distribution(rng) < acceptProb;
 }
 
@@ -46,8 +45,9 @@ bool LinearDecayDisorder::determine(float oldFitness, float newFitness,
                                     Iteration iteration)
 {
     if (oldFitness < newFitness) return true;
-    auto fitnessRatio = oldFitness / newFitness;
-    auto acceptProb = fitnessRatio * (intercept + gradient * iteration);
+    auto fitnessDifference = oldFitness - newFitness;
+    auto decay = intercept + gradient * iteration;
+    auto acceptProb = std::exp(-fitnessDifference) * decay;
     return distribution(rng) < acceptProb;
 }
 
