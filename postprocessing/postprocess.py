@@ -50,37 +50,46 @@ def doit(inputDir, state="initial"):
     """Loads data and draws graphs."""
 
     # Load hardware graph data
-    graphH = pd.read_csv(os.path.join(inputDir, filePaths["h_graph"]))
+    hGraphData = pd.read_csv(os.path.join(inputDir, filePaths["h_graph"]))
 
-    # All hardware nodes
-    nodeHs = np.unique(graphH[graphH.columns].values)
-
-    # All hardware edges (we don't care about weight)
-    edgeHs = graphH.values.tolist()
+    # Load hardware node data
+    hNodeData = pd.read_csv(os.path.join(inputDir, filePaths["h_nodes"]))
 
     # Load mapping data
-    mapAToH = pd.read_csv(os.path.join(inputDir,
-                                       filePaths[state + "_a_to_h_map"]))
+    aMapData = pd.read_csv(os.path.join(inputDir,
+                                        filePaths[state + "_a_to_h_map"]))
 
-    # Initial hardware node loading - derive node colours from that loading.
-    nodeHLoad = [len(mapAToH[mapAToH["Hardware node name"] == nodeH])
+    # Load initial application node mapping - defines application edges.
+    aToHGraphData = pd.read_csv(os.path.join(inputDir,
+                                       filePaths[state + "_a_h_graph"]))
+
+    # Load simulated annealing transition data
+    opsData = pd.read_csv(os.path.join(inputDir, filePaths["anneal_ops"]))
+
+    # All hardware nodes
+    nodeHs = hNodeData["Hardware node name"].values
+
+    # Hardware node positional data
+    explicitPositions = not ((hNodeData["Horizontal position"] == -1).any() or
+                             (hNodeData["Vertical position"] == -1).any())
+
+    # All hardware edges (we don't care about weight)
+    edgeHs = hGraphData.values.tolist()
+
+    # Hardware node loading - derive node colours from that loading.
+    nodeHLoad = [len(aMapData[aMapData["Hardware node name"] == nodeH])
                  for nodeH in nodeHs]
 
     # Compute maximum loading (assume that the maximum loading exists in the
     # initial placement, but if that's not true, you can always change it
     # here).
     maxNodeHLoad = max(nodeHLoad)
-
     nodeColours = colour_from_loadings(nodeHLoad, maxNodeHLoad)
-
-    # Initial application node mapping - defines application edges.
-    graphAH = pd.read_csv(os.path.join(inputDir,
-                                       filePaths[state + "_a_h_graph"]))
 
     # For each edge in the AH graph, store it in the edgeAHs array if it is not
     # a duplicate.
     edgeAHs = []
-    for index, edge in graphAH.iterrows():  # Sorry Pandas purists
+    for index, edge in aToHGraphData.iterrows():  # Sorry Pandas purists
         nodes = [edge["Hardware node name (first)"],
                  edge["Hardware node name (second)"]]
         primary = min(*nodes)
@@ -88,16 +97,19 @@ def doit(inputDir, state="initial"):
         edgeAHs.append(nodes + [edge["Loading"]])
 
     # Draw pretty picture.
-    graph = gv.Graph("G", filename="postprocess.gv", engine="circo",
-                     strict=True)
+    graph = gv.Graph("G", filename="postprocess.gv", strict=True,
+                     engine="neato" if explicitPositions else "circo")
     graph.attr(margin="0")
     graph.attr("node", shape="square", style="filled", label="",
                fillcolor="#000000", margin="0")
 
     # Hardware nodes
     for nodeIndex in range(len(nodeHs)):
+        nodePos = None if not explicitPositions else \
+            "{},{}!".format(hNodeData.iloc[nodeIndex]["Horizontal position"],
+                            hNodeData.iloc[nodeIndex]["Vertical position"])
         graph.node(nodeHs[nodeIndex], fillcolor=nodeColours[nodeIndex],
-                   label=str(nodeHLoad[nodeIndex]))
+                   label=str(nodeHLoad[nodeIndex]), pos=nodePos)
 
     # Application-hardware edges
     edgeAHColour = "#FF0000"
@@ -112,12 +124,9 @@ def doit(inputDir, state="initial"):
 
     graph.render()
 
-    # Load simulated annealing transition data
-    ops = pd.read_csv(os.path.join(inputDir, filePaths["anneal_ops"]))
-    fitnessChanges = ops.loc[ops["Determination"] == 1]\
-      ["Transformed Fitness"].to_dict()
-
     ## Draw pretty figure
+    fitnessChanges = opsData.loc[opsData["Determination"] == 1]\
+        ["Transformed Fitness"].to_dict()
     figure, axes = plt.subplots()
 
     # Draw relaxation data
