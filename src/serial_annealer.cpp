@@ -1,6 +1,5 @@
 #include "serial_annealer.hpp"
 
-/* Initialise disorder. */
 template<class DisorderT>
 SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
                                           std::string csvPathArg):
@@ -20,11 +19,15 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
      *
      * Each row in the CSV corresponds to a new iteration. */
     bool log = !csvPath.empty();
-    if (log) csvOut.open(csvPath.c_str(), std::ofstream::trunc);
-    csvOut << "Selected application node index,"
-           << "Selected hardware node index,"
-           << "Transformed Fitness,"
-           << "Determination\n";
+    std::ofstream csvOut;
+    if (log)
+    {
+        csvOut.open(csvPath.c_str(), std::ofstream::trunc);
+        csvOut << "Selected application node index,"
+               << "Selected hardware node index,"
+               << "Transformed Fitness,"
+               << "Determination\n";
+    }
 
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();
@@ -88,6 +91,8 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         /* Termination */
         if (iteration == maxIteration) break;
     }
+
+    if (log) csvOut.close();
 }
 
 #include "serial_annealer-impl.hpp"

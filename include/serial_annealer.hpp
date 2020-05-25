@@ -23,7 +23,6 @@ private:
 
     /* Output stream to a file. If none is provided, no output is written. */
     std::string csvPath;
-    std::ofstream csvOut;
 };
 
 #endif
