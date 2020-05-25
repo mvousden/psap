@@ -1,4 +1,5 @@
 #include "problem_definition_wrapper.hpp"
+#include "parallel_annealer.hpp"
 #include "serial_annealer.hpp"
 
 #include <filesystem>
@@ -27,8 +28,8 @@ int main()
 
     /* Solve problem */
     Iteration maxIteration = static_cast<Iteration>(1e5);
-    auto annealer = SerialAnnealer<ExpDecayDisorder>(
-        maxIteration, (outDir / "anneal_ops.csv").u8string());
+    auto annealer = ParallelAnnealer<ExpDecayDisorder>(
+        2, maxIteration, (outDir / "anneal_ops.csv").u8string());
     annealer(problem);
 
     /* Write solved stuff */

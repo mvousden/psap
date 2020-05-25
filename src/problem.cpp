@@ -211,7 +211,7 @@ float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
 
     /* Edge cache row for this hardware node (to avoid getting it multiple
      * times) */
-    auto edgeCacheRow = edgeCacheH[rootHIndex];
+    auto edgeCacheRow = edgeCacheH.at(rootHIndex);
 
     /* Iterate over each application node. */
     for (auto neighbourPtr : nodeA.neighbours)
@@ -220,7 +220,7 @@ float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
         auto neighbourHIndex = neighbourPtr.lock()->location.lock()->index;
 
         /* Impose fitness penalty from the edgeCache. */
-        returnValue -= edgeCacheRow[neighbourHIndex];
+        returnValue -= edgeCacheRow.at(neighbourHIndex);
     }
 
     return returnValue;
