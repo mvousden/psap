@@ -96,7 +96,10 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             problem.compute_hw_node_clustering_fitness(**oldH);
 
         /* Transformation */
-        problem.transform(selA, selH);
+        {
+            std::lock_guard<decltype(tformMx)> lockTform(tformMx);
+            problem.transform(selA, selH);
+        }
 
         /* Fitness of components before transformation. */
         auto newFitnessComponents =
@@ -124,7 +127,10 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         else
         {
             if (log) csvOut << 0 << '\n';
-            problem.transform(selA, oldH);
+            {
+                std::lock_guard<decltype(tformMx)> lockTform(tformMx);
+                problem.transform(selA, oldH);
+            }
         }
 
         /* Termination - possible to drift slightly over the maximum

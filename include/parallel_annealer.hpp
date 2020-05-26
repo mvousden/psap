@@ -5,6 +5,7 @@
 #include "problem.hpp"
 
 #include <fstream>
+#include <mutex>
 #include <sstream>
 
 template <class DisorderT=ExpDecayDisorder>
@@ -29,6 +30,9 @@ private:
     /* Output stream to a set of files. If none is provided, no output is
      * written. */
     std::string csvPathRoot;
+
+    /* Mutex to prevent multiple simultaneous transformations (inefficient) */
+    std::mutex tformMx;
 };
 
 #endif
