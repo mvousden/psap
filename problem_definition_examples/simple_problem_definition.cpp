@@ -9,8 +9,8 @@
 problem.name = "simple_ring_problem";
 
 /* Reserve space in the vectors for nodes. */
-std::vector<std::shared_ptr<NodeA>>::size_type nodeASize = 16;
-std::vector<std::shared_ptr<NodeH>>::size_type nodeHSize = 8;
+decltype(problem.nodeAs)::size_type nodeASize = 16;
+decltype(problem.nodeHs)::size_type nodeHSize = 8;
 problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
@@ -18,7 +18,7 @@ problem.nodeHs.reserve(nodeHSize);
 problem.pMax = 3;
 
 /* Application nodes */
-std::vector<std::shared_ptr<NodeA>>::size_type aIndex;
+decltype(problem.nodeAs)::size_type aIndex;
 for (aIndex = 0; aIndex < nodeASize; aIndex++)
 {
     std::string name = "appNode" + std::to_string(aIndex);
@@ -29,7 +29,7 @@ for (aIndex = 0; aIndex < nodeASize; aIndex++)
 for (aIndex = 0; aIndex < nodeASize; aIndex++)
 {
     /* Identify neighbours */
-    std::weak_ptr<NodeA> fwNeighbour, bwNeighbour;
+    decltype(NodeA::neighbours)::value_type fwNeighbour, bwNeighbour;
     if (aIndex == nodeASize - 1)
     {
         fwNeighbour = std::weak_ptr(problem.nodeAs[0]);
@@ -52,7 +52,7 @@ for (aIndex = 0; aIndex < nodeASize; aIndex++)
 }
 
 /* Hardware nodes, positioned in a nice little hardcoded ring. */
-std::vector<std::shared_ptr<NodeH>>::size_type hIndex;
+decltype(problem.nodeHs)::size_type hIndex;
 for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 {
     std::string name = "hwNode" + std::to_string(hIndex);

@@ -17,14 +17,14 @@ Problem::Problem()
  * have edges. */
 void Problem::initialise_edge_cache(unsigned diameter)
 {
-    std::vector<std::vector<float>>::size_type eOuterIndex;
-    std::vector<float>::size_type eInnerIndex;
+    decltype(edgeCacheH)::size_type eOuterIndex;
+    decltype(edgeCacheH)::value_type::size_type eInnerIndex;
 
     /* Populate zeroes and infinites. */
     for (eOuterIndex = 0; eOuterIndex < diameter; eOuterIndex++)
     {
-        edgeCacheH.push_back(
-            std::vector<float>(diameter, std::numeric_limits<float>::max()));
+        edgeCacheH.push_back(decltype(edgeCacheH)::value_type
+                             (diameter, std::numeric_limits<float>::max()));
         for (eInnerIndex = 0; eInnerIndex < diameter; eInnerIndex++)
             if (eOuterIndex == eInnerIndex)
                 edgeCacheH[eOuterIndex][eInnerIndex] = 0;
@@ -112,8 +112,7 @@ void Problem::initial_condition_random()
     {
         /* Select a hardware node at random that is not yet full. */
         auto selH = nonEmpty.begin();
-        std::uniform_int_distribution<
-            std::list<std::weak_ptr<NodeH>>::size_type>
+        std::uniform_int_distribution<decltype(nonEmpty)::size_type>
             distribution(0, nonEmpty.size() - 1);
         std::advance(selH, distribution(rng));
 
@@ -142,8 +141,7 @@ void Problem::select(decltype(nodeAs)::iterator& selA,
 {
     /* Application node */
     selA = nodeAs.begin();
-    std::uniform_int_distribution<
-        std::vector<std::shared_ptr<NodeA>>::size_type>
+    std::uniform_int_distribution<decltype(nodeAs)::size_type>
         distributionSelA(0, nodeAs.size() - 1);
     std::advance(selA, distributionSelA(rng));
 
@@ -158,8 +156,7 @@ void Problem::select(decltype(nodeAs)::iterator& selA,
     do
     {
         selH = nodeHs.begin();
-        std::uniform_int_distribution<
-            std::vector<std::shared_ptr<NodeH>>::size_type>
+        std::uniform_int_distribution<decltype(nodeHs)::size_type>
             distributionSelH(0, nodeHs.size() - 1);
         std::advance(selH, distributionSelH(rng));
     } while ((*selH)->contents.size() >= pMax or selH == oldH);
