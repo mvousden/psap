@@ -4,6 +4,7 @@
 #include "disorder_schedules.hpp"
 #include "problem.hpp"
 
+#include <atomic>
 #include <fstream>
 #include <mutex>
 #include <sstream>
@@ -21,7 +22,7 @@ public:
 
 private:
     unsigned numThreads;
-    Iteration iteration = 0;
+    std::atomic<Iteration> iteration = 0;
     Iteration maxIteration;
     DisorderT disorder;
     bool log = false;
