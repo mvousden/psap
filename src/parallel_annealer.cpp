@@ -34,13 +34,13 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem)
         {
             std::stringstream csvPath;
             csvPath << csvPathRoot << "-" << csvOutIndex;
-            csvOuts[csvOutIndex].open(csvPath.str().c_str(),
-                                      std::ofstream::trunc);
-            csvOuts[csvOutIndex] << "Iteration,"
-                                 << "Selected application node index,"
-                                 << "Selected hardware node index,"
-                                 << "Transformed Fitness,"
-                                 << "Determination\n";
+            csvOuts.at(csvOutIndex).open(csvPath.str().c_str(),
+                                         std::ofstream::trunc);
+            csvOuts.at(csvOutIndex) << "Iteration,"
+                                    << "Selected application node index,"
+                                    << "Selected hardware node index,"
+                                    << "Transformed Fitness,"
+                                    << "Determination\n";
         }
     }
 
@@ -48,7 +48,8 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem)
     std::vector<std::thread> threads;
     for (unsigned threadId = 0; threadId < numThreads; threadId++)
         threads.emplace_back(&ParallelAnnealer<DisorderT>::co_anneal, this,
-                             std::ref(problem), std::ref(csvOuts[threadId]));
+                             std::ref(problem),
+                             std::ref(csvOuts.at(threadId)));
 
     /* Join with slave threads. */
     for (auto& thread : threads) thread.join();

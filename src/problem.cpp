@@ -284,8 +284,8 @@ void Problem::write_a_h_graph(std::string path)
             /* If the entry in the submap doesn't exist, create it and
              * initialise the value to one. Otherwise, increment it. */
             if (edges[fromHName].find(toHName) == edges[fromHName].end())
-                edges[fromHName][toHName] = 1;
-            else edges[fromHName][toHName]++;
+                edges.at(fromHName)[toHName] = 1;
+            else edges.at(fromHName).at(toHName)++;
         }
     }
 
@@ -324,8 +324,8 @@ void Problem::write_h_graph(std::string path)
     out << "Hardware node name (first),Hardware node name (second)"
         << std::endl;
     for (const auto& edge : edgeHs)
-        out << nodeHs[std::get<0>(edge)]->name << ","
-            << nodeHs[std::get<1>(edge)]->name << std::endl;
+        out << nodeHs.at(std::get<0>(edge))->name << ","
+            << nodeHs.at(std::get<1>(edge))->name << std::endl;
     out.close();
 }
 

@@ -32,23 +32,23 @@ for (aIndex = 0; aIndex < nodeASize; aIndex++)
     decltype(NodeA::neighbours)::value_type fwNeighbour, bwNeighbour;
     if (aIndex == nodeASize - 1)
     {
-        fwNeighbour = std::weak_ptr(problem.nodeAs[0]);
-        bwNeighbour = std::weak_ptr(problem.nodeAs[aIndex - 1]);
+        fwNeighbour = std::weak_ptr(problem.nodeAs.at(0));
+        bwNeighbour = std::weak_ptr(problem.nodeAs.at(aIndex - 1));
     }
     else if (aIndex == 0)
     {
-        fwNeighbour = std::weak_ptr(problem.nodeAs[aIndex + 1]);
-        bwNeighbour = std::weak_ptr(problem.nodeAs[nodeASize - 1]);
+        fwNeighbour = std::weak_ptr(problem.nodeAs.at(aIndex + 1));
+        bwNeighbour = std::weak_ptr(problem.nodeAs.at(nodeASize - 1));
     }
     else
     {
-        fwNeighbour = std::weak_ptr(problem.nodeAs[aIndex + 1]);
-        bwNeighbour = std::weak_ptr(problem.nodeAs[aIndex - 1]);
+        fwNeighbour = std::weak_ptr(problem.nodeAs.at(aIndex + 1));
+        bwNeighbour = std::weak_ptr(problem.nodeAs.at(aIndex - 1));
     }
 
     /* Track both. */
-    problem.nodeAs[aIndex]->neighbours.push_back(fwNeighbour);
-    problem.nodeAs[aIndex]->neighbours.push_back(bwNeighbour);
+    problem.nodeAs.at(aIndex)->neighbours.push_back(fwNeighbour);
+    problem.nodeAs.at(aIndex)->neighbours.push_back(bwNeighbour);
 }
 
 /* Hardware nodes, positioned in a nice little hardcoded ring. */
