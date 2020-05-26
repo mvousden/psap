@@ -31,7 +31,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();
-    auto oldH = *selH;  /* Note - not an iterator */
+    auto oldH = problem.nodeHs.begin();  /* Note - not an iterator */
 
     /* Base fitness "used" from the start of each iteration. */
     auto oldFitness = problem.compute_total_fitness();
@@ -44,16 +44,15 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         iteration++;
 
         /* Selection */
-        problem.select(selA, selH);
+        problem.select(selA, selH, oldH);
         if (log) csvOut << selA - problem.nodeAs.begin() << ","
                         << selH - problem.nodeHs.begin() << ",";
 
         /* Fitness of components before transformation. */
-        oldH = problem.nodeHs[(*selA)->location.lock()->index];
         auto oldFitnessComponents =
             problem.compute_app_node_locality_fitness(**selA) * 2 +
             problem.compute_hw_node_clustering_fitness(**selH) +
-            problem.compute_hw_node_clustering_fitness(*oldH);
+            problem.compute_hw_node_clustering_fitness(**oldH);
 
         /* Transformation */
         problem.transform(selA, selH);
@@ -62,7 +61,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         auto newFitnessComponents =
             problem.compute_app_node_locality_fitness(**selA) * 2 +
             problem.compute_hw_node_clustering_fitness(**selH) +
-            problem.compute_hw_node_clustering_fitness(*oldH);
+            problem.compute_hw_node_clustering_fitness(**oldH);
 
         auto newFitness = oldFitness - oldFitnessComponents +
             newFitnessComponents;
@@ -84,8 +83,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         else
         {
             if (log) csvOut << 0 << '\n';
-            auto oldHIt = problem.nodeHs.begin() + oldH->index;
-            problem.transform(selA, oldHIt);
+            problem.transform(selA, oldH);
         }
 
         /* Termination */

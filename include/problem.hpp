@@ -30,10 +30,11 @@ public:
     void initial_condition_random();
 
     /* Neighbouring state selection and transformation */
-    void select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
-                std::vector<std::shared_ptr<NodeH>>::iterator& selH);
-    void transform(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
-                   std::vector<std::shared_ptr<NodeH>>::iterator& selH);
+    void select(decltype(nodeAs)::iterator& selA,
+                decltype(nodeHs)::iterator& selH,
+                decltype(nodeHs)::iterator& oldH);
+    void transform(decltype(nodeAs)::iterator& selA,
+                   decltype(nodeHs)::iterator& selH);
 
     /* Fitness calculators */
     float compute_app_node_locality_fitness(NodeA& nodeA);

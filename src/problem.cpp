@@ -132,9 +132,13 @@ void Problem::initial_condition_random()
  *
  *  - One hardware node at random, and places it in selH.
  *
+ * Also defines oldH, which is the hardware node that currently contains selA
+ * (for convenience).
+ *
  * Does not modify the state in any way. Swap selection not supported yet. */
-void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
-                     std::vector<std::shared_ptr<NodeH>>::iterator& selH)
+void Problem::select(decltype(nodeAs)::iterator& selA,
+                     decltype(nodeHs)::iterator& selH,
+                     decltype(nodeHs)::iterator& oldH)
 {
     /* Application node */
     selA = nodeAs.begin();
@@ -142,6 +146,9 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
         std::vector<std::shared_ptr<NodeA>>::size_type>
         distributionSelA(0, nodeAs.size() - 1);
     std::advance(selA, distributionSelA(rng));
+
+    /* Old hardware node */
+    oldH = nodeHs.begin() + (*selA)->location.lock()->index;
 
     /* Hardware node. Reselect if the hardware node selected is full, or if it
      * already contains the application node. This extra functionality isn't
@@ -155,8 +162,7 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
             std::vector<std::shared_ptr<NodeH>>::size_type>
             distributionSelH(0, nodeHs.size() - 1);
         std::advance(selH, distributionSelH(rng));
-    } while ((*selH)->contents.size() >= pMax or
-             (*selA)->location.lock() == (*selH));
+    } while ((*selH)->contents.size() >= pMax or selH == oldH);
 
     /* Application node in hardware node - if the number we select is greater
      * than the number of elements currently attached to the hardware node, we
@@ -179,8 +185,8 @@ void Problem::select(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
 /* Transforms the state by moving the selected application node to the selected
  * hardware node. The iterators pass as arguments are unchanged, and are not
  * checked for validity. */
-void Problem::transform(std::vector<std::shared_ptr<NodeA>>::iterator& selA,
-                        std::vector<std::shared_ptr<NodeH>>::iterator& selH)
+void Problem::transform(decltype(nodeAs)::iterator& selA,
+                        decltype(nodeHs)::iterator& selH)
 {
     /* Remove this application node from its current hardware node. Note that
      * the shared pointers will not be emptied - they are only emptied on
