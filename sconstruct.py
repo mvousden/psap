@@ -1,6 +1,6 @@
 import platform
 
-env = Environment()
+env = Environment(CPPPATH="./include/")
 env["SYSTEM"] = platform.system().lower()
 
 if env["SYSTEM"] == "linux":  # Clang, GCC
@@ -10,4 +10,4 @@ if env["SYSTEM"] == "windows":  # MSVC
     env.Append(CXXFLAGS="/std:c++17 /O2 /W4 /EHs /Za")
 
 sources = Glob("src/*.cpp", exclude="src/problem_definition.cpp")
-env.Program(target="psap-run", source=sources, CPPPATH="./include/")
+env.Program(target="psap-run", source=sources)
