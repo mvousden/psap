@@ -44,6 +44,9 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem)
         }
     }
 
+    /* Initialise problem locking infrastructure */
+    problem.initialise_atomic_locks();
+
     /* Spawn slave threads to do the annealing. */
     std::vector<std::thread> threads;
     for (unsigned threadId = 0; threadId < numThreads; threadId++)
@@ -85,8 +88,8 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         localIteration = iteration++;
         if (log) csvOut << localIteration << ",";
 
-        /* Selection */
-        problem.select(selA, selH, oldH);
+        /* "Atomic" selection */
+        problem.select(selA, selH, oldH, true);
         if (log) csvOut << selA - problem.nodeAs.begin() << ","
                         << selH - problem.nodeHs.begin() << ",";
 
@@ -133,6 +136,9 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
                 problem.transform(selA, oldH, selH);
             }
         }
+
+        /* Unlock the application node we were working with. */
+        problem.deselect_sela_atomic(selA);
 
         /* Termination. */
         if (iteration >= maxIteration) break;

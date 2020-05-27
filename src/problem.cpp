@@ -134,23 +134,73 @@ void Problem::initial_condition_random()
  * Also defines oldH, which is the hardware node that currently contains selA
  * (for convenience).
  *
+ * If atomic is true, selection is performed in an atomic way such
+ * that no two threads can select the same application node at the same
+ * time.
+ *
  * Does not modify the state in any way. Swap selection not supported yet. */
 void Problem::select(decltype(nodeAs)::iterator& selA,
                      decltype(nodeHs)::iterator& selH,
-                     decltype(nodeHs)::iterator& oldH)
+                     decltype(nodeHs)::iterator& oldH, bool atomic)
 {
-    /* Application node */
+    if (atomic) select_sela_atomic(selA); else select_sela(selA);
+    select_get_oldh(selA, oldH);
+    select_selh(selH, oldH);
+}
+
+/* Selection of an application node. */
+void Problem::select_sela(decltype(nodeAs)::iterator& selA)
+{
     selA = nodeAs.begin();
     std::uniform_int_distribution<decltype(nodeAs)::size_type>
         distributionSelA(0, nodeAs.size() - 1);
     std::advance(selA, distributionSelA(rng));
+}
 
-    /* Old hardware node */
+/* Selection of an application node in an atomic manner, so that two threads
+ * cannot "claim" the same application node at the same time.
+ *
+ * Worth noting that the caller needs to call deselect_sela_atomic to unlock
+ * the mutex once they're done with it. */
+void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
+{
+    /* Select index for the application node, until we hit one that's not been
+     * claimed already. */
+    std::uniform_int_distribution<decltype(nodeAs)::size_type>
+        distributionSelA(0, nodeAs.size() - 1);
+    unsigned roll;
+    do roll = distributionSelA(rng);
+    while (!lockAs[roll].try_lock());
+
+    /* Put the iterator in the right place. */
+    selA = nodeAs.begin();
+    std::advance(selA, distributionSelA(rng));
+}
+
+/* Deselects an atomically-selected application node. Dangerous if used
+ * improperly (lockAs needs to be populated, and don't call this method if you
+ * haven't locked the mutex first). I know RAII exists with lock_guard, but
+ * it's too complicated to make work here. */
+void Problem::deselect_sela_atomic(decltype(nodeAs)::iterator& selA)
+{
+    lockAs[selA - nodeAs.begin()].unlock();
+}
+
+/* Getting hardware node associated with application node. */
+void Problem::select_get_oldh(decltype(nodeAs)::iterator& selA,
+                              decltype(nodeHs)::iterator& oldH)
+{
     oldH = nodeHs.begin() + (*selA)->location.lock()->index;
+}
 
-    /* Hardware node. Reselect if the hardware node selected is full, or if it
-     * already contains the application node. This extra functionality isn't
-     * needed if a swap operation is defined, and is pretty inefficient if the
+/* Selection of a hardware node, avoiding selection of a certain node (to avoid
+ * duplication) */
+void Problem::select_selh(decltype(nodeHs)::iterator& selH,
+                          decltype(nodeHs)::iterator& avoid)
+{
+    /* Reselect if the hardware node selected is full, or if it already
+     * contains the application node. This extra functionality isn't needed if
+     * a swap operation is defined, and is pretty inefficient if the
      * application graph "just fits" in the hardware graph. If this is the
      * case, consider increasing pMax instead. */
     do
@@ -159,24 +209,13 @@ void Problem::select(decltype(nodeAs)::iterator& selA,
         std::uniform_int_distribution<decltype(nodeHs)::size_type>
             distributionSelH(0, nodeHs.size() - 1);
         std::advance(selH, distributionSelH(rng));
-    } while ((*selH)->contents.size() >= pMax or selH == oldH);
+    } while ((*selH)->contents.size() >= pMax or selH == avoid);
+}
 
-    /* Application node in hardware node - if the number we select is greater
-     * than the number of elements currently attached to the hardware node, we
-     * do a move operation. Otherwise, we do a swap operation with the
-     * application node with index equal to the randomly selected number.
-     *
-     * Except that we're not doing swap selection for now. I've left this here
-     * anyway in case its useful later.
-    std::uniform_int_distribution<unsigned> distributionSelHA(0, pMax);
-    auto roll = distributionSelHA(rng);
-    if (roll >= (*selH)->contents.size()) selHA = (*selH)->contents.end();
-    else
-    {
-        selHA = (*selH)->contents.begin();
-        std::advance(selHA, roll);
-    }
-    */
+/* Initialises the content of lockAs from the contents of nodeAs. */
+void Problem::initialise_atomic_locks()
+{
+    lockAs = decltype(lockAs)(nodeAs.size());
 }
 
 /* Transforms the state by moving the selected application node to the selected

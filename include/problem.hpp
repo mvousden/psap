@@ -5,6 +5,7 @@
 
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <string>
 #include <tuple>
@@ -29,10 +30,17 @@ public:
     void initial_condition_bucket();
     void initial_condition_random();
 
-    /* Neighbouring state selection and transformation */
+    /* Initialisation for atomic selection */
+    void initialise_atomic_selector();
+
+    /* Neighbouring state selection. */
     void select(decltype(nodeAs)::iterator& selA,
                 decltype(nodeHs)::iterator& selH,
-                decltype(nodeHs)::iterator& oldH);
+                decltype(nodeHs)::iterator& oldH, bool atomic=false);
+    void deselect_sela_atomic(decltype(nodeAs)::iterator& selA);
+    void initialise_atomic_locks();
+
+    /* Transformation from selection data. */
     void transform(decltype(nodeAs)::iterator& selA,
                    decltype(nodeHs)::iterator& selH,
                    decltype(nodeHs)::iterator& oldH);
@@ -52,6 +60,19 @@ public:
 private:
     std::vector<std::vector<float>> edgeCacheH;
     std::mt19937 rng;
+
+    /* Synchronisation object for application nodes, used by select in "atomic
+     * mode" */
+    std::vector<std::mutex> lockAs;  /* Not "lock as", but "lock application
+                                      * nodes". Obviously. */
+
+    /* Granular selection */
+    void select_sela(decltype(nodeAs)::iterator& selA);
+    void select_sela_atomic(decltype(nodeAs)::iterator& selA);
+    void select_get_oldh(decltype(nodeAs)::iterator& selA,
+                         decltype(nodeHs)::iterator& oldH);
+    void select_selh(decltype(nodeHs)::iterator& selH,
+                     decltype(nodeHs)::iterator& avoid);
 };
 
 #endif
