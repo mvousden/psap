@@ -55,7 +55,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
             problem.compute_hw_node_clustering_fitness(**oldH);
 
         /* Transformation */
-        problem.transform(selA, selH);
+        problem.transform(selA, selH, oldH);
 
         /* Fitness of components before transformation. */
         auto newFitnessComponents =
@@ -83,7 +83,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         else
         {
             if (log) csvOut << 0 << '\n';
-            problem.transform(selA, oldH);
+            problem.transform(selA, oldH, selH);
         }
 
         /* Termination */

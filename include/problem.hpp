@@ -34,7 +34,8 @@ public:
                 decltype(nodeHs)::iterator& selH,
                 decltype(nodeHs)::iterator& oldH);
     void transform(decltype(nodeAs)::iterator& selA,
-                   decltype(nodeHs)::iterator& selH);
+                   decltype(nodeHs)::iterator& selH,
+                   decltype(nodeHs)::iterator& oldH);
 
     /* Fitness calculators */
     float compute_app_node_locality_fitness(NodeA& nodeA);

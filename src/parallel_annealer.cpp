@@ -99,7 +99,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         /* Transformation */
         {
             std::lock_guard<decltype(tformMx)> lockTform(tformMx);
-            problem.transform(selA, selH);
+            problem.transform(selA, selH, oldH);
         }
 
         /* Fitness of components before transformation. */
@@ -130,7 +130,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             if (log) csvOut << 0 << '\n';
             {
                 std::lock_guard<decltype(tformMx)> lockTform(tformMx);
-                problem.transform(selA, oldH);
+                problem.transform(selA, oldH, selH);
             }
         }
 

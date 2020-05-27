@@ -183,13 +183,14 @@ void Problem::select(decltype(nodeAs)::iterator& selA,
  * hardware node. The iterators pass as arguments are unchanged, and are not
  * checked for validity. */
 void Problem::transform(decltype(nodeAs)::iterator& selA,
-                        decltype(nodeHs)::iterator& selH)
+                        decltype(nodeHs)::iterator& selH,
+                        decltype(nodeHs)::iterator& oldH)
 {
     /* Remove this application node from its current hardware node. Note that
      * the shared pointers will not be emptied - they are only emptied on
      * destruction of the Problem object. */
-    (*selA)->location.lock()->contents.remove_if(
-        [selA](std::weak_ptr<NodeA> cmp){return (*selA) == cmp.lock();});
+    (*oldH)->contents.remove_if(
+      [selA](std::weak_ptr<NodeA> cmp){return (*selA) == cmp.lock();});
 
     /* Assign the selected hardware node to the location field of the selected
      * application node. */
