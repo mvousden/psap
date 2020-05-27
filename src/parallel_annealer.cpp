@@ -134,8 +134,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             }
         }
 
-        /* Termination - possible to drift slightly over the maximum
-         * iteration. */
+        /* Termination. */
         if (iteration >= maxIteration) break;
     }
 }
