@@ -1,11 +1,13 @@
 #include "serial_annealer.hpp"
 
+#include <utility>
+
 template<class DisorderT>
 SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
                                           std::string csvPathArg):
     maxIteration(maxIterationArg),
     disorder(maxIterationArg),
-    csvPath(csvPathArg){}
+    csvPath(std::move(csvPathArg)){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */

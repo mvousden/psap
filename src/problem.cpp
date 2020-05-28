@@ -70,7 +70,7 @@ void Problem::initial_condition_bucket()
     auto selHIt = nodeHs.begin();
 
     /* Place each application node in turn. */
-    for (auto selA : nodeAs)
+    for (const auto& selA : nodeAs)
     {
         /* If the hardware node is full, move to the next one. */
         if ((*selHIt)->contents.size() >= pMax)
@@ -99,16 +99,16 @@ void Problem::initial_condition_random()
     std::list<std::weak_ptr<NodeH>> nonEmpty;
 
     /* Populate the container with all nodes. */
-    for (auto hNode : nodeHs) nonEmpty.push_back(hNode);
+    for (const auto& hNode : nodeHs) nonEmpty.push_back(hNode);
 
     /* Likewise for application nodes, though we don't select from this
      * container - we shuffle it. */
     std::vector<std::weak_ptr<NodeA>> toPlace;
-    for (auto aNode : nodeAs) toPlace.push_back(aNode);
+    for (const auto& aNode : nodeAs) toPlace.push_back(aNode);
     std::shuffle(toPlace.begin(), toPlace.end(), rng);
 
     /* Place each application node in turn. */
-    for (auto selA : toPlace)
+    for (const auto& selA : toPlace)
     {
         /* Select a hardware node at random that is not yet full. */
         auto selH = nonEmpty.begin();
@@ -220,8 +220,8 @@ void Problem::transform(decltype(nodeAs)::iterator& selA,
     /* Remove this application node from its current hardware node. Note that
      * the shared pointers will not be emptied - they are only emptied on
      * destruction of the Problem object. */
-    (*oldH)->contents.remove_if(
-      [selA](std::weak_ptr<NodeA> cmp){return (*selA) == cmp.lock();});
+    (*oldH)->contents.remove_if([selA](const std::weak_ptr<NodeA>& cmp)
+                                {return (*selA) == cmp.lock();});
 
     /* Assign the selected hardware node to the location field of the selected
      * application node. */
@@ -249,7 +249,7 @@ float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
     auto edgeCacheRow = edgeCacheH.at(rootHIndex);
 
     /* Iterate over each application node. */
-    for (auto neighbourPtr : nodeA.neighbours)
+    for (const auto& neighbourPtr : nodeA.neighbours)
     {
         /* Get the hardware node index associated with that neighbour. */
         auto neighbourHIndex = neighbourPtr.lock()->location.lock()->index;
@@ -276,11 +276,11 @@ float Problem::compute_total_fitness()
     float returnValue = 0;
 
     /* Locality fitness! */
-    for (auto nodeA : nodeAs)
+    for (const auto& nodeA : nodeAs)
         returnValue += compute_app_node_locality_fitness(*nodeA);
 
     /* Clustering fitness! */
-    for (auto nodeH : nodeHs)
+    for (const auto& nodeH : nodeHs)
         returnValue += compute_hw_node_clustering_fitness(*nodeH);
 
     return returnValue;
@@ -291,7 +291,7 @@ float Problem::compute_total_fitness()
  * form '<FROM_H_NODE_NAME>,<TO_H_NODE_NAME>,<COUNT>', where <COUNT> indicates
  * the number of application edges traversing this edge. Any existing file is
  * clobbered. Does no filesystem checking of any kind. */
-void Problem::write_a_h_graph(std::string path)
+void Problem::write_a_h_graph(const std::string& path)
 {
     /* The primary data structure for this routine is a map of maps, which
      * represents the sparse matrix of hardware nodes to hardware nodes, where
@@ -304,7 +304,7 @@ void Problem::write_a_h_graph(std::string path)
 
     for (const auto& nodeA : nodeAs)
     {
-        for (auto neighbourPtr : nodeA->neighbours)
+        for (const auto& neighbourPtr : nodeA->neighbours)
         {
             std::string fromHName = nodeA->location.lock()->name;
             std::string toHName = neighbourPtr.lock()->location.lock()->name;
@@ -337,7 +337,7 @@ void Problem::write_a_h_graph(std::string path)
  * CSV file at path passed to by argument. Each line is of the form
  * '<A_NODE_NAME>,<H_NODE_NAME>'. Any existing file is clobbered. Does no
  * filesystem checking of any kind. */
-void Problem::write_a_to_h_map(std::string path)
+void Problem::write_a_to_h_map(const std::string& path)
 {
     std::ofstream out(path, std::ofstream::trunc);
     out << "Application node name,Hardware node name" << std::endl;
@@ -350,7 +350,7 @@ void Problem::write_a_to_h_map(std::string path)
  * line is of the form '<H_NODE_NAME>,<H_NODE_NAME>'. No weights are
  * written. Any existing file is clobbered. Does no filesystem checking of any
  * kind. */
-void Problem::write_h_graph(std::string path)
+void Problem::write_h_graph(const std::string& path)
 {
     std::ofstream out(path, std::ofstream::trunc);
     out << "Hardware node name (first),Hardware node name (second)"
@@ -365,7 +365,7 @@ void Problem::write_h_graph(std::string path)
  * argument. Each line is of the form '<H_NODE_NAME>,<HORIZ_POS>,<VERTI_POS>'
  * (the index is implied, and begins at zero). Any existing file is
  * clobbered. Does no filesystem checking of any kind. */
-void Problem::write_h_nodes(std::string path)
+void Problem::write_h_nodes(const std::string& path)
 {
     std::ofstream out(path, std::ofstream::trunc);
     out << "Hardware node name,Horizontal position,Vertical position"
@@ -381,7 +381,7 @@ void Problem::write_h_nodes(std::string path)
  * by argument. Each line is of the form
  * '<H_NODE_NAME>,<NUMBER_OF_A_NODES>'. Any existing file is clobbered. Does no
  * filesystem checking of any kind. */
-void Problem::write_h_node_loading(std::string path)
+void Problem::write_h_node_loading(const std::string& path)
 {
     std::ofstream out(path, std::ofstream::trunc);
     out << "Hardware node name,Number of contained application nodes"

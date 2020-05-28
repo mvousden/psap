@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <thread>
+#include <utility>
 
 template<class DisorderT>
 ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
@@ -10,7 +11,7 @@ ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
     numThreads(numThreadsArg),
     maxIteration(maxIterationArg),
     disorder(maxIterationArg),
-    csvPathRoot(csvPathRootArg)
+    csvPathRoot(std::move(csvPathRootArg))
 {
     log = !csvPathRoot.empty();
 }
