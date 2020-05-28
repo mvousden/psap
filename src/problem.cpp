@@ -160,8 +160,8 @@ void Problem::select_sela(decltype(nodeAs)::iterator& selA)
 /* Selection of an application node in an atomic manner, so that two threads
  * cannot "claim" the same application node at the same time.
  *
- * Worth noting that the caller needs to call deselect_sela_atomic to unlock
- * the mutex once they're done with it. */
+ * Worth noting that the caller needs to unlock the mutex once they're done
+ * with it. */
 void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
 {
     /* Select index for the application node, until we hit one that's not been
@@ -175,15 +175,6 @@ void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
     /* Put the iterator in the right place. */
     selA = nodeAs.begin();
     std::advance(selA, distributionSelA(rng));
-}
-
-/* Deselects an atomically-selected application node. Dangerous if used
- * improperly (lockAs needs to be populated, and don't call this method if you
- * haven't locked the mutex first). I know RAII exists with lock_guard, but
- * it's too complicated to make work here. */
-void Problem::deselect_sela_atomic(decltype(nodeAs)::iterator& selA)
-{
-    lockAs[selA - nodeAs.begin()].unlock();
 }
 
 /* Getting hardware node associated with application node. */

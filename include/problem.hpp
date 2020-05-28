@@ -37,8 +37,12 @@ public:
     void select(decltype(nodeAs)::iterator& selA,
                 decltype(nodeHs)::iterator& selH,
                 decltype(nodeHs)::iterator& oldH, bool atomic=false);
-    void deselect_sela_atomic(decltype(nodeAs)::iterator& selA);
     void initialise_atomic_locks();
+
+    /* Synchronisation object for application nodes, used by select in "atomic
+     * mode" */
+    std::vector<std::mutex> lockAs;  /* Not "lock as", but "lock application
+                                      * nodes". Obviously. */
 
     /* Transformation from selection data. */
     void transform(decltype(nodeAs)::iterator& selA,
@@ -60,11 +64,6 @@ public:
 private:
     std::vector<std::vector<float>> edgeCacheH;
     std::mt19937 rng;
-
-    /* Synchronisation object for application nodes, used by select in "atomic
-     * mode" */
-    std::vector<std::mutex> lockAs;  /* Not "lock as", but "lock application
-                                      * nodes". Obviously. */
 
     /* Granular selection */
     void select_sela(decltype(nodeAs)::iterator& selA);

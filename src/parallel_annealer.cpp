@@ -93,6 +93,10 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         if (log) csvOut << selA - problem.nodeAs.begin() << ","
                         << selH - problem.nodeHs.begin() << ",";
 
+        /* RAII locking */
+        std::lock_guard<decltype(Problem::lockAs)::value_type> appLock
+            (problem.lockAs[selA - problem.nodeAs.begin()], std::adopt_lock);
+
         /* Fitness of components before transformation. */
         auto oldFitnessComponents =
             problem.compute_app_node_locality_fitness(**selA) * 2 +
@@ -136,9 +140,6 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
                 problem.transform(selA, oldH, selH);
             }
         }
-
-        /* Unlock the application node we were working with. */
-        problem.deselect_sela_atomic(selA);
 
         /* Termination. */
         if (iteration >= maxIteration) break;
