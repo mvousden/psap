@@ -207,6 +207,7 @@ void Problem::select_selh(decltype(nodeHs)::iterator& selH,
 void Problem::initialise_atomic_locks()
 {
     lockAs = decltype(lockAs)(nodeAs.size());
+    lockHs = decltype(lockHs)(nodeHs.size());
 }
 
 /* Transforms the state by moving the selected application node to the selected

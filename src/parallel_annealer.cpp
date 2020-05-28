@@ -1,5 +1,6 @@
 #include "parallel_annealer.hpp"
 
+#include <mutex>
 #include <thread>
 
 template<class DisorderT>
@@ -104,10 +105,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             problem.compute_hw_node_clustering_fitness(**oldH);
 
         /* Transformation */
-        {
-            std::lock_guard<decltype(tformMx)> lockTform(tformMx);
-            problem.transform(selA, selH, oldH);
-        }
+        locking_transform(problem, selA, selH, oldH);
 
         /* Fitness of components before transformation. */
         auto newFitnessComponents =
@@ -135,15 +133,40 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         else
         {
             if (log) csvOut << 0 << '\n';
-            {
-                std::lock_guard<decltype(tformMx)> lockTform(tformMx);
-                problem.transform(selA, oldH, selH);
-            }
+            locking_transform(problem, selA, oldH, selH);
         }
 
         /* Termination. */
         if (iteration >= maxIteration) break;
     }
+}
+
+/* Performs a transform that simultaneously locks hardware nodes during the
+ * transformation to avoid data races. */
+template<class DisorderT>
+void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
+    decltype(Problem::nodeAs)::iterator& selA,
+    decltype(Problem::nodeHs)::iterator& selH,
+    decltype(Problem::nodeHs)::iterator& oldH)
+{
+    /* Identify where the locks are (hold them as references) */
+    decltype(Problem::lockHs)::value_type& selHLock =
+        problem.lockHs[selH - problem.nodeHs.begin()];
+    decltype(Problem::lockHs)::value_type& oldHLock =
+        problem.lockHs[oldH - problem.nodeHs.begin()];
+
+    /* Lock them simultaneously. */
+    std::lock(selHLock, oldHLock);
+
+    /* Unlock them together (non-simultaneously) at the end of the
+     * transformation. */
+    std::lock_guard<decltype(Problem::lockHs)::value_type> selHGuard
+        (selHLock, std::adopt_lock);
+    std::lock_guard<decltype(Problem::lockHs)::value_type> oldHGuard
+        (oldHLock, std::adopt_lock);
+
+    /* Perform the transformation. */
+    problem.transform(selA, selH, oldH);
 }
 
 #include "parallel_annealer-impl.hpp"
