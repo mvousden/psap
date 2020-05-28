@@ -168,7 +168,7 @@ void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
      * claimed already. */
     std::uniform_int_distribution<decltype(nodeAs)::size_type>
         distributionSelA(0, nodeAs.size() - 1);
-    unsigned roll;
+    decltype(nodeAs)::size_type roll;
     do roll = distributionSelA(rng);
     while (!lockAs[roll].try_lock());
 
