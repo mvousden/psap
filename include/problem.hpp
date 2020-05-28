@@ -58,11 +58,11 @@ public:
     float compute_total_fitness();
 
     /* State dumps */
-    void write_a_h_graph(const std::string& path);
-    void write_a_to_h_map(const std::string& path);
-    void write_h_graph(const std::string& path);
-    void write_h_nodes(const std::string& path);
-    void write_h_node_loading(const std::string& path);
+    void write_a_h_graph(const std::string_view& path);
+    void write_a_to_h_map(const std::string_view& path);
+    void write_h_graph(const std::string_view& path);
+    void write_h_nodes(const std::string_view& path);
+    void write_h_node_loading(const std::string_view& path);
 
 private:
     std::vector<std::vector<float>> edgeCacheH;

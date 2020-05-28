@@ -291,7 +291,7 @@ float Problem::compute_total_fitness()
  * form '<FROM_H_NODE_NAME>,<TO_H_NODE_NAME>,<COUNT>', where <COUNT> indicates
  * the number of application edges traversing this edge. Any existing file is
  * clobbered. Does no filesystem checking of any kind. */
-void Problem::write_a_h_graph(const std::string& path)
+void Problem::write_a_h_graph(const std::string_view& path)
 {
     /* The primary data structure for this routine is a map of maps, which
      * represents the sparse matrix of hardware nodes to hardware nodes, where
@@ -322,7 +322,7 @@ void Problem::write_a_h_graph(const std::string& path)
     }
 
     /* Write out each entry in the map. */
-    std::ofstream out(path, std::ofstream::trunc);
+    std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Hardware node name (first),Hardware node name (second),Loading"
         << std::endl;
     for (const auto& someEdges : edges)
@@ -337,9 +337,9 @@ void Problem::write_a_h_graph(const std::string& path)
  * CSV file at path passed to by argument. Each line is of the form
  * '<A_NODE_NAME>,<H_NODE_NAME>'. Any existing file is clobbered. Does no
  * filesystem checking of any kind. */
-void Problem::write_a_to_h_map(const std::string& path)
+void Problem::write_a_to_h_map(const std::string_view& path)
 {
-    std::ofstream out(path, std::ofstream::trunc);
+    std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Application node name,Hardware node name" << std::endl;
     for (const auto& nodeA : nodeAs)
         out << nodeA->name << "," << nodeA->location.lock()->name << std::endl;
@@ -350,9 +350,9 @@ void Problem::write_a_to_h_map(const std::string& path)
  * line is of the form '<H_NODE_NAME>,<H_NODE_NAME>'. No weights are
  * written. Any existing file is clobbered. Does no filesystem checking of any
  * kind. */
-void Problem::write_h_graph(const std::string& path)
+void Problem::write_h_graph(const std::string_view& path)
 {
-    std::ofstream out(path, std::ofstream::trunc);
+    std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Hardware node name (first),Hardware node name (second)"
         << std::endl;
     for (const auto& edge : edgeHs)
@@ -365,9 +365,9 @@ void Problem::write_h_graph(const std::string& path)
  * argument. Each line is of the form '<H_NODE_NAME>,<HORIZ_POS>,<VERTI_POS>'
  * (the index is implied, and begins at zero). Any existing file is
  * clobbered. Does no filesystem checking of any kind. */
-void Problem::write_h_nodes(const std::string& path)
+void Problem::write_h_nodes(const std::string_view& path)
 {
-    std::ofstream out(path, std::ofstream::trunc);
+    std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Hardware node name,Horizontal position,Vertical position"
         << std::endl;
     for (const auto& node : nodeHs) out << node->name << ","
@@ -381,9 +381,9 @@ void Problem::write_h_nodes(const std::string& path)
  * by argument. Each line is of the form
  * '<H_NODE_NAME>,<NUMBER_OF_A_NODES>'. Any existing file is clobbered. Does no
  * filesystem checking of any kind. */
-void Problem::write_h_node_loading(const std::string& path)
+void Problem::write_h_node_loading(const std::string_view& path)
 {
-    std::ofstream out(path, std::ofstream::trunc);
+    std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Hardware node name,Number of contained application nodes"
         << std::endl;
     for (const auto& nodeH : nodeHs)
