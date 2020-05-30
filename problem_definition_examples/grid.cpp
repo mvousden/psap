@@ -22,7 +22,7 @@ problem.nodeHs.reserve(numMailboxes);
 
 /* Create a nested array that identifies the index (in nodeAs) of an
  * application node given its (context-sensitive) position in the grid. */
-std::array<std:array<decltype(problem.nodeAs)::size_type, gridDiameter>,
+std::array<std::array<decltype(problem.nodeAs)::size_type, gridDiameter>,
            gridDiameter> aIndexGivenPos;
 
 /* Create application nodes */
