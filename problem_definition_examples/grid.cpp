@@ -120,14 +120,20 @@ for (decltype(problem.nodeHs)::size_type mboxOuterIdx = 0;
 for (decltype(problem.nodeHs)::size_type mboxInnerIdx = 0;
      mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
 {
+    /* Get index and determine position (outer = horizontal, inner =
+     * vertical) */
+    unsigned hIndex = static_cast<unsigned>(problem.nodeHs.size());
+    float posHoriz = boardOuterIdx * mboxOuterRange + mboxOuterIdx;
+    float posVerti = boardInnerIdx * mboxInnerRange + mboxInnerIdx;
     std::stringstream name;
     name << "H_" << boardOuterIdx
          << "_" << boardInnerIdx
          << "_" << mboxOuterIdx
          << "_" << mboxInnerIdx;
-    problem.nodeHs.push_back(std::make_shared<NodeH>(name.str()));
-    hIndexGivenPos[{boardOuterIdx, boardInnerIdx, mboxOuterIdx, mboxInnerIdx}]
-        = problem.nodeHs.size() - 1;
+    problem.nodeHs.push_back(std::make_shared<NodeH>(name.str(), hIndex,
+                                                     posHosiz, posVerti));
+    hIndexGivenPos[{boardOuterIdx, boardInnerIdx,
+                    mboxOuterIdx, mboxInnerIdx}] = hIndex;
 }}}}
 
 /* Connect mailboxes within each board up appropriately. */
