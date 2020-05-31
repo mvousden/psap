@@ -101,10 +101,10 @@ for (aOuterIndex = 0; aOuterIndex < gridDiameter; aOuterIndex++)
 
 /* Hardware nodes - this one's a little more complicated. This map
  * identifies the index (in nodeHs) of a hardware node given its (in sequence):
- *  0. Board horizontal co-ordinate
- *  1. Board vertical co-ordinate
- *  2. Mailbox horizontal co-ordinate
- *  3. Mailbox vertical co-ordinate
+ *  0. Board horizontal (outer) co-ordinate
+ *  1. Board vertical (inner) co-ordinate
+ *  2. Mailbox horizontal (outer) co-ordinate
+ *  3. Mailbox vertical (inner) co-ordinate
  * These "co-ordinates" (for lack of a better word) are the values in array
  * key. */
 std::map<std:array<decltype(problem.nodeHs)::size_type, 4>,  // Co-ordinate
@@ -162,7 +162,7 @@ for (decltype(problem.nodeHs)::size_type mboxInnerIdx = 0;
             (direction == "inner-" and mboxInnerIdx == 0)) continue;
 
         /* Compute/lookup neighbour index. */
-        decltype(gridDiameter) nIndex;
+        decltype(hIndex) nIndex;
         switch (direction)
         {
             case "outer+": nIndex = hIndexGivenPos.at(
@@ -187,8 +187,99 @@ for (decltype(problem.nodeHs)::size_type mboxInnerIdx = 0;
         }
 
         /* Connect */
-        problem.edgeHs.push_back(std::tuple(hIndex, nIndex, interMboxWeight);
+        problem.edgeHs.push_back(std::tuple(hIndex, nIndex, interMboxWeight));
 }}}}
 
 /* Connect mailboxes that cross boards appropriately. */
 float interBoardWeight = 800;
+for (decltype(problem.nodeHs)::size_type boardOuterIdx = 0;
+     boardOuterIdx < boardOuterRange; boardOuterIdx++){
+for (decltype(problem.nodeHs)::size_type boardInnerIdx = 0;
+     boardInnerIdx < boardInnerRange; boardInnerIdx++){
+
+    /* Attempt to make a connection for each direction in the topology. Unlike
+     * the previous loops, this one is unrolled because each iteration is
+     * considerably different. */
+    decltype(boardOuterIdx) neighbourOuterIdx, neighbourInnerIdx;
+    decltype(boardOuterIdx) mboxOuterIdx, mboxInnerIdx;
+
+    /* Firstly, consider the outer+ direction. Bounds check: */
+    if (boardOuterIdx != boardOuterRange - 1)
+    {
+        /* Compute neighbour index. */
+        neighbourOuterIdx = boardOuterIdx + 1;
+        neighbourInnerIdx = boardInnerIdx;
+
+        /* Connect together the mailboxes on the interface between these two
+         * neighbouring boards. */
+        for (mboxInnerIdx = 0; mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
+        {
+            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
+                mboxOuterRange - 1, mboxInnerIdx});
+            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
+                neighbourInnerIdx, 0, mboxInnerIdx});
+            problem.edgeHs.push_back(std::tuple(hIndex, nIndex,
+                                                interBoardWeight));
+        }
+    }
+
+    /* Outer- direction. Bounds check: */
+    if (boardOuterIdx != 0)
+    {
+        /* Compute neighbour index. */
+        neighbourOuterIdx = boardOuterIdx + 1;
+        neighbourInnerIdx = boardInnerIdx;
+
+        /* Connect together the mailboxes on the interface between these two
+         * neighbouring boards. */
+        for (mboxInnerIdx = 0; mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
+        {
+            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
+                0, mboxInnerIdx});
+            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
+                neighbourInnerIdx, mboxOuterRange - 1, mboxInnerIdx});
+            problem.edgeHs.push_back(std::tuple(hIndex, nIndex,
+                                                interBoardWeight));
+        }
+    }
+
+    /* Inner+ direction. Bounds check: */
+    if (boardInnerIdx != boardInnerRange - 1)
+    {
+        /* Compute neighbour index. */
+        neighbourOuterIdx = boardOuterIdx;
+        neighbourInnerIdx = boardInnerIdx + 1;
+
+        /* Connect together the mailboxes on the interface between these two
+         * neighbouring boards. */
+        for (mboxOuterIdx = 0; mboxOuterIdx < mboxOuterRange; mboxOuterIdx++)
+        {
+            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
+                mboxOuterIdx, mboxInnerRange - 1});
+            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
+                neighbourInnerIdx, mboxOuterIdx, 0});
+            problem.edgeHs.push_back(std::tuple(hIndex, nIndex,
+                                                interBoardWeight));
+        }
+    }
+
+    /* Inner+ direction. Bounds check: */
+    if (boardInnerIdx != 0)
+    {
+        /* Compute neighbour index. */
+        neighbourOuterIdx = boardOuterIdx;
+        neighbourInnerIdx = boardInnerIdx - 1;
+
+        /* Connect together the mailboxes on the interface between these two
+         * neighbouring boards. */
+        for (mboxOuterIdx = 0; mboxOuterIdx < mboxOuterRange; mboxOuterIdx++)
+        {
+            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
+                mboxOuterIdx, 0});
+            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
+                neighbourInnerIdx, mboxOuterIdx, mboxInnerRange - 1});                
+            problem.edgeHs.push_back(std::tuple(hIndex, nIndex,
+                                                interBoardWeight));
+        }
+    }
+}}
