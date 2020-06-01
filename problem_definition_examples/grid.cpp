@@ -19,9 +19,9 @@ constexpr decltype(boardOuterRange) totMailboxes =
     mboxOuterRange * mboxInnerRange;  // 3 * 2 * 4 * 4 = 96
 
 /* Define maximum number of application nodes permitted on a hardware node,
- * given four cores per mailbox, sixteen threads per core, and 128 application
+ * given four cores per mailbox, sixteen threads per core, and 256 application
  * nodes per thread. */
-problem.pMax = 4 * 16 * 128;  // 4 * 16 * 128 = 8192
+problem.pMax = 4 * 16 * 256;  // 4 * 16 * 256 = 16384
 
 /* Vector sizing */
 problem.nodeAs.reserve(gridDiameter * gridDiameter);
