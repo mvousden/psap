@@ -235,7 +235,7 @@ for (boardInnerIdx = 0; boardInnerIdx < boardInnerRange; boardInnerIdx++){
     if (boardOuterIdx != 0)
     {
         /* Compute neighbour index. */
-        neighbourOuterIdx = boardOuterIdx + 1;
+        neighbourOuterIdx = boardOuterIdx - 1;
         neighbourInnerIdx = boardInnerIdx;
 
         /* Connect together the mailboxes on the interface between these two
