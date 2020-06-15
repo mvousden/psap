@@ -286,6 +286,80 @@ float Problem::compute_total_fitness()
     return returnValue;
 }
 
+/* Checks the integrity of the data structures holding nodes.
+ *
+ * Specifically, this method returns true if integrity is not compromised, and
+ * false otherwise. It checks:
+ *
+ *  - that each application node is contained by a hardware node, and that the
+ *    relationship is reciprocated (1).
+ *
+ *  - that each application node contained by each hardware node reciprocates
+ *    that relationship (2).
+ *
+ * Note that this method is not thread safe */
+bool Problem::check_node_integrity(std::stringstream& errors)
+{
+    bool output = true;  /* Innocent until proven guilty. */
+
+    /* Check (1). */
+    for (const auto& nodeA : nodeAs)
+    {
+        /* Ensure that the application node is contained by something. */
+        auto nodeH = nodeA->location.lock();
+        if (!nodeH)
+        {
+            output = false;
+            errors << "Application node '" << nodeA->name
+                   << "' has no location information." << std::endl;
+            continue;
+        }
+
+        /* Ensure the relationship is reciprocated. */
+        bool found = false;
+        for (const auto& containedA : nodeH->contents)
+        {
+            if (containedA.lock() == nodeA)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            output = false;
+            errors << "Application node '" << nodeA->name
+                   << "' claims to be held in hardware node '" << nodeH->name
+                   << "', but that hardware node does not reciprocate."
+                   << std::endl;
+        }
+    }
+
+    /* Check (2). */
+    for (const auto& nodeH : nodeHs)
+    {
+        /* Iterate through each application node, and check that the
+         * application node thinks it is contained by the hardware node. */
+        for (const auto& containedA : nodeH->contents)
+        {
+            /* Note that we don't need to check application location here,
+             * because it is checked by the logic in (1). */
+            if (containedA.lock()->location.lock() != nodeH)
+            {
+                output = false;
+                errors << "Hardware node '" << nodeH->name
+                       << "' claims to contain application node '"
+                       << containedA.lock()->name
+                       << "', but that application node does not reciprocate."
+                       << std::endl;
+            }
+        }
+    }
+
+    return output;
+}
+
 /* Writes, for each application edge, an entry to the CSV file at path passed
  * to by argument connecting nodes in the hardware graph. Each line is of the
  * form '<FROM_H_NODE_NAME>,<TO_H_NODE_NAME>,<COUNT>', where <COUNT> indicates
@@ -388,5 +462,16 @@ void Problem::write_h_node_loading(const std::string_view& path)
         << std::endl;
     for (const auto& nodeH : nodeHs)
         out << nodeH->name << "," << nodeH->contents.size() << std::endl;
+    out.close();
+}
+
+/* Checks data structure integrity, and writes errors to a file. Any existing
+ * file is clobbered. Does not filesystem checking of any kind. If no errors
+ * are found, the file is created with no content. */
+void Problem::write_integrity_check_errs(const std::string_view& path)
+{
+    std::ofstream out(path.data(), std::ofstream::trunc);
+    std::stringstream errorMsgs;
+    if (!check_node_integrity(errorMsgs)) out << errorMsgs.rdbuf();
     out.close();
 }

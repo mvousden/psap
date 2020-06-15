@@ -8,6 +8,7 @@
 #include <mutex>
 #include <random>
 #include <string>
+#include <sstream>
 #include <tuple>
 #include <vector>
 
@@ -57,12 +58,16 @@ public:
     float compute_hw_node_clustering_fitness(NodeH& nodeH);
     float compute_total_fitness();
 
+    /* Integrity checking */
+    bool check_node_integrity(std::stringstream& errors);
+
     /* State dumps */
     void write_a_h_graph(const std::string_view& path);
     void write_a_to_h_map(const std::string_view& path);
     void write_h_graph(const std::string_view& path);
     void write_h_nodes(const std::string_view& path);
     void write_h_node_loading(const std::string_view& path);
+    void write_integrity_check_errs(const std::string_view& path);
 
 private:
     std::vector<std::vector<float>> edgeCacheH;
