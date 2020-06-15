@@ -3,6 +3,7 @@
 
 #include "nodes.hpp"
 
+#include <fstream>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -22,6 +23,11 @@ public:
     std::string name = "unnamed_problem";
 
     Problem();
+    ~Problem();
+
+    /* Logging */
+    void initialise_logging(const std::string_view& path);
+    void log(const std::string_view& message);
 
     /* Methods that interact with edgeCacheH. */
     void initialise_edge_cache(unsigned diameter);
@@ -30,9 +36,6 @@ public:
     /* Initial conditions for the annealer. */
     void initial_condition_bucket();
     void initial_condition_random();
-
-    /* Initialisation for atomic selection */
-    void initialise_atomic_selector();
 
     /* Neighbouring state selection. */
     void select(decltype(nodeAs)::iterator& selA,
@@ -72,6 +75,10 @@ public:
 private:
     std::vector<std::vector<float>> edgeCacheH;
     std::mt19937 rng;
+
+    /* Logging */
+    std::ofstream logS;
+    std::mutex logLock;
 
     /* Granular selection */
     void select_sela(decltype(nodeAs)::iterator& selA);

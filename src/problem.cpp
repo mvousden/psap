@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <list>
 #include <map>
 
@@ -9,6 +11,47 @@ Problem::Problem()
 {
     /* Define our random number generator. */
     rng = std::mt19937(std::random_device{}());
+}
+
+Problem::~Problem()
+{
+    /* Close log file if opened. */
+    if (logS.is_open())
+    {
+        log("Problem destructor called. Closing log.");
+        logS.close();
+    }
+}
+
+/* Define a path for logging. If not defined, nothing is logged. */
+void Problem::initialise_logging(const std::string_view& path)
+{
+    logS = std::ofstream(path.data(), std::ofstream::app);
+    log("Logging initialised.");
+}
+
+/* Write a log message, and flushes. Is thread safe. */
+void Problem::log(const std::string_view& message)
+{
+    /* Does nothing if logging is not initialised. */
+    if (!logS.is_open()) return;
+
+    /* Wait for current thread to finish logging (RAII). */
+    std::lock_guard<decltype(Problem::logLock)> guard(logLock);
+
+    /* Write datetime */
+    std::stringstream combined;
+
+    auto datetime = std::time(nullptr);
+    combined << "["
+             << std::put_time(std::gmtime(&datetime), "%F %T%z") << "] ";
+
+    /* Write message data */
+    combined << message.data();
+
+    /* Write to stdout, with newline character, and to logfile with flush. */
+    std::cout << combined.str() << "\n";
+    logS << combined.str() << std::endl;
 }
 
 /* Reserve space in the edge cache as a function of the diameter, and define
@@ -19,6 +62,9 @@ void Problem::initialise_edge_cache(unsigned diameter)
 {
     decltype(edgeCacheH)::size_type eOuterIndex;
     decltype(edgeCacheH)::value_type::size_type eInnerIndex;
+    std::stringstream message;
+    message << "Initialising edge cache with diameter " << diameter << ".";
+    log(message.str());
 
     /* Populate zeroes and infinites. */
     for (eOuterIndex = 0; eOuterIndex < diameter; eOuterIndex++)
@@ -36,6 +82,8 @@ void Problem::initialise_edge_cache(unsigned diameter)
         edgeCacheH[std::get<0>(edge)][std::get<1>(edge)] = std::get<2>(edge);
         edgeCacheH[std::get<1>(edge)][std::get<0>(edge)] = std::get<2>(edge);
     }
+
+    log("Edge cache initialised.");
 }
 
 /* Populate the infinite members of the edge cache, using the Floyd-Warshall
@@ -43,6 +91,7 @@ void Problem::initialise_edge_cache(unsigned diameter)
  * result to be meaningful, populated with edge data. */
 void Problem::populate_edge_cache()
 {
+    log("Populating edge cache using the Floyd-Warshall algorithm.");
     auto size = edgeCacheH.size();
     for (decltype(size) k = 0; k < size; k++)
         for (decltype(size) i = 0; i < size; i++)
@@ -51,6 +100,7 @@ void Problem::populate_edge_cache()
                 auto trialPathWeight = edgeCacheH[i][k] + edgeCacheH[k][j];
                 edgeCacheH[i][j] = std::min(edgeCacheH[i][j], trialPathWeight);
             }
+    log("Edge cache fully populated.");
 }
 
 /* Defines an initial state for the annealer, but populating the location field
@@ -66,6 +116,8 @@ void Problem::populate_edge_cache()
  * defined. */
 void Problem::initial_condition_bucket()
 {
+    log("Applying bucket-filling initial condition.");
+
     /* Start from the first hardware node. */
     auto selHIt = nodeHs.begin();
 
@@ -81,6 +133,8 @@ void Problem::initial_condition_bucket()
         selA->location = std::weak_ptr(*selHIt);
         (*selHIt)->contents.push_back(std::weak_ptr(selA));
     }
+
+    log("Initial condition applied.");
 }
 
 /* Defines an initial state for the annealer, by populating the location field
@@ -93,6 +147,8 @@ void Problem::initial_condition_bucket()
  * defined. */
 void Problem::initial_condition_random()
 {
+    log("Applying random initial condition.");
+
     /* To make random selection faster, define a container of hardware nodes
      * that can fit more application nodes in them. Elements will leave this
      * container as they become populated. */
@@ -123,6 +179,8 @@ void Problem::initial_condition_random()
         /* Remove the hardware node if it is full. */
         if (selH->lock()->contents.size() >= pMax) nonEmpty.erase(selH);
     }
+
+    log("Initial condition applied.");
 }
 
 /* Selects:
@@ -367,6 +425,10 @@ bool Problem::check_node_integrity(std::stringstream& errors)
  * clobbered. Does no filesystem checking of any kind. */
 void Problem::write_a_h_graph(const std::string_view& path)
 {
+    std::stringstream message;
+    message << "Writing a_h graph to file at '" << path.data() << "'.";
+    log(message.str());
+
     /* The primary data structure for this routine is a map of maps, which
      * represents the sparse matrix of hardware nodes to hardware nodes, where
      * the keys of the maps are the names of the nodes. Note that not all
@@ -413,6 +475,10 @@ void Problem::write_a_h_graph(const std::string_view& path)
  * filesystem checking of any kind. */
 void Problem::write_a_to_h_map(const std::string_view& path)
 {
+    std::stringstream message;
+    message << "Writing a_to_h map to file at '" << path.data() << "'.";
+    log(message.str());
+
     std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Application node name,Hardware node name" << std::endl;
     for (const auto& nodeA : nodeAs)
@@ -426,6 +492,10 @@ void Problem::write_a_to_h_map(const std::string_view& path)
  * kind. */
 void Problem::write_h_graph(const std::string_view& path)
 {
+    std::stringstream message;
+    message << "Writing h graph to file at '" << path.data() << "'.";
+    log(message.str());
+
     std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Hardware node name (first),Hardware node name (second)"
         << std::endl;
@@ -441,6 +511,11 @@ void Problem::write_h_graph(const std::string_view& path)
  * clobbered. Does no filesystem checking of any kind. */
 void Problem::write_h_nodes(const std::string_view& path)
 {
+    std::stringstream message;
+    message << "Writing h node information to file at '"
+            << path.data() << "'.";
+    log(message.str());
+
     std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Hardware node name,Horizontal position,Vertical position"
         << std::endl;
@@ -457,6 +532,10 @@ void Problem::write_h_nodes(const std::string_view& path)
  * filesystem checking of any kind. */
 void Problem::write_h_node_loading(const std::string_view& path)
 {
+    std::stringstream message;
+    message << "Writing h node loading to file at '" << path.data() << "'.";
+    log(message.str());
+
     std::ofstream out(path.data(), std::ofstream::trunc);
     out << "Hardware node name,Number of contained application nodes"
         << std::endl;
@@ -470,8 +549,18 @@ void Problem::write_h_node_loading(const std::string_view& path)
  * are found, the file is created with no content. */
 void Problem::write_integrity_check_errs(const std::string_view& path)
 {
+    std::stringstream message;
+    message << "Performing integrity check, writing to file at '"
+            << path.data() << "'.";
+    log(message.str());
+
     std::ofstream out(path.data(), std::ofstream::trunc);
     std::stringstream errorMsgs;
-    if (!check_node_integrity(errorMsgs)) out << errorMsgs.rdbuf();
+    if (!check_node_integrity(errorMsgs))
+    {
+        log("Integrity errors found.");
+        out << errorMsgs.rdbuf();
+    }
+    else log("No integrity errors found.");
     out.close();
 }
