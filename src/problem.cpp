@@ -218,6 +218,9 @@ void Problem::select_sela(decltype(nodeAs)::iterator& selA)
 /* Selection of an application node in an atomic manner, so that two threads
  * cannot "claim" the same application node at the same time.
  *
+ * Logs if the while loop goes on for longer than is reasonable (1000
+ * iterations, for now).
+ *
  * Worth noting that the caller needs to unlock the mutex once they're done
  * with it. */
 void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
@@ -227,7 +230,17 @@ void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
     std::uniform_int_distribution<decltype(nodeAs)::size_type>
         distributionSelA(0, nodeAs.size() - 1);
     decltype(nodeAs)::size_type roll;
-    do roll = distributionSelA(rng);
+    auto attempt = SELECTION_PATIENCE_THRESHOLD;
+    do
+    {
+        attempt--;
+        if (attempt == 0)
+        {
+            log("WARNING: Atomic application node selection is taking a "
+                "while. Try spawning fewer threads.");
+        }
+        roll = distributionSelA(rng);
+    }
     while (!lockAs[roll].try_lock());
 
     /* Put the iterator in the right place. */
@@ -252,8 +265,15 @@ void Problem::select_selh(decltype(nodeHs)::iterator& selH,
      * a swap operation is defined, and is pretty inefficient if the
      * application graph "just fits" in the hardware graph. If this is the
      * case, consider increasing pMax instead. */
+    auto attempt = SELECTION_PATIENCE_THRESHOLD;
     do
     {
+        attempt--;
+        if (attempt == 0)
+        {
+            log("WARNING: Hardware node selection is taking a while. Try "
+                "setting a larger value for pMax.");
+        }
         selH = nodeHs.begin();
         std::uniform_int_distribution<decltype(nodeHs)::size_type>
             distributionSelH(0, nodeHs.size() - 1);

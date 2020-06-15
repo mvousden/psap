@@ -13,6 +13,10 @@
 #include <tuple>
 #include <vector>
 
+/* Number of iterations a while loop goes through during selection, after which
+ * a message is logged. */
+#define SELECTION_PATIENCE_THRESHOLD 1e3
+
 class Problem
 {
 public:
