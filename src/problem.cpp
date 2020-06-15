@@ -245,7 +245,7 @@ void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
 
     /* Put the iterator in the right place. */
     selA = nodeAs.begin();
-    std::advance(selA, distributionSelA(rng));
+    std::advance(selA, roll);
 }
 
 /* Getting hardware node associated with application node. */
