@@ -33,7 +33,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();
-    auto oldH = problem.nodeHs.begin();  /* Note - not an iterator */
+    auto oldH = problem.nodeHs.begin();
 
     /* Base fitness "used" from the start of each iteration. */
     auto oldFitness = problem.compute_total_fitness();
