@@ -48,9 +48,22 @@ int main()
         message << "Annealing problem for " << maxIteration << " iterations.";
         problem.log(message.str());
     }
+
+    /* In parallel, taking intermediate fitness measurements... */
     auto annealer = ParallelAnnealer<ExpDecayDisorder>(
         2, maxIteration, (outDir / "anneal_ops.csv").u8string());
     annealer(problem, static_cast<Iteration>(maxIteration / 20));
+
+    /* Or in parallel without taking any fitness measurements...
+    auto annealer = ParallelAnnealer<ExpDecayDisorder>(
+        2, maxIteration, (outDir / "anneal_ops.csv").u8string());
+    annealer(problem); */
+
+    /* Or serially...
+    auto annealer = SerialAnnealer<ExpDecayDisorder>(
+         maxIteration, (outDir / "anneal_ops.csv").u8string());
+    annealer(problem); */
+
     problem.log("Annealing complete.");
 
     /* Write solved stuff */
