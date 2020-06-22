@@ -135,7 +135,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
     if (log) csvOut << "-1,-1," << oldFitness << ",1\n";
 
     Iteration localIteration;
-    while (true)
+    do
     {
         /* Get the iteration number. The variable "iteration" is shared between
          * threads. */
@@ -188,10 +188,8 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             if (log) csvOut << 0 << '\n';
             locking_transform(problem, selA, oldH, selH);
         }
-
-        /* Termination. */
-        if (iteration >= maxIteration) break;
     }
+    while (iteration < maxIteration);  /* Termination condition */
 }
 
 /* Performs a transform that simultaneously locks hardware nodes during the

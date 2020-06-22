@@ -41,7 +41,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
     /* Write data for iteration zero to deploy initial fitness. */
     if (log) csvOut << "-1,-1," << oldFitness << ",1\n";
 
-    while (true)
+    do
     {
         iteration++;
 
@@ -87,10 +87,8 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
             if (log) csvOut << 0 << '\n';
             problem.transform(selA, oldH, selH);
         }
-
-        /* Termination */
-        if (iteration == maxIteration) break;
     }
+    while (iteration != maxIteration);  /* Termination */
 
     if (log) csvOut.close();
 }
