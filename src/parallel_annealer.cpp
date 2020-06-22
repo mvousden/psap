@@ -125,7 +125,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
     auto oldH = problem.nodeHs.begin();
 
     /* Base fitness "used" from the start of each iteration. Note that the
-     * currently-storef fitness will drift from the total fitness. This is fine
+     * currently-stored fitness will drift from the total fitness. This is fine
      * because determination only care about the fitness difference from an
      * operation - not its absolute value or ratio. */
     auto oldFitness = problem.compute_total_fitness();
