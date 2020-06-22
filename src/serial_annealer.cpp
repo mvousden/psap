@@ -1,5 +1,6 @@
 #include "serial_annealer.hpp"
 
+#include <chrono>
 #include <utility>
 
 template<class DisorderT>
@@ -19,9 +20,13 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
      * use of '\n' over std::endl to reduce flushing (possibly at the cost of
      * portability). Main will flush everything at the end.
      *
-     * Each row in the CSV corresponds to a new iteration. */
+     * Each row in the CSV corresponds to a new iteration.
+     *
+     * There's also a file (appended with '-wallclock') that contains the
+     * elapsed wallclock time in seconds. */
     bool log = !csvPath.empty();
     std::ofstream csvOut;
+    std::ofstream clockOut;
     if (log)
     {
         csvOut.open(csvPath.c_str(), std::ofstream::trunc);
@@ -29,6 +34,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
                << "Selected hardware node index,"
                << "Transformed Fitness,"
                << "Determination\n";
+        clockOut.open((csvPath + "-wallclock").c_str(), std::ofstream::trunc);
     }
 
     auto selA = problem.nodeAs.begin();
@@ -40,6 +46,10 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
     /* Write data for iteration zero to deploy initial fitness. */
     if (log) csvOut << "-1,-1," << oldFitness << ",1\n";
+
+    /* Start the timer. */
+    auto timeAtStart = std::chrono::steady_clock::now();
+    if (log)
 
     do
     {
@@ -90,7 +100,17 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
     }
     while (iteration != maxIteration);  /* Termination */
 
-    if (log) csvOut.close();
+    if (log)
+    {
+        /* Write the elapsed time to the wallclock log file. */
+        clockOut << std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::steady_clock::now() - timeAtStart).count()
+                 << std::endl;
+
+        /* Close log files */
+        csvOut.close();
+        clockOut.close();
+    }
 }
 
 #include "serial_annealer-impl.hpp"

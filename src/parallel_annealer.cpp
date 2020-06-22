@@ -1,5 +1,6 @@
 #include "parallel_annealer.hpp"
 
+#include <chrono>
 #include <mutex>
 #include <thread>
 #include <utility>
@@ -36,6 +37,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
      * for the serial fitness computation if recordEvery is nonzero. */
     std::vector<std::ofstream> csvOuts (numThreads);
     std::ofstream csvOutMaster;
+    std::ofstream clockOut;
     decltype(csvOuts)::size_type csvOutIndex;
     if (log)
     {
@@ -59,10 +61,18 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
             csvOutMaster.open(csvPathRoot.c_str(), std::ofstream::trunc);
             csvOutMaster << "Iteration,Fitness\n";
         }
+
+        /* Wallclock measurement. */
+        clockOut.open((csvPathRoot + "-wallclock").c_str(),
+                      std::ofstream::trunc);
     }
 
     /* Initialise problem locking infrastructure */
     problem.initialise_atomic_locks();
+
+    /* Initialise timer in a stupid way. */
+    auto now = std::chrono::steady_clock::now();
+    auto wallClock = now - now;  /* Zero */
 
     /* This do-while loop spawns threads to do the annealing for every
      * "recording session", then joins the threads together and records the
@@ -77,6 +87,10 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         if (recordEvery == 0) nextStop = maxIteration;
         else nextStop = std::min(maxIteration, iteration + recordEvery);
 
+        /* Measure wallclock time between now and when the threads are joined
+         * with. */
+        auto timeAtStart = std::chrono::steady_clock::now();
+
         /* Spawn slave threads to do the annealing. */
         std::vector<std::thread> threads;
         for (unsigned threadId = 0; threadId < numThreads; threadId++)
@@ -86,6 +100,9 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
 
         /* Join with slave threads. */
         for (auto& thread : threads) thread.join();
+
+        /* The other end of the wallclock measurement. */
+        wallClock += (std::chrono::steady_clock::now() - timeAtStart);
 
         /* Compute fitness value and record it. */
         if (log and recordEvery != 0)
@@ -106,11 +123,14 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
     }
     while (iteration <= maxIteration);
 
-    /* Close log files. */
+    /* Write wallclock information and close log files. */
     if (log)
     {
+        clockOut << std::chrono::duration_cast<std::chrono::seconds>(
+            wallClock).count() << std::endl;
         for (auto& csvOut : csvOuts) csvOut.close();
         csvOutMaster.close();
+        clockOut.close();
     }
 }
 
