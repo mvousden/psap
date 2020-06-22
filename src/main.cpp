@@ -50,7 +50,7 @@ int main()
     }
     auto annealer = ParallelAnnealer<ExpDecayDisorder>(
         2, maxIteration, (outDir / "anneal_ops.csv").u8string());
-    annealer(problem);
+    annealer(problem, static_cast<Iteration>(maxIteration / 20));
     problem.log("Annealing complete.");
 
     /* Write solved stuff */

@@ -17,9 +17,14 @@ ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
 }
 
 /* Hits the solution repeatedly with many hammers at the same time while
- * cooling it. Hopefully improves it (the jury's out). */
+ * cooling it. Hopefully improves it (the jury's out).
+ *
+ * The recordEvery argument, if non-zero, causes the annealing to stop after
+ * every "recordEvery" iterations to compute and record the fitness at that
+ * time. */
 template<class DisorderT>
-void ParallelAnnealer<DisorderT>::anneal(Problem& problem)
+void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
+                                         Iteration recordEvery)
 {
     /* If no output path has been defined for logging operations, then don't
      * log them. Otherwise, do so. Logging clobbers previous anneals. Note the
@@ -27,11 +32,14 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem)
      * portability). Main will flush everything at the end.
      *
      * There will be one CSV file for each thread. Each row in each CSV
-     * corresponds to a new iteration. */
+     * corresponds to a new iteration. There will also be one "master" CSV file
+     * for the serial fitness computation if recordEvery is nonzero. */
     std::vector<std::ofstream> csvOuts (numThreads);
+    std::ofstream csvOutMaster;
     decltype(csvOuts)::size_type csvOutIndex;
     if (log)
     {
+        /* Per-thread logging. */
         for (csvOutIndex = 0; csvOutIndex < csvOuts.size(); csvOutIndex++)
         {
             std::stringstream csvPath;
@@ -44,29 +52,73 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem)
                                     << "Transformed Fitness,"
                                     << "Determination\n";
         }
+
+        /* Frequent serial fitness computation. */
+        if (recordEvery != 0)
+        {
+            csvOutMaster.open(csvPathRoot.c_str(), std::ofstream::trunc);
+            csvOutMaster << "Iteration,Fitness\n";
+        }
     }
 
     /* Initialise problem locking infrastructure */
     problem.initialise_atomic_locks();
 
-    /* Spawn slave threads to do the annealing. */
-    std::vector<std::thread> threads;
-    for (unsigned threadId = 0; threadId < numThreads; threadId++)
-        threads.emplace_back(&ParallelAnnealer<DisorderT>::co_anneal, this,
-                             std::ref(problem),
-                             std::ref(csvOuts.at(threadId)));
+    /* This do-while loop spawns threads to do the annealing for every
+     * "recording session", then joins the threads together and records the
+     * fitness at that time. The reason for this is because the problem data
+     * structure is not thread-safe (thanks STL), so we need to pause execution
+     * while computing fitness. Not a big deal really, as long as the recording
+     * frequency is low. */
+    do
+    {
+        /* Compute next stopping point. */
+        Iteration nextStop;
+        if (recordEvery == 0) nextStop = maxIteration;
+        else nextStop = std::min(maxIteration, iteration + recordEvery);
 
-    /* Join with slave threads. */
-    for (auto& thread : threads) thread.join();
+        /* Spawn slave threads to do the annealing. */
+        std::vector<std::thread> threads;
+        for (unsigned threadId = 0; threadId < numThreads; threadId++)
+            threads.emplace_back(&ParallelAnnealer<DisorderT>::co_anneal, this,
+                                 std::ref(problem),
+                                 std::ref(csvOuts.at(threadId)), nextStop);
+
+        /* Join with slave threads. */
+        for (auto& thread : threads) thread.join();
+
+        /* Compute fitness value and record it. */
+        if (log and recordEvery != 0)
+        {
+            /* Problem logging (mostly for the timestamp). */
+            std::stringstream message;
+            message << "Stopping annealing to record fitness at iteration "
+                    << iteration << "...";
+            problem.log(message.str());
+
+            /* Fitness computation and logging. */
+            csvOutMaster << iteration << ","
+                         << problem.compute_total_fitness() << std::endl;
+
+            /* End timestamp */
+            problem.log("Fitness logged.");
+        }
+    }
+    while (iteration <= maxIteration);
 
     /* Close log files. */
-    if (log) for (auto& csvOut : csvOuts) csvOut.close();
+    if (log)
+    {
+        for (auto& csvOut : csvOuts) csvOut.close();
+        csvOutMaster.close();
+    }
 }
 
 /* An individual hammer, to be wielded by a single thread. */
 template<class DisorderT>
 void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
-                                            std::ofstream& csvOut)
+                                            std::ofstream& csvOut,
+                                            Iteration maxIteration)
 {
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();

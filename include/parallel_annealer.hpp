@@ -14,10 +14,12 @@ class ParallelAnnealer
 public:
     ParallelAnnealer(unsigned numThreads=1, Iteration maxIteration=100,
                      std::string csvPathRoot="");
-    void operator()(Problem& problem){anneal(problem);}
+    void operator()(Problem& problem, Iteration recordEvery=0)
+        {anneal(problem, recordEvery);}
 
     /* Parallel compute unit */
-    void co_anneal(Problem& problem, std::ofstream& csvOut);
+    void co_anneal(Problem& problem, std::ofstream& csvOut,
+                   Iteration maxIteration);
 
     static void locking_transform(Problem& problem,
                                   decltype(Problem::nodeAs)::iterator& selA,
@@ -30,7 +32,7 @@ private:
     Iteration maxIteration;
     DisorderT disorder;
     bool log = false;
-    void anneal(Problem& problem);
+    void anneal(Problem& problem, Iteration recordEvery);
 
     /* Output stream to a set of files. If none is provided, no output is
      * written. */
