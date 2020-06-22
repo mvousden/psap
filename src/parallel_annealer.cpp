@@ -127,11 +127,12 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
     /* Base fitness "used" from the start of each iteration. Note that the
      * currently-stored fitness will drift from the total fitness. This is fine
      * because determination only care about the fitness difference from an
-     * operation - not its absolute value or ratio. */
-    auto oldFitness = problem.compute_total_fitness();
+     * operation - not its absolute value or ratio. As such, we choose an
+     * arbitrary initial value here (because nobody cares about what it is). */
+    auto oldFitness = static_cast<float>(-42);
 
-    /* Write data for iteration zero to deploy initial fitness. May differ
-     * between threads. */
+    /* Again, nobody cares about the initial fitness value, but it's
+     * interesting to watch it change. */
     if (log) csvOut << "-1,-1," << oldFitness << ",1\n";
 
     Iteration localIteration;
