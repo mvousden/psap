@@ -63,7 +63,8 @@ void Problem::initialise_edge_cache(unsigned diameter)
     decltype(edgeCacheH)::size_type eOuterIndex;
     decltype(edgeCacheH)::value_type::size_type eInnerIndex;
     std::stringstream message;
-    message << "Initialising edge cache with diameter " << diameter << ".";
+    message << "Initialising hardware edge cache with diameter "
+            << diameter << ".";
     log(message.str());
 
     /* Populate zeroes and infinites. */
@@ -83,7 +84,7 @@ void Problem::initialise_edge_cache(unsigned diameter)
         edgeCacheH[std::get<1>(edge)][std::get<0>(edge)] = std::get<2>(edge);
     }
 
-    log("Edge cache initialised.");
+    log("Hardware edge cache initialised.");
 }
 
 /* Populate the infinite members of the edge cache, using the Floyd-Warshall
