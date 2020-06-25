@@ -3,8 +3,15 @@
 
 #include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
+
+/* Note that the 'lock' mutex members are synchronisation objects for the
+ * parallel execution case (and are optimised-out in the serial
+ * case). Application nodes are locked on selection (responsibility of the
+ * problem object), whereas hardware nodes are locked on transformation
+ * (responsibility of the annealer). */
 
 class NodeH;
 
@@ -16,6 +23,7 @@ public:
     std::weak_ptr<NodeH> location;
     std::string name;
     std::vector<std::weak_ptr<NodeA>> neighbours;
+    std::mutex lock;
 };
 
 /* Node in the hardware graph. */
@@ -30,6 +38,7 @@ public:
     unsigned index;
     float posHoriz = -1;
     float posVerti = -1;
+    std::mutex lock;
 };
 
 #endif

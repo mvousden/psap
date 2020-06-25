@@ -44,15 +44,6 @@ public:
                     decltype(nodeHs)::iterator& selH,
                     decltype(nodeHs)::iterator& oldH, bool atomic=false);
 
-    /* Synchronisation object for application and hardware nodes. Application
-     * nodes are locked on selection (responsibility of the problem), whereas
-     * hardware nodes are locked on transformation (responsibility of the
-     * annealer).*/
-    void initialise_atomic_locks();
-    std::vector<std::mutex> lockHs;
-    std::vector<std::mutex> lockAs;  /* Not "lock as", but "lock application
-                                      * nodes". Obviously. */
-
     /* Transformation from selection data. */
     void transform(decltype(nodeAs)::iterator& selA,
                    decltype(nodeHs)::iterator& selH,

@@ -77,9 +77,6 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
                       std::ofstream::trunc);
     }
 
-    /* Initialise problem locking infrastructure */
-    problem.initialise_atomic_locks();
-
     /* Initialise timer in a stupid way. */
     auto now = std::chrono::steady_clock::now();
     auto wallClock = now - now;  /* Zero */
@@ -180,8 +177,8 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
                         << selectionCollisions << ",";
 
         /* RAII locking */
-        std::lock_guard<decltype(Problem::lockAs)::value_type> appLock
-            (problem.lockAs[selA - problem.nodeAs.begin()], std::adopt_lock);
+        std::lock_guard<decltype(NodeA::lock)> appLock((*selA)->lock,
+                                                       std::adopt_lock);
 
         /* Fitness of components before transformation. */
         auto oldFitnessComponents =
@@ -234,20 +231,16 @@ void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
     decltype(Problem::nodeHs)::iterator& oldH)
 {
     /* Identify where the locks are (hold them as references) */
-    decltype(Problem::lockHs)::value_type& selHLock =
-        problem.lockHs[selH - problem.nodeHs.begin()];
-    decltype(Problem::lockHs)::value_type& oldHLock =
-        problem.lockHs[oldH - problem.nodeHs.begin()];
+    decltype(NodeH::lock)& selHLock = (*selH)->lock;
+    decltype(NodeH::lock)& oldHLock = (*oldH)->lock;
 
     /* Lock them simultaneously. */
     std::lock(selHLock, oldHLock);
 
     /* Unlock them together (non-simultaneously) at the end of the
      * transformation. */
-    std::lock_guard<decltype(Problem::lockHs)::value_type> selHGuard
-        (selHLock, std::adopt_lock);
-    std::lock_guard<decltype(Problem::lockHs)::value_type> oldHGuard
-        (oldHLock, std::adopt_lock);
+    std::lock_guard<decltype(selHLock)> selHGuard(selHLock, std::adopt_lock);
+    std::lock_guard<decltype(oldHLock)> oldHGuard(oldHLock, std::adopt_lock);
 
     /* Perform the transformation. */
     problem.transform(selA, selH, oldH);

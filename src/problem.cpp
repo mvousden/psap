@@ -266,7 +266,7 @@ unsigned Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
         }
         roll = distributionSelA(rng);
     }
-    while (!lockAs[roll].try_lock());
+    while (!nodeAs.at(roll)->lock.try_lock());
 
     /* Put the iterator in the right place. */
     selA = nodeAs.begin();
@@ -306,13 +306,6 @@ void Problem::select_selh(decltype(nodeHs)::iterator& selH,
             distributionSelH(0, nodeHs.size() - 1);
         std::advance(selH, distributionSelH(rng));
     } while ((*selH)->contents.size() >= pMax or selH == avoid);
-}
-
-/* Initialises the content of lockAs from the contents of nodeAs. */
-void Problem::initialise_atomic_locks()
-{
-    lockAs = decltype(lockAs)(nodeAs.size());
-    lockHs = decltype(lockHs)(nodeHs.size());
 }
 
 /* Transforms the state by moving the selected application node to the selected
