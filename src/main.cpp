@@ -78,9 +78,8 @@ int main()
     problem.write_integrity_check_errs(
         (outDir / "integrity_after.err").u8string());
 
-    /* This one isn't needed, but makes creating histograms easier.
+    /* This one isn't needed, but makes creating histograms easier. */
     problem.write_h_node_loading((outDir / "h_node_loading.csv").u8string());
-    */
 
     return 0;
 }
