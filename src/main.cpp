@@ -14,11 +14,10 @@ int main()
     /* Directory to write to - clear it. */
     std::filesystem::path outRootDir = "output";
     std::filesystem::path outDir = outRootDir / problem.name;
-    std::filesystem::remove_all(outDir);
-    std::filesystem::create_directories(outDir);
+    problem.define_output_path(outDir);
 
     /* Prepare problem for annealing */
-    problem.initialise_logging((outDir / "log.txt").u8string());
+    problem.initialise_logging();
     problem.initialise_edge_cache(
         static_cast<unsigned>(problem.nodeHs.size()));
     problem.populate_edge_cache();
@@ -50,18 +49,17 @@ int main()
     }
 
     /* In parallel, taking intermediate fitness measurements... */
-    auto annealer = ParallelAnnealer<ExpDecayDisorder>(
-        2, maxIteration, (outDir / "anneal_ops.csv").u8string());
-    annealer(problem, static_cast<Iteration>(maxIteration / 20));
+    auto annealer = ParallelAnnealer<ExpDecayDisorder>(2, maxIteration,
+                                                       outDir);
+    annealer(problem, maxIteration / 20);
 
     /* Or in parallel without taking any fitness measurements...
-    auto annealer = ParallelAnnealer<ExpDecayDisorder>(
-        2, maxIteration, (outDir / "anneal_ops.csv").u8string());
+    auto annealer = ParallelAnnealer<ExpDecayDisorder>(2, maxIteration,
+                                                       outDir);
     annealer(problem); */
 
     /* Or serially...
-    auto annealer = SerialAnnealer<ExpDecayDisorder>(
-         maxIteration, (outDir / "anneal_ops.csv").u8string());
+    auto annealer = SerialAnnealer<ExpDecayDisorder>(maxIteration, outDir);
     annealer(problem); */
 
     problem.log("Annealing complete.");

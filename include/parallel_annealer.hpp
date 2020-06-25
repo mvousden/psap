@@ -13,7 +13,7 @@ class ParallelAnnealer
 {
 public:
     ParallelAnnealer(unsigned numThreads=1, Iteration maxIteration=100,
-                     std::string csvPathRoot="");
+                     std::filesystem::path outDirArg="");
     void operator()(Problem& problem, Iteration recordEvery=0)
         {anneal(problem, recordEvery);}
 
@@ -34,9 +34,12 @@ private:
     bool log = false;
     void anneal(Problem& problem, Iteration recordEvery);
 
-    /* Output stream to a set of files. If none is provided, no output is
+    /* Output streams. If no output directory is provided, no output is
      * written. */
-    std::string csvPathRoot;
+    std::filesystem::path outDir;
+    constexpr static auto csvBaseName = "anneal_ops";
+    constexpr static auto fitnessPath = "reliable_fitness_values.csv";
+    constexpr static auto clockPath = "wallclock.txt";
 };
 
 #endif

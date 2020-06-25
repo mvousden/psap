@@ -4,6 +4,7 @@
 #include "disorder_schedules.hpp"
 #include "problem.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <string>
 
@@ -11,8 +12,8 @@ template <class DisorderT=ExpDecayDisorder>
 class SerialAnnealer
 {
 public:
-    SerialAnnealer(Iteration maxIteration=100,
-                   std::string csvPath="");
+    SerialAnnealer(Iteration maxIterationArg=100,
+                   std::filesystem::path outDirArg="");
     void operator()(Problem& problem){anneal(problem);}
 
 private:
@@ -21,8 +22,11 @@ private:
     DisorderT disorder;
     void anneal(Problem& problem);
 
-    /* Output stream to a file. If none is provided, no output is written. */
-    std::string csvPath;
+    /* Output streams. If no output directory is provided, no output is
+     * written. */
+    std::filesystem::path outDir;
+    constexpr static auto csvPath = "anneal_ops.csv";
+    constexpr static auto clockPath = "wallclock.txt";
 };
 
 #endif

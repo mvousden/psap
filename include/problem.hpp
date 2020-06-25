@@ -3,6 +3,7 @@
 
 #include "nodes.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <memory>
@@ -25,8 +26,9 @@ public:
     Problem();
     ~Problem();
 
-    /* Logging */
-    void initialise_logging(const std::string_view& path);
+    /* Logging and pathing */
+    void define_output_path(const std::filesystem::path& outDirArg);
+    void initialise_logging();
     void log(const std::string_view& message);
 
     /* Methods that interact with edgeCacheH. */
@@ -80,9 +82,12 @@ private:
     std::vector<std::vector<float>> edgeCacheH;
     std::mt19937 rng;
 
-    /* Logging */
+    /* Logging and pathing */
+    std::filesystem::path outDir;
     std::ofstream logS;
     std::mutex logLock;
+
+    constexpr static auto logHandle = "log.txt";
 
     /* Granular selection */
     void select_sela(decltype(nodeAs)::iterator& selA);

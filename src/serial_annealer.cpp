@@ -5,36 +5,42 @@
 
 template<class DisorderT>
 SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
-                                          std::string csvPathArg):
+                                          std::filesystem::path outDirArg):
     maxIteration(maxIterationArg),
     disorder(maxIterationArg),
-    csvPath(std::move(csvPathArg)){}
+    outDir(outDirArg){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */
 template<class DisorderT>
 void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 {
-    /* If no output path has been defined for logging operations, then don't
-     * log them. Otherwise, do so. Logging clobbers previous anneals. Note the
-     * use of '\n' over std::endl to reduce flushing (possibly at the cost of
-     * portability). Main will flush everything at the end.
+    /* Set up logging.
      *
-     * Each row in the CSV corresponds to a new iteration.
+     * If no output directory has been defined, then we run without
+     * logging. Logging clobbers previous anneals. There are two output files
+     * created in this way:
      *
-     * There's also a file (appended with '-wallclock') that contains the
-     * elapsed wallclock time in seconds. */
-    bool log = !csvPath.empty();
+     * - A CSV file describing the annealing operations, where each row
+     *   corresponds to a new iteration. Note the use of '\n' over std::endl
+     *   to reduce flushing (possibly at the cost of portability). Main will
+     *   flush everything at the end.
+     *
+     * - A text file to which the wallclock runtime in seconds is dumped. */
+    bool log = !outDir.empty();
     std::ofstream csvOut;
     std::ofstream clockOut;
     if (log)
     {
-        csvOut.open(csvPath.c_str(), std::ofstream::trunc);
+        csvOut.open((outDir / csvPath).u8string().c_str(),
+                    std::ofstream::trunc);
         csvOut << "Selected application node index,"
                << "Selected hardware node index,"
                << "Transformed Fitness,"
                << "Determination\n";
-        clockOut.open((csvPath + "-wallclock").c_str(), std::ofstream::trunc);
+
+        clockOut.open((outDir / clockPath).u8string().c_str(),
+                      std::ofstream::trunc);
     }
 
     auto selA = problem.nodeAs.begin();
@@ -49,8 +55,6 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
     /* Start the timer. */
     auto timeAtStart = std::chrono::steady_clock::now();
-    if (log)
-
     do
     {
         iteration++;
@@ -104,7 +108,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
     {
         /* Write the elapsed time to the wallclock log file. */
         clockOut << std::chrono::duration_cast<std::chrono::seconds>(
-                        std::chrono::steady_clock::now() - timeAtStart).count()
+            std::chrono::steady_clock::now() - timeAtStart).count()
                  << std::endl;
 
         /* Close log files */

@@ -11,6 +11,9 @@ Problem::Problem()
 {
     /* Define our random number generator. */
     rng = std::mt19937(std::random_device{}());
+
+    /* Explicitly initialise contents of output path. */
+    outDir.clear();
 }
 
 Problem::~Problem()
@@ -23,11 +26,25 @@ Problem::~Problem()
     }
 }
 
-/* Define a path for logging. If not defined, nothing is logged. */
-void Problem::initialise_logging(const std::string_view& path)
+/* Define a path for dumping outputs. Pass in a directory path (will be
+ * cleared). */
+void Problem::define_output_path(const std::filesystem::path& outDirArg)
 {
-    logS = std::ofstream(path.data(), std::ofstream::app);
-    log("Logging initialised.");
+    std::filesystem::remove_all(outDirArg);
+    std::filesystem::create_directories(outDirArg);
+    outDir = outDirArg;
+}
+
+/* Initialise logging capability. Returns without setup if the output path has
+ * not been defined. */
+void Problem::initialise_logging()
+{
+    if (!outDir.empty())
+    {
+        logS = std::ofstream((outDir / logHandle).u8string(),
+                             std::ofstream::app);
+        log("Logging initialised.");
+    }
 }
 
 /* Write a log message, and flushes. Is thread safe. */

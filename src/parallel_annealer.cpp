@@ -8,13 +8,13 @@
 template<class DisorderT>
 ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
                                               Iteration maxIterationArg,
-                                              std::string csvPathRootArg):
+                                              std::filesystem::path outDirArg):
     numThreads(numThreadsArg),
     maxIteration(maxIterationArg),
     disorder(maxIterationArg),
-    csvPathRoot(std::move(csvPathRootArg))
+    outDir(outDirArg)
 {
-    log = !csvPathRoot.empty();
+    log = !outDir.empty();
 }
 
 /* Hits the solution repeatedly with many hammers at the same time while
@@ -27,14 +27,21 @@ template<class DisorderT>
 void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
                                          Iteration recordEvery)
 {
-    /* If no output path has been defined for logging operations, then don't
-     * log them. Otherwise, do so. Logging clobbers previous anneals. Note the
-     * use of '\n' over std::endl to reduce flushing (possibly at the cost of
-     * portability). Main will flush everything at the end.
+    /* Set up logging.
      *
-     * There will be one CSV file for each thread. Each row in each CSV
-     * corresponds to a new iteration. There will also be one "master" CSV file
-     * for the serial fitness computation if recordEvery is nonzero. */
+     * If no output directory has been defined, then we run without
+     * logging. Logging clobbers previous anneals. There are three types of
+     * output files created in this way:
+     *
+     * - A set of CSV files (one for each thread) describing the annealing
+     *   operations, where each row corresponds to a new iteration. Note the
+     *   use of '\n' over std::endl to reduce flushing (possibly at the cost of
+     *   portability). Main will flush everything at the end.
+     *
+     * - A text file to which the wallclock runtime in seconds is dumped.
+     *
+     * - A single "master" CSV file for the serial fitness computation, if
+     *   recordEvery is nonzero. */
     std::vector<std::ofstream> csvOuts (numThreads);
     std::ofstream csvOutMaster;
     std::ofstream clockOut;
@@ -45,9 +52,10 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         for (csvOutIndex = 0; csvOutIndex < csvOuts.size(); csvOutIndex++)
         {
             std::stringstream csvPath;
-            csvPath << csvPathRoot << "-" << csvOutIndex;
-            csvOuts.at(csvOutIndex).open(csvPath.str().c_str(),
-                                         std::ofstream::trunc);
+            csvPath << csvBaseName << "-" << csvOutIndex << ".csv";
+            csvOuts.at(csvOutIndex).open(
+                (outDir / csvPath.str()).u8string().c_str(),
+                std::ofstream::trunc);
             csvOuts.at(csvOutIndex) << "Iteration,"
                                     << "Selected application node index,"
                                     << "Selected hardware node index,"
@@ -59,12 +67,13 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         /* Frequent serial fitness computation. */
         if (recordEvery != 0)
         {
-            csvOutMaster.open(csvPathRoot.c_str(), std::ofstream::trunc);
+            csvOutMaster.open((outDir / fitnessPath).u8string().c_str(),
+                              std::ofstream::trunc);
             csvOutMaster << "Iteration,Fitness\n";
         }
 
         /* Wallclock measurement. */
-        clockOut.open((csvPathRoot + "-wallclock").c_str(),
+        clockOut.open((outDir / clockPath).u8string().c_str(),
                       std::ofstream::trunc);
     }
 
