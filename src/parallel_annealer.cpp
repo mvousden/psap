@@ -131,7 +131,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
             problem.log("Fitness logged.");
         }
     }
-    while (iteration <= maxIteration);
+    while (iteration < maxIteration);
 
     /* Write wallclock information and close log files. */
     if (log)
