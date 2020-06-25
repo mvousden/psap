@@ -340,8 +340,8 @@ void Problem::transform(decltype(nodeAs)::iterator& selA,
 /* Computes and returns the locality fitness associated with a given
  * application node. Note that locality fitness, in terms of the problem
  * specification, is associated with an edge. Since all edges in this
- * implementation are "double-counted", this method divides the fitness
- * contribution by half. */
+ * implementation are "double-counted", this method computes half of the
+ * fitness contribution. */
 float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
 {
     float returnValue = 0;
