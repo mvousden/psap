@@ -342,7 +342,7 @@ void Problem::transform(decltype(nodeAs)::iterator& selA,
  * specification, is associated with an edge. Since all edges in this
  * implementation are "double-counted", this method computes half of the
  * fitness contribution. */
-float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
+float Problem::compute_app_node_locality_fitness(const NodeA& nodeA)
 {
     float returnValue = 0;
 
@@ -368,7 +368,7 @@ float Problem::compute_app_node_locality_fitness(NodeA& nodeA)
 
 /* Computes and returns the clustering fitness associated with a given hardware
  * node. */
-float Problem::compute_hw_node_clustering_fitness(NodeH& nodeH)
+float Problem::compute_hw_node_clustering_fitness(const NodeH& nodeH)
 {
     auto size = static_cast<float>(nodeH.contents.size());
     return -size * size;

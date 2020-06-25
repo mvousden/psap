@@ -59,8 +59,8 @@ public:
                    decltype(nodeHs)::iterator& oldH);
 
     /* Fitness calculators */
-    float compute_app_node_locality_fitness(NodeA& nodeA);
-    float compute_hw_node_clustering_fitness(NodeH& nodeH);
+    float compute_app_node_locality_fitness(const NodeA& nodeA);
+    float compute_hw_node_clustering_fitness(const NodeH& nodeH);
     float compute_total_fitness();
 
     /* Integrity checking */
