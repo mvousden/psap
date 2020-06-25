@@ -225,7 +225,8 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
 }
 
 /* Performs a transform that simultaneously locks hardware nodes during the
- * transformation to avoid data races. */
+ * transformation to avoid data races. This is a wrapper around
+ * problem.transform. */
 template<class DisorderT>
 void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
     decltype(Problem::nodeAs)::iterator& selA,
