@@ -197,14 +197,19 @@ void Problem::initial_condition_random()
  * that no two threads can select the same application node at the same
  * time.
  *
- * Does not modify the state in any way. Swap selection not supported yet. */
-void Problem::select(decltype(nodeAs)::iterator& selA,
-                     decltype(nodeHs)::iterator& selH,
-                     decltype(nodeHs)::iterator& oldH, bool atomic)
+ * Does not modify the state in any way. Swap selection not supported yet.
+ *
+ * Returns zero if atomic is false, and returns the number of collisions when
+ * selecting the application node otherwise. */
+unsigned Problem::select(decltype(nodeAs)::iterator& selA,
+                         decltype(nodeHs)::iterator& selH,
+                         decltype(nodeHs)::iterator& oldH, bool atomic)
 {
-    if (atomic) select_sela_atomic(selA); else select_sela(selA);
+    unsigned output = 0;
+    if (atomic) output = select_sela_atomic(selA); else select_sela(selA);
     select_get_oldh(selA, oldH);
     select_selh(selH, oldH);
+    return output;
 }
 
 /* Selection of an application node. */
@@ -223,15 +228,17 @@ void Problem::select_sela(decltype(nodeAs)::iterator& selA)
  * iterations, for now).
  *
  * Worth noting that the caller needs to unlock the mutex once they're done
- * with it. */
-void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
+ * with it.
+ *
+ * Returns the number of selection attempts. */
+unsigned Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
 {
     /* Select index for the application node, until we hit one that's not been
      * claimed already. */
     std::uniform_int_distribution<decltype(nodeAs)::size_type>
         distributionSelA(0, nodeAs.size() - 1);
     decltype(nodeAs)::size_type roll;
-    auto attempt = SELECTION_PATIENCE_THRESHOLD;
+    auto attempt = Problem::selectionPatience;
     do
     {
         attempt--;
@@ -247,6 +254,8 @@ void Problem::select_sela_atomic(decltype(nodeAs)::iterator& selA)
     /* Put the iterator in the right place. */
     selA = nodeAs.begin();
     std::advance(selA, roll);
+
+    return static_cast<unsigned>(Problem::selectionPatience - attempt - 1);
 }
 
 /* Getting hardware node associated with application node. */
@@ -266,7 +275,7 @@ void Problem::select_selh(decltype(nodeHs)::iterator& selH,
      * a swap operation is defined, and is pretty inefficient if the
      * application graph "just fits" in the hardware graph. If this is the
      * case, consider increasing pMax instead. */
-    auto attempt = SELECTION_PATIENCE_THRESHOLD;
+    auto attempt = Problem::selectionPatience;
     do
     {
         attempt--;

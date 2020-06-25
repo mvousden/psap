@@ -13,10 +13,6 @@
 #include <tuple>
 #include <vector>
 
-/* Number of iterations a while loop goes through during selection, after which
- * a message is logged. */
-#define SELECTION_PATIENCE_THRESHOLD 1e3
-
 class Problem
 {
 public:
@@ -42,9 +38,9 @@ public:
     void initial_condition_random();
 
     /* Neighbouring state selection. */
-    void select(decltype(nodeAs)::iterator& selA,
-                decltype(nodeHs)::iterator& selH,
-                decltype(nodeHs)::iterator& oldH, bool atomic=false);
+    unsigned select(decltype(nodeAs)::iterator& selA,
+                    decltype(nodeHs)::iterator& selH,
+                    decltype(nodeHs)::iterator& oldH, bool atomic=false);
 
     /* Synchronisation object for application and hardware nodes. Application
      * nodes are locked on selection (responsibility of the problem), whereas
@@ -76,6 +72,10 @@ public:
     void write_h_node_loading(const std::string_view& path);
     void write_integrity_check_errs(const std::string_view& path);
 
+    /* Number of iterations a while loop goes through during selection, after
+     * which a message is logged. */
+    constexpr static float selectionPatience = 1e3;
+
 private:
     std::vector<std::vector<float>> edgeCacheH;
     std::mt19937 rng;
@@ -86,7 +86,7 @@ private:
 
     /* Granular selection */
     void select_sela(decltype(nodeAs)::iterator& selA);
-    void select_sela_atomic(decltype(nodeAs)::iterator& selA);
+    unsigned select_sela_atomic(decltype(nodeAs)::iterator& selA);
     void select_get_oldh(decltype(nodeAs)::iterator& selA,
                          decltype(nodeHs)::iterator& oldH);
     void select_selh(decltype(nodeHs)::iterator& selH,

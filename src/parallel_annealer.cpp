@@ -51,6 +51,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
             csvOuts.at(csvOutIndex) << "Iteration,"
                                     << "Selected application node index,"
                                     << "Selected hardware node index,"
+                                    << "Number of selection collisions,"
                                     << "Transformed Fitness,"
                                     << "Determination\n";
         }
@@ -153,7 +154,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
 
     /* Again, nobody cares about the initial fitness value, but it's
      * interesting to watch it change. */
-    if (log) csvOut << "-1,-1," << oldFitness << ",1\n";
+    if (log) csvOut << "-1,-1,-1,0," << oldFitness << ",1\n";
 
     Iteration localIteration;
     do
@@ -164,9 +165,10 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         if (log) csvOut << localIteration << ",";
 
         /* "Atomic" selection */
-        problem.select(selA, selH, oldH, true);
+        auto selectionCollisions = problem.select(selA, selH, oldH, true);
         if (log) csvOut << selA - problem.nodeAs.begin() << ","
-                        << selH - problem.nodeHs.begin() << ",";
+                        << selH - problem.nodeHs.begin() << ","
+                        << selectionCollisions << ",";
 
         /* RAII locking */
         std::lock_guard<decltype(Problem::lockAs)::value_type> appLock
