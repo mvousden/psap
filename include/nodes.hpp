@@ -1,6 +1,7 @@
 #ifndef NODES_HPP
 #define NODES_HPP
 
+#include <atomic>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -11,7 +12,15 @@
  * parallel execution case (and are optimised-out in the serial
  * case). Application nodes are locked on selection (responsibility of the
  * problem object), whereas hardware nodes are locked on transformation
- * (responsibility of the annealer). */
+ * (responsibility of the annealer).
+ *
+ * The 'transformCount' atomic members are used to identify whether a node has
+ * been transformed compared to a known starting point. It does not matter if
+ * they wrap, as only a difference in counter value is checked for (and
+ * wrapping all the way around in one iteration is nigh-on impossible with few
+ * compute workers). These members are only used by parallel annealers, and are
+ * ignored by serial annealers. */
+typedef unsigned TransformCount;
 
 class NodeH;
 
@@ -24,6 +33,7 @@ public:
     std::string name;
     std::vector<std::weak_ptr<NodeA>> neighbours;
     std::mutex lock;
+    std::atomic<TransformCount> transformCount = 0;
 };
 
 /* Node in the hardware graph. */
@@ -39,6 +49,7 @@ public:
     float posHoriz = -1;
     float posVerti = -1;
     std::mutex lock;
+    std::atomic<TransformCount> transformCount = 0;
 };
 
 #endif

@@ -61,6 +61,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
                                     << "Selected hardware node index,"
                                     << "Number of selection collisions,"
                                     << "Transformed Fitness,"
+                                    << "Fitness computation is reliable,"
                                     << "Determination\n";
         }
 
@@ -160,7 +161,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
 
     /* Again, nobody cares about the initial fitness value, but it's
      * interesting to watch it change. */
-    if (log) csvOut << "-1,-1,-1,0," << oldFitness << ",1\n";
+    if (log) csvOut << "-1,-1,-1,0," << oldFitness << ",1,1\n";
 
     Iteration localIteration;
     do
@@ -180,6 +181,14 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         std::lock_guard<decltype(NodeA::lock)> appLock((*selA)->lock,
                                                        std::adopt_lock);
 
+        /* Compute the transformation footprint, so that we can identify
+         * whether or not the fitness computation is reliable (it is unreliable
+         * if another thread changes a relevant bit of the datastructure. We
+         * don't do anything different if it is unreliable outside of
+         * logging the occurence in the output). */
+        TransformCount oldTformFootprint = compute_transform_footprint(
+            selA, selH, oldH);
+
         /* Fitness of components before transformation. */
         auto oldFitnessComponents =
             problem.compute_app_node_locality_fitness(**selA) * 2 +
@@ -195,9 +204,20 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(**oldH);
 
+        /* Footprint after transformation. Note the minus three - this is
+         * because our move transformation causes three changes to the data
+         * structure, and we don't want to count those. */
+        TransformCount newTformFootprint = compute_transform_footprint(
+            selA, selH, oldH) - 3;
+
+        /* New fitness computation. */
         auto newFitness = oldFitness - oldFitnessComponents +
             newFitnessComponents;
-        if (log) csvOut << newFitness << ",";
+
+        /* Writing new fitness value to csv, and whether or not the fitness
+         * computation this iteration is unreliable. */
+        if (log) csvOut << newFitness << ","
+                        << (oldTformFootprint == newTformFootprint) << ",";
 
         /* Determination */
         bool sufficientlyDetermined =
@@ -221,6 +241,36 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
     while (iteration < maxIteration);  /* Termination condition */
 }
 
+/* Computes the transformation footprint from the set of notes that are used
+ * for a transformation.
+ *
+ * This footprint will be incremented by the number of notes affected by the
+ * transformation after the transformation has been taken place. Footprints are
+ * used to determine whether or not nodes concerned in a transformation have
+ * been affected by other threads - if the footprint is different, then the
+ * state is unreliable. */
+template<class DisorderT>
+TransformCount ParallelAnnealer<DisorderT>::compute_transform_footprint(
+    const decltype(Problem::nodeAs)::iterator& selA,
+    const decltype(Problem::nodeHs)::iterator& selH,
+    const decltype(Problem::nodeHs)::iterator& oldH)
+{
+    TransformCount output = 0;
+
+    /* Footprint from hardware nodes. */
+    output += (*selH)->transformCount;
+    output += (*oldH)->transformCount;
+
+    /* Footprint from application node, and its neighbours. */
+    output += (*selA)->transformCount;
+    for (const auto& neighbourPtr : (*selA)->neighbours)
+    {
+        output += neighbourPtr.lock()->transformCount;
+    }
+
+    return output;
+}
+
 /* Performs a transform that simultaneously locks hardware nodes during the
  * transformation to avoid data races. This is a wrapper around
  * problem.transform. */
@@ -241,6 +291,11 @@ void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
      * transformation. */
     std::lock_guard<decltype(selHLock)> selHGuard(selHLock, std::adopt_lock);
     std::lock_guard<decltype(oldHLock)> oldHGuard(oldHLock, std::adopt_lock);
+
+    /* Increment transformation counters. */
+    (*selA)->transformCount++;
+    (*selH)->transformCount++;
+    (*oldH)->transformCount++;
 
     /* Perform the transformation. */
     problem.transform(selA, selH, oldH);

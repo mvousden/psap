@@ -21,6 +21,11 @@ public:
     void co_anneal(Problem& problem, std::ofstream& csvOut,
                    Iteration maxIteration);
 
+    static TransformCount compute_transform_footprint(
+        const decltype(Problem::nodeAs)::iterator& selA,
+        const decltype(Problem::nodeHs)::iterator& selH,
+        const decltype(Problem::nodeHs)::iterator& oldH);
+
     static void locking_transform(Problem& problem,
                                   decltype(Problem::nodeAs)::iterator& selA,
                                   decltype(Problem::nodeHs)::iterator& selH,
