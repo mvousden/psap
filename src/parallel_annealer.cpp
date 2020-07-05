@@ -189,7 +189,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         /* Transformation */
         locking_transform(problem, selA, selH, oldH);
 
-        /* Fitness of components before transformation. */
+        /* Fitness of components after transformation. */
         auto newFitnessComponents =
             problem.compute_app_node_locality_fitness(**selA) * 2 +
             problem.compute_hw_node_clustering_fitness(**selH) +
