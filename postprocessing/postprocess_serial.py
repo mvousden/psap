@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Postprocesses output from a PSAP run. Call this script pointing at the
+# Postprocesses output from a serial PSAP run. Call this script pointing at the
 # appropriate output directory (it will search for the appropriate files).
 
 import os
