@@ -78,6 +78,14 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
                       std::ofstream::trunc);
     }
 
+    /* If we're doing periodic fitness updates, throw one in before starting to
+     * anneal. */
+    if (log and recordEvery != 0)
+    {
+        csvOutMaster << iteration << ","
+                     << problem.compute_total_fitness() << std::endl;
+    }
+
     /* Initialise timer in a stupid way. */
     auto now = std::chrono::steady_clock::now();
     auto wallClock = now - now;  /* Zero */
