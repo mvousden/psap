@@ -41,7 +41,7 @@ int main()
     problem.write_a_to_h_map((outDir / "initial_a_to_h_map.csv").u8string());
 
     /* Solve problem */
-    Iteration maxIteration = static_cast<Iteration>(1e7);
+    Iteration maxIteration = static_cast<Iteration>(1e5);
     {
         std::stringstream message;
         message << "Annealing problem for " << maxIteration << " iterations.";
