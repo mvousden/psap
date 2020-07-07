@@ -2,6 +2,7 @@
 #define DISORDER_SCHEDULES_HPP
 
 #include <random>
+#include <string>
 
 /* Overflow is a real possibility, believe me. Better to incur a small
  * memory than to check for overflow every iteration. */
@@ -27,6 +28,7 @@ class AbsoluteZero
 public:
     AbsoluteZero(Iteration){};
     bool determine(float, float, Iteration){return false;}
+    const char* handle = "AbsoluteZero";
 };
 
 /* Disorder decays exponentially. Better solutions are always accepted. */
@@ -35,6 +37,7 @@ class ExpDecayDisorder: public Disorder
 public:
     ExpDecayDisorder(Iteration maxIteration);
     bool determine(float, float, Iteration);
+    const char* handle = "ExpDecayDisorder";
 
 private:
     double disorderDecay;
@@ -46,6 +49,7 @@ class LinearDecayDisorder: public Disorder
 public:
     LinearDecayDisorder(Iteration maxIteration);
     bool determine(float, float, Iteration);
+    const char* handle = "LinearDecayDisorder";
 
 private:
     double gradient;
@@ -58,6 +62,7 @@ class NoDisorder: public Disorder
 public:
     NoDisorder(Iteration maxIteration);
     bool determine(float, float, Iteration);
+    const char* handle = "NoDisorder";
 };
 
 #endif

@@ -16,11 +16,13 @@ public:
                      std::filesystem::path outDirArg="");
     void operator()(Problem& problem, Iteration recordEvery=0)
         {anneal(problem, recordEvery);}
+    const char* handle = "ParallelAnnealer";
 
     /* Parallel compute unit */
     void co_anneal(Problem& problem, std::ofstream& csvOut,
                    Iteration maxIteration);
 
+    /* Transformation utilities */
     static TransformCount compute_transform_footprint(
         const decltype(Problem::nodeAs)::iterator& selA,
         const decltype(Problem::nodeHs)::iterator& selH,

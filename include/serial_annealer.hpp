@@ -15,6 +15,7 @@ public:
     SerialAnnealer(Iteration maxIterationArg=100,
                    std::filesystem::path outDirArg="");
     void operator()(Problem& problem){anneal(problem);}
+    const char* handle = "SerialAnnealer";
 
 private:
     Iteration iteration = 0;
