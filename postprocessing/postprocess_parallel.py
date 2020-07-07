@@ -27,11 +27,13 @@ def doit(inputDir):
                                                list(fitnessData["Fitness"]))
     figure.savefig("fitness_parallel.pdf")
 
-    # Grab collision statistics for each thread.
+    # Grab statistics for each thread.
     iterationsPerThread = []
     selectionCollisionsPerThread = []
     reliableFitnessPerThread = []
+    insufficientlyDeterminedOps = []
     threadIndex = 0
+    maxIteration = 0
     while True:
         annealOpsPath = os.path.join(
             inputDir, filePaths["anneal_ops"].format(threadIndex))
@@ -47,6 +49,9 @@ def doit(inputDir):
             annealOps["Number of selection collisions"].sum())
         reliableFitnessPerThread.append(
             annealOps["Fitness computation is reliable"].sum())
+        insufficientlyDeterminedOps = insufficientlyDeterminedOps + \
+            list(annealOps[annealOps["Determination"] == 0]["Iteration"])
+        maxIteration = max(maxIteration, annealOps["Iteration"].max())
 
         # Make life simpler for later
         del annealOps
@@ -62,7 +67,7 @@ def doit(inputDir):
     # Degree data
     aDegrees = pd.read_csv(os.path.join(inputDir, filePaths["a_degrees"]))
 
-    # Write to file
+    # Write statistics to file
     with open("postprocessing_statistics_parallel.ini", "w") as collisionsFile:
         collisionsFile.write(
             "[postprocessing]\n"
@@ -80,6 +85,11 @@ def doit(inputDir):
                 aDegrees["Degree"].mean(),
                 selectionCollisionPercent,
                 reliableFitnessPercent))
+
+    # Draw determination data
+    figure, axes = postprocessing.plot_determination_histogram(
+        insufficientlyDeterminedOps, maxIteration)
+    figure.savefig("determination_parallel.pdf")
 
 
 if __name__ == "__main__":

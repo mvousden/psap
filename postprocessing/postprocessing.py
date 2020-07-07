@@ -200,6 +200,7 @@ def plot_determination_histogram(underdeterminedIterations, maxIteration):
     # Formatting
     axes.ticklabel_format(axis="x", scilimits=(0, 0), style="sci")
     axes.set_xlim(0, maxIteration * 1.05)
+    axes.set_ylim(0, 100)
     axes.set_xlabel("Iteration")
     axes.set_ylabel("Insufficiently-Determined Selection Operation Rate (%)")
     axes.set_title("Determination Histogram")
