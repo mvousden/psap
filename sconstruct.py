@@ -6,7 +6,7 @@ try:
     gitRev = sp.Popen(["git", "rev-parse", "HEAD"],
                       stdout=sp.PIPE, stderr=sp.PIPE)\
         .stdout.read().strip().decode("utf-8")
-except FileNotFoundErrror:
+except FileNotFoundError:
     gitRev = ""
 
 env = Environment()
