@@ -61,7 +61,7 @@ void Problem::log(const std::string_view& message)
 
     auto datetime = std::time(nullptr);
     combined << "["
-             << std::put_time(std::gmtime(&datetime), "%F %T%z") << "] ";
+             << std::put_time(std::gmtime(&datetime), "%FT%T%z") << "] ";
 
     /* Write message data */
     combined << message.data();
