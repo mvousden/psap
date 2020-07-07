@@ -458,6 +458,24 @@ bool Problem::check_node_integrity(std::stringstream& errors)
     return output;
 }
 
+/* Writes, for each application node, an entry to the CSV file at path passed
+ * to by argument with its degree. Each line is of the form
+ * '<A_NODE_NAME>,<DEGREE>'. Any existing file is clobbered. Does no filesystem
+ * checking of any kind. */
+void Problem::write_a_degrees(const std::string_view& path)
+{
+    std::stringstream message;
+    message << "Writing a degree list to file at '" << path.data() << "'.";
+    log(message.str());
+
+    std::ofstream out(path.data(), std::ofstream::trunc);
+    out << "Application node name,Degree" << std::endl;
+
+    for (const auto& nodeA : nodeAs)
+        out << nodeA->name << "," << nodeA->neighbours.size() << std::endl;
+    out.close();
+}
+
 /* Writes, for each application edge, an entry to the CSV file at path passed
  * to by argument connecting nodes in the hardware graph. Each line is of the
  * form '<FROM_H_NODE_NAME>,<TO_H_NODE_NAME>,<COUNT>', where <COUNT> indicates

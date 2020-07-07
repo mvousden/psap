@@ -37,6 +37,7 @@ int main()
     }
 
     /* Write initial condition data */
+    problem.write_a_degrees((outDir / "a_degrees.csv").u8string());
     problem.write_a_h_graph((outDir / "initial_a_h_graph.csv").u8string());
     problem.write_a_to_h_map((outDir / "initial_a_to_h_map.csv").u8string());
 

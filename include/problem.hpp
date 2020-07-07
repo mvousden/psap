@@ -58,6 +58,7 @@ public:
     bool check_node_integrity(std::stringstream& errors);
 
     /* State dumps */
+    void write_a_degrees(const std::string_view& path);
     void write_a_h_graph(const std::string_view& path);
     void write_a_to_h_map(const std::string_view& path);
     void write_h_graph(const std::string_view& path);
