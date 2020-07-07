@@ -1,7 +1,17 @@
 import platform
+import subprocess as sp
+
+# Grab Git revision, empty if not in a git repo or other failure
+try:
+    gitRev = sp.Popen(["git", "rev-parse", "HEAD"],
+                      stdout=sp.PIPE, stderr=sp.PIPE)\
+        .stdout.read().strip().decode("utf-8")
+except FileNotFoundErrror:
+    gitRev = ""
 
 env = Environment()
 env["SYSTEM"] = platform.system()
+env.Append(CPPDEFINES={"GIT_REVISION": "{}".format(gitRev)})
 
 if any([env["SYSTEM"] == system for system in ["Linux", "Darwin"]]):
     # Clang, GCC
