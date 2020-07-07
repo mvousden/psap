@@ -6,9 +6,7 @@
 template<class DisorderT>
 SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
                                           std::filesystem::path outDirArg):
-    maxIteration(maxIterationArg),
-    disorder(maxIterationArg),
-    outDir(outDirArg){}
+    Annealer<DisorderT>(maxIterationArg, outDirArg){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */
@@ -27,19 +25,18 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
      *   flush everything at the end.
      *
      * - A text file to which the wallclock runtime in seconds is dumped. */
-    bool log = !outDir.empty();
     std::ofstream csvOut;
     std::ofstream clockOut;
-    if (log)
+    if (this->log)
     {
-        csvOut.open((outDir / csvPath).u8string().c_str(),
+        csvOut.open((this->outDir / csvPath).u8string().c_str(),
                     std::ofstream::trunc);
         csvOut << "Selected application node index,"
                << "Selected hardware node index,"
                << "Transformed Fitness,"
                << "Determination\n";
 
-        clockOut.open((outDir / clockPath).u8string().c_str(),
+        clockOut.open((this->outDir / clockPath).u8string().c_str(),
                       std::ofstream::trunc);
     }
 
@@ -51,7 +48,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
     auto oldFitness = problem.compute_total_fitness();
 
     /* Write data for iteration zero to deploy initial fitness. */
-    if (log) csvOut << "-1,-1," << oldFitness << ",1\n";
+    if (this->log) csvOut << "-1,-1," << oldFitness << ",1\n";
 
     /* Start the timer. */
     auto timeAtStart = std::chrono::steady_clock::now();
@@ -61,8 +58,8 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
         /* Selection */
         problem.select(selA, selH, oldH);
-        if (log) csvOut << selA - problem.nodeAs.begin() << ","
-                        << selH - problem.nodeHs.begin() << ",";
+        if (this->log) csvOut << selA - problem.nodeAs.begin() << ","
+                              << selH - problem.nodeHs.begin() << ",";
 
         /* Fitness of components before transformation. */
         auto oldFitnessComponents =
@@ -81,30 +78,30 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
         auto newFitness = oldFitness - oldFitnessComponents +
             newFitnessComponents;
-        if (log) csvOut << newFitness << ",";
+        if (this->log) csvOut << newFitness << ",";
 
         /* Determination */
         bool sufficientlyDetermined =
-            disorder.determine(oldFitness, newFitness, iteration);
+            this->disorder.determine(oldFitness, newFitness, iteration);
 
         /* If the solution was sufficiently determined to be chosen, update the
          * base fitness to support computation for the next
          * iteration. Otherwise, revert the solution. */
         if (sufficientlyDetermined)
         {
-            if (log) csvOut << 1 << '\n';
+            if (this->log) csvOut << 1 << '\n';
             oldFitness = newFitness;
         }
 
         else
         {
-            if (log) csvOut << 0 << '\n';
+            if (this->log) csvOut << 0 << '\n';
             problem.transform(selA, oldH, selH);
         }
     }
-    while (iteration != maxIteration);  /* Termination */
+    while (iteration != this->maxIteration);  /* Termination */
 
-    if (log)
+    if (this->log)
     {
         /* Write the elapsed time to the wallclock log file. */
         clockOut << std::chrono::duration_cast<std::chrono::seconds>(

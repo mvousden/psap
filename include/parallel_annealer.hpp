@@ -1,15 +1,14 @@
 #ifndef PARALLEL_ANNEALER_HPP
 #define PARALLEL_ANNEALER_HPP
 
-#include "disorder_schedules.hpp"
-#include "problem.hpp"
+#include "annealer.hpp"
 
 #include <atomic>
 #include <fstream>
 #include <sstream>
 
 template <class DisorderT=ExpDecayDisorder>
-class ParallelAnnealer
+class ParallelAnnealer: public Annealer<DisorderT>
 {
 public:
     ParallelAnnealer(unsigned numThreads=1, Iteration maxIteration=100,
@@ -36,14 +35,15 @@ public:
 private:
     unsigned numThreads;
     std::atomic<Iteration> iteration = 0;
-    Iteration maxIteration;
-    DisorderT disorder;
-    bool log = false;
+
+    /* Anneal methods. Note that I don't use optional arguments here because
+     * Annealer has a pure virtual anneal(Problem) method, and I want to
+     * encapsulate both call methods. */
     void anneal(Problem& problem, Iteration recordEvery);
+    void anneal(Problem& problem){anneal(problem, 0);}
 
     /* Output streams. If no output directory is provided, no output is
      * written. */
-    std::filesystem::path outDir;
     constexpr static auto csvBaseName = "anneal_ops";
     constexpr static auto fitnessPath = "reliable_fitness_values.csv";
     constexpr static auto clockPath = "wallclock.txt";

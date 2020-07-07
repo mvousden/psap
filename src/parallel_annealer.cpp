@@ -9,13 +9,8 @@ template<class DisorderT>
 ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
                                               Iteration maxIterationArg,
                                               std::filesystem::path outDirArg):
-    numThreads(numThreadsArg),
-    maxIteration(maxIterationArg),
-    disorder(maxIterationArg),
-    outDir(outDirArg)
-{
-    log = !outDir.empty();
-}
+    Annealer<DisorderT>(maxIterationArg, outDirArg),
+    numThreads(numThreadsArg){}
 
 /* Hits the solution repeatedly with many hammers at the same time while
  * cooling it. Hopefully improves it (the jury's out).
@@ -46,7 +41,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
     std::ofstream csvOutMaster;
     std::ofstream clockOut;
     decltype(csvOuts)::size_type csvOutIndex;
-    if (log)
+    if (this->log)
     {
         /* Per-thread logging. */
         for (csvOutIndex = 0; csvOutIndex < csvOuts.size(); csvOutIndex++)
@@ -54,7 +49,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
             std::stringstream csvPath;
             csvPath << csvBaseName << "-" << csvOutIndex << ".csv";
             csvOuts.at(csvOutIndex).open(
-                (outDir / csvPath.str()).u8string().c_str(),
+                (this->outDir / csvPath.str()).u8string().c_str(),
                 std::ofstream::trunc);
             csvOuts.at(csvOutIndex) << "Iteration,"
                                     << "Selected application node index,"
@@ -68,19 +63,19 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         /* Frequent serial fitness computation. */
         if (recordEvery != 0)
         {
-            csvOutMaster.open((outDir / fitnessPath).u8string().c_str(),
+            csvOutMaster.open((this->outDir / fitnessPath).u8string().c_str(),
                               std::ofstream::trunc);
             csvOutMaster << "Iteration,Fitness\n";
         }
 
         /* Wallclock measurement. */
-        clockOut.open((outDir / clockPath).u8string().c_str(),
+        clockOut.open((this->outDir / clockPath).u8string().c_str(),
                       std::ofstream::trunc);
     }
 
     /* If we're doing periodic fitness updates, throw one in before starting to
      * anneal. */
-    if (log and recordEvery != 0)
+    if (this->log and recordEvery != 0)
     {
         csvOutMaster << iteration << ","
                      << problem.compute_total_fitness() << std::endl;
@@ -100,8 +95,8 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
     {
         /* Compute next stopping point. */
         Iteration nextStop;
-        if (recordEvery == 0) nextStop = maxIteration;
-        else nextStop = std::min(maxIteration, iteration + recordEvery);
+        if (recordEvery == 0) nextStop = this->maxIteration;
+        else nextStop = std::min(this->maxIteration, iteration + recordEvery);
 
         /* Measure wallclock time between now and when the threads are joined
          * with. */
@@ -121,7 +116,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         wallClock += (std::chrono::steady_clock::now() - timeAtStart);
 
         /* Compute fitness value and record it. */
-        if (log and recordEvery != 0)
+        if (this->log and recordEvery != 0)
         {
             /* Problem logging (mostly for the timestamp). */
             std::stringstream message;
@@ -137,10 +132,10 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
             problem.log("Fitness logged.");
         }
     }
-    while (iteration < maxIteration);
+    while (iteration < this->maxIteration);
 
     /* Write wallclock information and close log files. */
-    if (log)
+    if (this->log)
     {
         clockOut << std::chrono::duration_cast<std::chrono::seconds>(
             wallClock).count() << std::endl;
@@ -169,7 +164,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
 
     /* Again, nobody cares about the initial fitness value, but it's
      * interesting to watch it change. */
-    if (log) csvOut << "-1,-1,-1,0," << oldFitness << ",1,1\n";
+    if (this->log) csvOut << "-1,-1,-1,0," << oldFitness << ",1,1\n";
 
     Iteration localIteration;
     do
@@ -177,13 +172,13 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         /* Get the iteration number. The variable "iteration" is shared between
          * threads. */
         localIteration = iteration++;
-        if (log) csvOut << localIteration << ",";
+        if (this->log) csvOut << localIteration << ",";
 
         /* "Atomic" selection */
         auto selectionCollisions = problem.select(selA, selH, oldH, true);
-        if (log) csvOut << selA - problem.nodeAs.begin() << ","
-                        << selH - problem.nodeHs.begin() << ","
-                        << selectionCollisions << ",";
+        if (this->log) csvOut << selA - problem.nodeAs.begin() << ","
+                              << selH - problem.nodeHs.begin() << ","
+                              << selectionCollisions << ",";
 
         /* RAII locking */
         std::lock_guard<decltype(NodeA::lock)> appLock((*selA)->lock,
@@ -224,25 +219,26 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
 
         /* Writing new fitness value to csv, and whether or not the fitness
          * computation this iteration is unreliable. */
-        if (log) csvOut << newFitness << ","
-                        << (oldTformFootprint == newTformFootprint) << ",";
+        if (this->log) csvOut << newFitness << ","
+                              << (oldTformFootprint == newTformFootprint)
+                              << ",";
 
         /* Determination */
         bool sufficientlyDetermined =
-            disorder.determine(oldFitness, newFitness, localIteration);
+            this->disorder.determine(oldFitness, newFitness, localIteration);
 
         /* If the solution was sufficiently determined to be chosen, update the
          * base fitness to support computation for the next
          * iteration. Otherwise, revert the solution. */
         if (sufficientlyDetermined)
         {
-            if (log) csvOut << 1 << '\n';
+            if (this->log) csvOut << 1 << '\n';
             oldFitness = newFitness;
         }
 
         else
         {
-            if (log) csvOut << 0 << '\n';
+            if (this->log) csvOut << 0 << '\n';
             locking_transform(problem, selA, oldH, selH);
         }
     }
