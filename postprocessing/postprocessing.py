@@ -2,6 +2,7 @@
 
 import graphviz as gv
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import pandas as pd
 
@@ -169,6 +170,46 @@ def draw_map(inputDir, outPath, filePaths, initialState=False,
     fileName, extension = os.path.splitext(os.path.basename(outPath))
     graph.render(filename=fileName, directory=os.path.dirname(outPath),
                  cleanup=True, format=extension.split(".")[-1])
+
+
+def plot_determination_histogram(underdeterminedIterations, maxIteration):
+    """Draws a histogram showing how the determination rate of the annealing
+    operation changes with iteration (and by extension, cooling schedule).
+
+    Arguments:
+
+     - underdeterminedIterations: Iterable containing iterations that failed
+         the determination check.
+
+     - maxIteration: Integer denoting the final iteration (regardless of
+         determination); this is used to align the histogram.
+
+    Returns the figure and axes as a tuple (for your editing/saving needs)."""
+
+    # Compute histogram data
+    numBins = 25  # Philistine
+    occs, edges = np.histogram(underdeterminedIterations, bins=numBins)
+    occs = occs / (maxIteration / numBins) * 100  # Percentage
+
+    # Plot data
+    figure, axes = plt.subplots()
+    axes.bar(edges[:-1], occs, width=np.diff(edges), edgecolor="#005500",
+             align="edge", color="g")
+    axes.grid(axis="y", color="k", alpha=0.5, linestyle="--")
+
+    # Formatting
+    axes.ticklabel_format(axis="x", scilimits=(0, 0), style="sci")
+    axes.set_xlim(0, maxIteration * 1.05)
+    axes.set_xlabel("Iteration")
+    axes.set_ylabel("Insufficiently-Determined Selection Operation Rate (%)")
+    axes.set_title("Determination Histogram")
+    axes.spines["right"].set_visible(False)
+    axes.spines["top"].set_visible(False)
+    axes.yaxis.set_ticks_position("left")
+    axes.xaxis.set_ticks_position("bottom")
+    figure.tight_layout()
+
+    return figure, axes
 
 
 def plot_fitness(iterations, fitnesses, alpha=1):

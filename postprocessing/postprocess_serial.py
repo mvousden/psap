@@ -33,6 +33,11 @@ def doit(inputDir):
                                                alpha=relaxAlpha)
     figure.savefig("fitness_serial.pdf")
 
+    # Draw determination data
+    figure, axes = postprocessing.plot_determination_histogram(
+        opsData[opsData["Determination"] == 0].index, maxIteration)
+    figure.savefig("determination_serial.pdf")
+
 
 if __name__ == "__main__":
     rc = postprocessing.check_expected_files(sys.argv[1], filePaths.values())
