@@ -4,8 +4,6 @@
 #include "annealer.hpp"
 
 #include <atomic>
-#include <fstream>
-#include <sstream>
 
 template <class DisorderT=ExpDecayDisorder>
 class ParallelAnnealer: public Annealer<DisorderT>
@@ -15,7 +13,6 @@ public:
                      std::filesystem::path outDirArg="");
     void operator()(Problem& problem, Iteration recordEvery=0)
         {anneal(problem, recordEvery);}
-    const char* handle = "ParallelAnnealer";
 
     /* Parallel compute unit */
     void co_anneal(Problem& problem, std::ofstream& csvOut,
@@ -42,11 +39,14 @@ private:
     void anneal(Problem& problem, Iteration recordEvery);
     void anneal(Problem& problem){anneal(problem, 0);}
 
-    /* Output streams. If no output directory is provided, no output is
+    /* Output file names. If no output directory is provided, no output is
      * written. */
     constexpr static auto csvBaseName = "anneal_ops";
     constexpr static auto fitnessPath = "reliable_fitness_values.csv";
     constexpr static auto clockPath = "wallclock.txt";
+
+    /* Metadata writing */
+    void write_metadata();
 };
 
 #endif

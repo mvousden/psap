@@ -1,12 +1,14 @@
 #include "serial_annealer.hpp"
 
 #include <chrono>
+#include <sstream>
+#include <string>
 #include <utility>
 
 template<class DisorderT>
 SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
                                           std::filesystem::path outDirArg):
-    Annealer<DisorderT>(maxIterationArg, outDirArg){}
+    Annealer<DisorderT>(maxIterationArg, outDirArg, "SerialAnnealer"){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */
@@ -38,6 +40,8 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
 
         clockOut.open((this->outDir / clockPath).u8string().c_str(),
                       std::ofstream::trunc);
+
+        this->write_metadata();
     }
 
     auto selA = problem.nodeAs.begin();

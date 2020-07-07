@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <mutex>
+#include <sstream>
 #include <thread>
 #include <utility>
 
@@ -9,7 +10,7 @@ template<class DisorderT>
 ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
                                               Iteration maxIterationArg,
                                               std::filesystem::path outDirArg):
-    Annealer<DisorderT>(maxIterationArg, outDirArg),
+    Annealer<DisorderT>(maxIterationArg, outDirArg, "ParallelAnnealer"),
     numThreads(numThreadsArg){}
 
 /* Hits the solution repeatedly with many hammers at the same time while
@@ -71,6 +72,9 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         /* Wallclock measurement. */
         clockOut.open((this->outDir / clockPath).u8string().c_str(),
                       std::ofstream::trunc);
+
+        /* Metadata */
+        write_metadata();
     }
 
     /* If we're doing periodic fitness updates, throw one in before starting to
@@ -303,6 +307,24 @@ void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
 
     /* Perform the transformation. */
     problem.transform(selA, selH, oldH);
+}
+
+/* Uses the annealer to write metadata, then appends the number of threads to
+ * the file naively.
+ *
+ * Don't judge, life is too short. */
+template<class DisorderT>
+void ParallelAnnealer<DisorderT>::write_metadata()
+{
+    Annealer<DisorderT>::write_metadata();
+    if (this->log)
+    {
+        std::ofstream metadata;
+        metadata.open((this->outDir / this->metadataName).u8string().c_str(),
+                      std::ofstream::app);
+        metadata << "threadCount = " << numThreads;
+        metadata.close();
+    }
 }
 
 #include "parallel_annealer-impl.hpp"
