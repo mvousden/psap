@@ -172,7 +172,49 @@ def draw_map(inputDir, outPath, filePaths, initialState=False,
                  cleanup=True, format=extension.split(".")[-1])
 
 
-def plot_determination_histogram(underdeterminedIterations, maxIteration):
+def plot_loading_histogram(loadings, numBins=10):
+    """Draws a histogram showing the distribution of how hardware nodes are
+    loaded with application nodes.
+
+    Arguments:
+
+     - loadings: Iterable containing, for each hardware node, an integer
+         denoting the number of application nodes mapped onto it.
+
+     - numBins: Integer number of bins to draw with.
+
+    Returns the figure and axes as a tuple (for your editing/saving needs)."""
+
+    # Plot data
+    figure, axes = plt.subplots()
+    axes.hist(loadings, bins=numBins, color="r", edgecolor="#550000")
+
+    # Formatting
+    numberOfHardwareNodes = len(loadings)
+
+    # This suppresses a UserWarning raised when limits are set to the same
+    # value.
+    axes.set_xlim(min(loadings), max(loadings +\
+                  (0 if min(loadings) != max(loadings) else 1e-2)))
+
+    # The formatting continues...
+    axes.set_ylim(0, len(loadings))
+    axes.xaxis.get_major_locator().set_params(integer=True)
+    axes.yaxis.get_major_locator().set_params(integer=True)
+    axes.set_xlabel("Number of application nodes placed on hardware nodes")
+    axes.set_ylabel("Occurences (total={})".format(numberOfHardwareNodes))
+    axes.set_title("Hardware Node Loading")
+    axes.spines["right"].set_visible(False)
+    axes.spines["top"].set_visible(False)
+    axes.yaxis.set_ticks_position("left")
+    axes.xaxis.set_ticks_position("bottom")
+    figure.tight_layout()
+
+    return figure, axes
+
+
+def plot_determination_histogram(underdeterminedIterations, maxIteration,
+                                 numBins=25):
     """Draws a histogram showing how the determination rate of the annealing
     operation changes with iteration (and by extension, cooling schedule).
 
@@ -184,10 +226,11 @@ def plot_determination_histogram(underdeterminedIterations, maxIteration):
      - maxIteration: Integer denoting the final iteration (regardless of
          determination); this is used to align the histogram.
 
+     - numBins: Integer number of bins to draw with.
+
     Returns the figure and axes as a tuple (for your editing/saving needs)."""
 
     # Compute histogram data
-    numBins = 25  # Philistine
     occs, edges = np.histogram(underdeterminedIterations, bins=numBins)
     occs = occs / (maxIteration / numBins) * 100  # Percentage
 

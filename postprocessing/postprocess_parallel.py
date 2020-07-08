@@ -91,6 +91,13 @@ def doit(inputDir):
         insufficientlyDeterminedOps, maxIteration)
     figure.savefig("determination_parallel.pdf")
 
+    # Draw hardware node loading data
+    loadingData = pd.read_csv(os.path.join(inputDir,
+                                           filePaths["h_node_loading"]))
+    figure, axes = postprocessing.plot_loading_histogram(
+        loadingData["Number of contained application nodes"])
+    figure.savefig("loading_parallel.pdf")
+
 
 if __name__ == "__main__":
     rc = postprocessing.check_expected_files(sys.argv[1], filePaths.values())
