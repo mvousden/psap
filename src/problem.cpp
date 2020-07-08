@@ -371,16 +371,27 @@ float Problem::compute_hw_node_clustering_fitness(const NodeH& nodeH)
  * solution. */
 float Problem::compute_total_fitness()
 {
+    return compute_total_clustering_fitness() +
+        compute_total_locality_fitness();
+}
+
+/* Computes and returns the total clustering fitness of the current mapping for
+ * this solution. */
+float Problem::compute_total_clustering_fitness()
+{
     float returnValue = 0;
-
-    /* Locality fitness! */
-    for (const auto& nodeA : nodeAs)
-        returnValue += compute_app_node_locality_fitness(*nodeA);
-
-    /* Clustering fitness! */
     for (const auto& nodeH : nodeHs)
         returnValue += compute_hw_node_clustering_fitness(*nodeH);
+    return returnValue;
+}
 
+/* Computes and returns the total locality fitness of the current mapping for
+ * this solution. */
+float Problem::compute_total_locality_fitness()
+{
+    float returnValue = 0;
+    for (const auto& nodeA : nodeAs)
+        returnValue += compute_app_node_locality_fitness(*nodeA);
     return returnValue;
 }
 

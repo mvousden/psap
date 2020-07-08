@@ -53,6 +53,8 @@ public:
     float compute_app_node_locality_fitness(const NodeA& nodeA);
     float compute_hw_node_clustering_fitness(const NodeH& nodeH);
     float compute_total_fitness();
+    float compute_total_clustering_fitness();
+    float compute_total_locality_fitness();
 
     /* Integrity checking */
     bool check_node_integrity(std::stringstream& errors);

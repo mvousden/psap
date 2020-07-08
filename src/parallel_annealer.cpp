@@ -57,6 +57,8 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
                                     << "Selected hardware node index,"
                                     << "Number of selection collisions,"
                                     << "Transformed Fitness,"
+                                    << "Transformed Clustering Fitness,"
+                                    << "Transformed Locality Fitness,"
                                     << "Fitness computation is reliable,"
                                     << "Determination\n";
         }
@@ -66,7 +68,10 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         {
             csvOutMaster.open((this->outDir / fitnessPath).u8string().c_str(),
                               std::ofstream::trunc);
-            csvOutMaster << "Iteration,Fitness\n";
+            csvOutMaster << "Iteration,"
+                         << "Fitness,"
+                         << "Clustering Fitness,"
+                         << "Locality Fitness\n";
         }
 
         /* Wallclock measurement. */
@@ -78,11 +83,17 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
     }
 
     /* If we're doing periodic fitness updates, throw one in before starting to
-     * anneal. */
+     * anneal. An expansive scope matters here. */
+    float clusteringFitness;
+    float localityFitness;
     if (this->log and recordEvery != 0)
     {
+        clusteringFitness = problem.compute_total_clustering_fitness();
+        localityFitness = problem.compute_total_locality_fitness();
         csvOutMaster << iteration << ","
-                     << problem.compute_total_fitness() << std::endl;
+                     << clusteringFitness + localityFitness << ","
+                     << clusteringFitness << ","
+                     << localityFitness << std::endl;
     }
 
     /* Initialise timer in a stupid way. */
@@ -111,7 +122,8 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         for (unsigned threadId = 0; threadId < numThreads; threadId++)
             threads.emplace_back(&ParallelAnnealer<DisorderT>::co_anneal, this,
                                  std::ref(problem),
-                                 std::ref(csvOuts.at(threadId)), nextStop);
+                                 std::ref(csvOuts.at(threadId)), nextStop,
+                                 clusteringFitness, localityFitness);
 
         /* Join with slave threads. */
         for (auto& thread : threads) thread.join();
@@ -129,8 +141,12 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
             problem.log(message.str());
 
             /* Fitness computation and logging. */
+            clusteringFitness = problem.compute_total_clustering_fitness();
+            localityFitness = problem.compute_total_locality_fitness();
             csvOutMaster << iteration << ","
-                         << problem.compute_total_fitness() << std::endl;
+                         << clusteringFitness + localityFitness << ","
+                         << clusteringFitness << ","
+                         << localityFitness << std::endl;
 
             /* End timestamp */
             problem.log("Fitness logged.");
@@ -153,7 +169,9 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
 template<class DisorderT>
 void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
                                             std::ofstream& csvOut,
-                                            Iteration maxIteration)
+                                            Iteration maxIteration,
+                                            float oldClusteringFitness,
+                                            float oldLocalityFitness)
 {
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();
@@ -162,13 +180,15 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
     /* Base fitness "used" from the start of each iteration. Note that the
      * currently-stored fitness will drift from the total fitness. This is fine
      * because determination only care about the fitness difference from an
-     * operation - not its absolute value or ratio. As such, we choose an
-     * arbitrary initial value here (because nobody cares about what it is). */
-    auto oldFitness = static_cast<float>(-42);
+     * operation - not its absolute value or ratio. */
+    auto oldFitness = oldClusteringFitness + oldLocalityFitness;
 
-    /* Again, nobody cares about the initial fitness value, but it's
+    /* Really, nobody cares about the initial fitness value, but it's
      * interesting to watch it change. */
-    if (this->log) csvOut << "-1,-1,-1,0," << oldFitness << ",1,1\n";
+    if (this->log) csvOut << "-1,-1,-1,0,"
+                          << oldFitness << ","
+                          << oldClusteringFitness << ","
+                          << oldLocalityFitness << ",1,1\n";
 
     Iteration localIteration;
     do
@@ -197,19 +217,23 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             selA, selH, oldH);
 
         /* Fitness of components before transformation. */
-        auto oldFitnessComponents =
-            problem.compute_app_node_locality_fitness(**selA) * 2 +
+        auto oldClusteringFitnessComponents =
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(**oldH);
+
+        auto oldLocalityFitnessComponents =
+            problem.compute_app_node_locality_fitness(**selA) * 2;
 
         /* Transformation */
         locking_transform(problem, selA, selH, oldH);
 
         /* Fitness of components after transformation. */
-        auto newFitnessComponents =
-            problem.compute_app_node_locality_fitness(**selA) * 2 +
+        auto newClusteringFitnessComponents =
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(**oldH);
+
+        auto newLocalityFitnessComponents =
+            problem.compute_app_node_locality_fitness(**selA) * 2;
 
         /* Footprint after transformation. Note the minus three - this is
          * because our move transformation causes three changes to the data
@@ -218,12 +242,19 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
             selA, selH, oldH) - 3;
 
         /* New fitness computation. */
-        auto newFitness = oldFitness - oldFitnessComponents +
-            newFitnessComponents;
+        auto newClusteringFitness = oldClusteringFitness -
+            oldClusteringFitnessComponents + newClusteringFitnessComponents;
 
-        /* Writing new fitness value to csv, and whether or not the fitness
+        auto newLocalityFitness = oldLocalityFitness -
+            oldLocalityFitnessComponents + newLocalityFitnessComponents;
+
+        auto newFitness = newLocalityFitness + newClusteringFitness;
+
+        /* Writing new fitness value to CSV, and whether or not the fitness
          * computation this iteration is unreliable. */
         if (this->log) csvOut << newFitness << ","
+                              << newClusteringFitness << ","
+                              << newLocalityFitness << ","
                               << (oldTformFootprint == newTformFootprint)
                               << ",";
 
@@ -238,6 +269,8 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         {
             if (this->log) csvOut << 1 << '\n';
             oldFitness = newFitness;
+            oldClusteringFitness = newClusteringFitness;
+            oldLocalityFitness = newLocalityFitness;
         }
 
         else

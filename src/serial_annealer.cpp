@@ -36,6 +36,8 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         csvOut << "Selected application node index,"
                << "Selected hardware node index,"
                << "Transformed Fitness,"
+               << "Transformed Clustering Fitness,"
+               << "Transformed Locality Fitness,"
                << "Determination\n";
 
         clockOut.open((this->outDir / clockPath).u8string().c_str(),
@@ -49,10 +51,15 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
     auto oldH = problem.nodeHs.begin();
 
     /* Base fitness "used" from the start of each iteration. */
-    auto oldFitness = problem.compute_total_fitness();
+    auto oldClusteringFitness = problem.compute_total_clustering_fitness();
+    auto oldLocalityFitness = problem.compute_total_locality_fitness();
+    auto oldFitness = oldLocalityFitness + oldClusteringFitness;
 
     /* Write data for iteration zero to deploy initial fitness. */
-    if (this->log) csvOut << "-1,-1," << oldFitness << ",1\n";
+    if (this->log) csvOut << "-1,-1,"
+                          << oldFitness << ","
+                          << oldClusteringFitness << ","
+                          << oldLocalityFitness << ",1\n";
 
     /* Start the timer. */
     auto timeAtStart = std::chrono::steady_clock::now();
@@ -66,23 +73,36 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
                               << selH - problem.nodeHs.begin() << ",";
 
         /* Fitness of components before transformation. */
-        auto oldFitnessComponents =
-            problem.compute_app_node_locality_fitness(**selA) * 2 +
+        auto oldClusteringFitnessComponents =
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(**oldH);
+
+        auto oldLocalityFitnessComponents =
+            problem.compute_app_node_locality_fitness(**selA) * 2;
 
         /* Transformation */
         problem.transform(selA, selH, oldH);
 
-        /* Fitness of components before transformation. */
-        auto newFitnessComponents =
-            problem.compute_app_node_locality_fitness(**selA) * 2 +
+        /* Fitness of components after transformation. */
+        auto newClusteringFitnessComponents =
             problem.compute_hw_node_clustering_fitness(**selH) +
             problem.compute_hw_node_clustering_fitness(**oldH);
 
-        auto newFitness = oldFitness - oldFitnessComponents +
-            newFitnessComponents;
-        if (this->log) csvOut << newFitness << ",";
+        auto newLocalityFitnessComponents =
+            problem.compute_app_node_locality_fitness(**selA) * 2;
+
+        /* New fitness computation, and writing to CSV. */
+        auto newClusteringFitness = oldClusteringFitness -
+            oldClusteringFitnessComponents + newClusteringFitnessComponents;
+
+        auto newLocalityFitness = oldLocalityFitness -
+            oldLocalityFitnessComponents + newLocalityFitnessComponents;
+
+        auto newFitness = newLocalityFitness + newClusteringFitness;
+
+        if (this->log) csvOut << newFitness << ","
+                              << newClusteringFitness << ","
+                              << newLocalityFitness << ",";
 
         /* Determination */
         bool sufficientlyDetermined =
@@ -95,6 +115,8 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         {
             if (this->log) csvOut << 1 << '\n';
             oldFitness = newFitness;
+            oldClusteringFitness = newClusteringFitness;
+            oldLocalityFitness = newLocalityFitness;
         }
 
         else

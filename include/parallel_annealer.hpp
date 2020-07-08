@@ -16,7 +16,8 @@ public:
 
     /* Parallel compute unit */
     void co_anneal(Problem& problem, std::ofstream& csvOut,
-                   Iteration maxIteration);
+                   Iteration maxIteration, float oldClusteringFitness,
+                   float oldLocalityFitness);
 
     /* Transformation utilities */
     static TransformCount compute_transform_footprint(
