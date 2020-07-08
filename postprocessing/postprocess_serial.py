@@ -23,20 +23,17 @@ def doit(inputDir):
 
     # Draw relaxation data
     opsData = pd.read_csv(os.path.join(inputDir, filePaths["anneal_ops"]))
-    fitnessChanges = \
-        opsData.loc[opsData["Determination"] == 1]["Transformed Fitness"]\
-        .to_dict()
-    maxIteration = list(fitnessChanges.keys())[-1]
-    relaxAlpha = min(1, 1000. / maxIteration)
-
-    figure, axes = postprocessing.plot_fitness(list(fitnessChanges.keys()),
-                                               list(fitnessChanges.values()),
-                                               alpha=relaxAlpha)
+    determinedData = opsData[opsData["Determination"] == 1]
+    figure, axes = postprocessing.plot_fitness(
+        list(determinedData.index),
+        list(determinedData["Transformed Clustering Fitness"]),
+        list(determinedData["Transformed Locality Fitness"]))
+    del determinedData
     figure.savefig("fitness_serial.pdf")
 
     # Draw determination data
     figure, axes = postprocessing.plot_determination_histogram(
-        opsData[opsData["Determination"] == 0].index, maxIteration)
+        opsData[opsData["Determination"] == 0].index, opsData.index.max())
     figure.savefig("determination_serial.pdf")
 
     # Draw hardware node loading data

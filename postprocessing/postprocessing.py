@@ -254,7 +254,7 @@ def plot_determination_histogram(underdeterminedIterations, maxIteration,
     return figure, axes
 
 
-def plot_fitness(iterations, fitnesses, alpha=1):
+def plot_fitness(iterations, clusteringFitnesses, localityFitnesses):
     """Draws fitness data onto a matplotlib figure/axes pair.
 
     Arguments:
@@ -262,30 +262,51 @@ def plot_fitness(iterations, fitnesses, alpha=1):
      - iterations: Iterable, indexable containing iteration values for each
          fitness value in 'fitnesses'.
 
-     - fitnesses: Iterable, indexable containing fitness data; one for each
-         iteration in 'iterations'.
+     - clusteringFitnesses: Iterable, indexable containing clustering fitness
+         data; one for each iteration in 'iterations'.
 
-     - alpha: Alpha with which to draw fitness points (useful if the density of
-         fitness points is high.
+     - localityFitnesses: Iterable, indexable containing locality fitness
+         data; one for each iteration in 'iterations'.
 
     Returns the figure and axes as a tuple (for your editing/saving needs)."""
 
     figure, axes = plt.subplots()
 
-    # Plot data
-    axes.plot(iterations, fitnesses, "kx", alpha=alpha)
+    clusterColour = "#AAAAFF"
+    localityColour = "#88FF88"
+    edgeColour = "#000044"
 
-    # Draw initial and ending points with pretty markers and lines.
-    axes.plot(iterations[0], fitnesses[0], "rx")
-    axes.plot(iterations[-1], fitnesses[-1], "bx")
-    axes.plot([iterations[0], iterations[-1]],
-              [fitnesses[0], fitnesses[0]], "r--")
-    axes.plot([iterations[0], iterations[-1]],
-              [fitnesses[-1], fitnesses[-1]], "b--")
+    # Below 30 iterations, draw a bar chart. Above, draw a line instead.
+    if len(iterations) < 30:
+        widths = list(np.diff(iterations))
+        widths.append(widths[-1])  # It's gotta go somewhere
+        axes.bar(iterations, clusteringFitnesses, alpha=0.8,
+                 edgeColor=edgeColour, color=clusterColour,
+                 label="Clustering Fitness", width=widths)
+        axes.bar(iterations, localityFitnesses, bottom=clusteringFitnesses,
+                 alpha=0.8, edgeColor=edgeColour, color=localityColour,
+                 label="Locality Fitness", width=widths)
+
+        axes.set_xlim(0 - widths[0] / 2, iterations[-1] * 1.05)
+
+    else:
+        totalFitnesses = [clusteringFitnesses[zI] + localityFitnesses[zI]
+                          for zI in range(len(iterations))]
+        axes.plot(iterations, clusteringFitnesses, color=edgeColour)
+        axes.plot(iterations, totalFitnesses, color=edgeColour)
+        axes.plot([0, iterations[-1]], [0, 0], color=edgeColour)
+        axes.fill_between(iterations, 0, clusteringFitnesses,
+                          color=clusterColour, label="Clustering Fitness")
+        axes.fill_between(iterations, clusteringFitnesses, totalFitnesses,
+                          color=localityColour, label="Locality Fitness")
+
+        axes.set_xlim(0, iterations[-1] * 1.05)
+
+    # Legend
+    axes.legend(frameon=False, loc=4)
 
     # Formatting
     axes.ticklabel_format(axis="x", scilimits=(0, 0), style="sci")
-    axes.set_xlim(0, iterations[-1] * 1.05)
     axes.set_xlabel("Iteration")
     axes.set_ylabel("Fitness")
     axes.set_title("Simulated Annealing Relaxation Profile")

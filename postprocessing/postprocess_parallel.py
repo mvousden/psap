@@ -23,8 +23,10 @@ def doit(inputDir):
 
     # Draw relaxation data
     fitnessData = pd.read_csv(os.path.join(inputDir, filePaths["fitness"]))
-    figure, axes = postprocessing.plot_fitness(list(fitnessData["Iteration"]),
-                                               list(fitnessData["Fitness"]))
+    figure, axes = postprocessing.plot_fitness(
+        list(fitnessData["Iteration"]),
+        list(fitnessData["Clustering Fitness"]),
+        list(fitnessData["Locality Fitness"]))
     figure.savefig("fitness_parallel.pdf")
 
     # Grab statistics for each thread.
