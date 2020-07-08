@@ -23,8 +23,9 @@ def doit(inputDir):
 
     # Draw relaxation data
     opsData = pd.read_csv(os.path.join(inputDir, filePaths["anneal_ops"]))
-    fitnessChanges = opsData.loc[opsData["Determination"] == 1]\
-        ["Transformed Fitness"].to_dict()
+    fitnessChanges = \
+        opsData.loc[opsData["Determination"] == 1]["Transformed Fitness"]\
+        .to_dict()
     maxIteration = list(fitnessChanges.keys())[-1]
     relaxAlpha = min(1, 1000. / maxIteration)
 

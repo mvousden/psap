@@ -95,11 +95,9 @@ def draw_map(inputDir, outPath, filePaths, initialState=False,
     # Load hardware node data
     hNodeData = pd.read_csv(os.path.join(inputDir, filePaths["h_nodes"]))
 
-
     # Load initial application node mapping - defines application edges.
     aToHGraphData = pd.read_csv(os.path.join(inputDir,
                                        filePaths[state + "_a_h_graph"]))
-
     # Load mapping data
     aMapData = pd.read_csv(os.path.join(inputDir,
                                         filePaths[state + "_a_to_h_map"]))
@@ -194,7 +192,7 @@ def plot_loading_histogram(loadings, numBins=10):
 
     # This suppresses a UserWarning raised when limits are set to the same
     # value.
-    axes.set_xlim(min(loadings), max(loadings +\
+    axes.set_xlim(min(loadings), max(loadings +
                   (0 if min(loadings) != max(loadings) else 1e-2)))
 
     # The formatting continues...
