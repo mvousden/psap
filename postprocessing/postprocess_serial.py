@@ -12,14 +12,17 @@ import postprocessing
 from postprocessing import filePathsSerial as filePaths
 
 
-def doit(inputDir):
-    """Loads data and draws graphs."""
+def doit(inputDir, outputDir="./"):
+    """Loads data and draws graphs to an output directory."""
 
-    # Load simulated annealing transition data
-    postprocessing.draw_map(inputDir, "initial_map_serial.pdf", filePaths,
-                            initialState=True)
-    postprocessing.draw_map(inputDir, "final_map_serial.pdf", filePaths,
-                            initialState=False)
+    os.makedirs(outputDir)
+
+    postprocessing.draw_map(
+        inputDir, os.path.join(outputDir, "initial_map.pdf"),
+        filePaths, initialState=True)
+    postprocessing.draw_map(
+        inputDir, os.path.join(outputDir, "final_map.pdf"),
+        filePaths, initialState=False)
 
     # Draw relaxation data
     opsData = pd.read_csv(os.path.join(inputDir, filePaths["anneal_ops"]))
@@ -29,19 +32,19 @@ def doit(inputDir):
         list(determinedData["Transformed Clustering Fitness"]),
         list(determinedData["Transformed Locality Fitness"]))
     del determinedData
-    figure.savefig("fitness_serial.pdf")
+    figure.savefig(os.path.join(outputDir, "fitness.pdf"))
 
     # Draw determination data
     figure, axes = postprocessing.plot_determination_histogram(
         opsData[opsData["Determination"] == 0].index, opsData.index.max())
-    figure.savefig("determination_serial.pdf")
+    figure.savefig(os.path.join(outputData, "determination.pdf"))
 
     # Draw hardware node loading data
     loadingData = pd.read_csv(os.path.join(inputDir,
                                            filePaths["h_node_loading"]))
     figure, axes = postprocessing.plot_loading_histogram(
         loadingData["Number of contained application nodes"])
-    figure.savefig("loading_serial.pdf")
+    figure.savefig(os.path.join(outputDir, "loading.pdf"))
 
 
 if __name__ == "__main__":

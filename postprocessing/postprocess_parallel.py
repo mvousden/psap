@@ -12,14 +12,17 @@ import postprocessing
 from postprocessing import filePathsParallel as filePaths
 
 
-def doit(inputDir):
-    """Loads data and draws graphs."""
+def doit(inputDir, outputDir="./"):
+    """Loads data and draws graphs to an output directory."""
 
-    # Load simulated annealing transition data
-    postprocessing.draw_map(inputDir, "initial_map_parallel.pdf", filePaths,
-                            initialState=True)
-    postprocessing.draw_map(inputDir, "final_map_parallel.pdf", filePaths,
-                            initialState=False)
+    os.makedirs(outputDir)
+
+    postprocessing.draw_map(
+        inputDir, os.path.join(outputDir, "initial_map.pdf"),
+        filePaths, initialState=True)
+    postprocessing.draw_map(
+        inputDir, os.path.join(outputDir, "final_map.pdf"),
+        filePaths, initialState=False)
 
     # Draw relaxation data
     fitnessData = pd.read_csv(os.path.join(inputDir, filePaths["fitness"]))
@@ -27,7 +30,7 @@ def doit(inputDir):
         list(fitnessData["Iteration"]),
         list(fitnessData["Clustering Fitness"]),
         list(fitnessData["Locality Fitness"]))
-    figure.savefig("fitness_parallel.pdf")
+    figure.savefig(os.path.join(outputDir, "fitness.pdf"))
 
     # Grab statistics for each thread.
     iterationsPerThread = []
@@ -70,7 +73,9 @@ def doit(inputDir):
     aDegrees = pd.read_csv(os.path.join(inputDir, filePaths["a_degrees"]))
 
     # Write statistics to file
-    with open("postprocessing_statistics_parallel.ini", "w") as collisionsFile:
+    with open(
+            os.path.join(outputDir, "postprocessing_statistics.ini"),
+            "w") as collisionsFile:
         collisionsFile.write(
             "[postprocessing]\n"
             "compute_threads = {}\n"
@@ -91,18 +96,18 @@ def doit(inputDir):
     # Draw determination data
     figure, axes = postprocessing.plot_determination_histogram(
         insufficientlyDeterminedOps, maxIteration)
-    figure.savefig("determination_parallel.pdf")
+    figure.savefig(os.path.join(outputDir, "determination.pdf"))
 
     # Draw hardware node loading data
-    loadingData = pd.read_csv(os.path.join(inputDir,
-                                           filePaths["h_node_loading"]))
+    loadingData = pd.read_csv(
+        os.path.join(inputDir, filePaths["h_node_loading"]))
     figure, axes = postprocessing.plot_loading_histogram(
         loadingData["Number of contained application nodes"])
-    figure.savefig("loading_parallel.pdf")
+    figure.savefig(os.path.join(outputDir, "loading.pdf"))
 
 
 if __name__ == "__main__":
     rc = postprocessing.check_expected_files(sys.argv[1], filePaths.values())
     if (not rc):
         sys.exit(1)
-    doit(sys.argv[1])
+    doit(sys.argv[1], os.path.basename(sys.argv[1]))
