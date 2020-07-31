@@ -61,22 +61,23 @@ plt.legend(title="$|N_A|,|N_H|$")
 figure.tight_layout()
 figure.savefig("speedup.pdf")
 
-# Draw fitness rate data
+# Draw fitness error rate data
 figure, axes = plt.subplots()
 for appSize in df["Application Size"].unique():
     for hwSize in df["Hardware Size"].unique():
         subFrame = df[(df["Application Size"] == appSize) &
                       (df["Hardware Size"] == hwSize)]
         axes.plot(subFrame["Number of Compute Workers"],
-                  subFrame["Reliable Fitness Rate"] * 100,
+                  (1 - subFrame["Reliable Fitness Rate"]) * 100,
                   "x", label="${}^2, {}$".format(appSize, hwSize))
 
-# Other stuff for fitness rate graph
+# Other stuff for fitness error rate graph
 horizAxisBuffer = 1
 axes.set_xlim(1 - horizAxisBuffer, maxHoriz + horizAxisBuffer)
-axes.set_ylim(0, 105)
+axes.set_ylim(-2, 100)
 axes.set_xlabel("Number of Compute Workers ($n$)")
-axes.set_ylabel("Percentage of Fitness Calculations\nMade with Reliable Data")
+axes.set_ylabel("Error Rate (percentage of fitness\ncalculations made with"
+                "unreliable data)")
 axes.spines["top"].set_visible(False)
 axes.spines["right"].set_visible(False)
 axes.xaxis.set_ticks_position("bottom")
@@ -84,7 +85,7 @@ axes.yaxis.set_ticks_position("left")
 axes.xaxis.set_ticks([2**power for power in [0, 2, 4, 5, 6]])
 axes.xaxis.set_ticklabels(["1", "4", "16", "32\n(physical core limit)", "64"])
 axes.yaxis.set_ticks([0, 50, 100])
-axes.set_title("Reliable Fitness Computation Proportion againse Number of\n"
+axes.set_title("Fitness Error Rate against Number of\n"
                "Compute Workers for Varying Problem Sizes")
 plt.legend(title="$|N_A|,|N_H|$")
 figure.tight_layout()
