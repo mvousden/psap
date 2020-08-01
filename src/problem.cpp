@@ -149,7 +149,7 @@ void Problem::initial_condition_bucket()
 
         /* Map */
         selA->location = std::weak_ptr(*selHIt);
-        (*selHIt)->contents.push_back(std::weak_ptr(selA));
+        (*selHIt)->contents.insert(selA.get());
     }
 
     log("Initial condition applied.");
@@ -192,7 +192,7 @@ void Problem::initial_condition_random()
 
         /* Map */
         selA.lock()->location = *selH;
-        selH->lock()->contents.push_back(selA);
+        selH->lock()->contents.insert(selA.lock().get());
 
         /* Remove the hardware node if it is full. */
         if (selH->lock()->contents.size() >= pMax) nonEmpty.erase(selH);
@@ -318,8 +318,7 @@ void Problem::transform(decltype(nodeAs)::iterator& selA,
     /* Remove this application node from its current hardware node. Note that
      * the shared pointers will not be emptied - they are only emptied on
      * destruction of the Problem object. */
-    (*oldH)->contents.remove_if([selA](const std::weak_ptr<NodeA>& cmp)
-                                {return (*selA) == cmp.lock();});
+    (*oldH)->contents.erase(selA->get());
 
     /* Assign the selected hardware node to the location field of the selected
      * application node. */
@@ -327,7 +326,7 @@ void Problem::transform(decltype(nodeAs)::iterator& selA,
 
     /* Append the selected application node to the contents field of the
      * selected hardware node. */
-    (*selH)->contents.push_back(std::weak_ptr(*selA));
+    (*selH)->contents.insert(selA->get());
 }
 
 /* Computes and returns the locality fitness associated with a given
@@ -428,7 +427,7 @@ bool Problem::check_node_integrity(std::stringstream& errors)
         bool found = false;
         for (const auto& containedA : nodeH->contents)
         {
-            if (containedA.lock() == nodeA)
+            if (containedA == nodeA.get())
             {
                 found = true;
                 break;
@@ -454,12 +453,12 @@ bool Problem::check_node_integrity(std::stringstream& errors)
         {
             /* Note that we don't need to check application location here,
              * because it is checked by the logic in (1). */
-            if (containedA.lock()->location.lock() != nodeH)
+            if (containedA->location.lock() != nodeH)
             {
                 output = false;
                 errors << "Hardware node '" << nodeH->name
                        << "' claims to contain application node '"
-                       << containedA.lock()->name
+                       << containedA->name
                        << "', but that application node does not reciprocate."
                        << std::endl;
             }

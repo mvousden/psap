@@ -2,10 +2,10 @@
 #define NODES_HPP
 
 #include <atomic>
-#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <set>
 #include <vector>
 
 /* Note that the 'lock' mutex members are synchronisation objects for the
@@ -43,7 +43,7 @@ public:
     NodeH(std::string name, unsigned index): name(name), index(index){}
     NodeH(std::string name, unsigned index, float posHoriz, float posVerti):
         name(name), index(index), posHoriz(posHoriz), posVerti(posVerti){}
-    std::list<std::weak_ptr<NodeA>> contents;
+    std::set<NodeA*> contents;
     std::string name;
     unsigned index;
     float posHoriz = -1;
