@@ -18,8 +18,8 @@ int main()
     std::filesystem::path outDir = "";
     if (!mouseMode)
     {
-        std::filesystem::path outRootDir = "output";
-        std::filesystem::path outDir = outRootDir / problem.name;
+        decltype(outDir) outRootDir = "output";
+        outDir = outRootDir / problem.name;
         problem.define_output_path(outDir);
         problem.initialise_logging();
     }
