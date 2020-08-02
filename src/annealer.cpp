@@ -5,6 +5,7 @@
 #define STRINGIFY(x) STRINGIFY_EXPAND(x)
 
 #include <iomanip>
+#include <utility>
 
 template<class DisorderT>
 Annealer<DisorderT>::Annealer(Iteration maxIterationArg,
@@ -13,7 +14,7 @@ Annealer<DisorderT>::Annealer(Iteration maxIterationArg,
     maxIteration(maxIterationArg),
     disorder(maxIterationArg),
     handle(handleArg),
-    outDir(outDirArg)
+    outDir(std::move(outDirArg))
 {
     log = !outDir.empty();
 }

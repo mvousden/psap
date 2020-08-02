@@ -7,7 +7,7 @@
 
 template<class DisorderT>
 SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
-                                          std::filesystem::path outDirArg):
+                                          const std::filesystem::path& outDirArg):
     Annealer<DisorderT>(maxIterationArg, outDirArg, "SerialAnnealer"){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves

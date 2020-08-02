@@ -9,7 +9,7 @@
 template<class DisorderT>
 ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
                                               Iteration maxIterationArg,
-                                              std::filesystem::path outDirArg):
+                                              const std::filesystem::path& outDirArg):
     Annealer<DisorderT>(maxIterationArg, outDirArg, "ParallelAnnealer"),
     numThreads(numThreadsArg){}
 
@@ -210,8 +210,8 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
                               << selectionCollisions << ",";
 
         /* RAII locking */
-        std::lock_guard<decltype(NodeA::lock)> appLock((*selA)->lock,
-                                                       std::adopt_lock);
+        std::lock_guard<decltype((*selA)->lock)> appLock((*selA)->lock,
+                                                         std::adopt_lock);
 
         /* Compute the transformation footprint, so that we can identify
          * whether or not the fitness computation is reliable (it is unreliable

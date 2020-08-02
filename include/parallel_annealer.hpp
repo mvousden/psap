@@ -10,7 +10,7 @@ class ParallelAnnealer: public Annealer<DisorderT>
 {
 public:
     ParallelAnnealer(unsigned numThreads=1, Iteration maxIteration=100,
-                     std::filesystem::path outDirArg="");
+                     const std::filesystem::path& outDirArg="");
     void operator()(Problem& problem, Iteration recordEvery=0)
         {anneal(problem, recordEvery);}
 
