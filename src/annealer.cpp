@@ -1,8 +1,7 @@
 #include "annealer.hpp"
 
 /* Macros for parsing the git revision preprocessor argument (if any) */
-#define STRINGIFY_EXPAND(x) #x
-#define STRINGIFY(x) STRINGIFY_EXPAND(x)
+#define STRINGIFY(x) #x
 
 #include <iomanip>
 #include <utility>
