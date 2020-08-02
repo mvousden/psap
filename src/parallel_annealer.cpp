@@ -222,7 +222,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
          * Since the only use of transform footprints are logging-related
          * (behaviour doesn't change if we detect an unreliable fitness
          * computation), we only do this if we're logging. */
-        TransformCount oldTformFootprint;
+        TransformCount oldTformFootprint = 0;
         if (this->log) oldTformFootprint = compute_transform_footprint(
             selA, selH, oldH);
 
@@ -248,7 +248,7 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         /* Footprint after transformation. Note the minus three - this is
          * because our move transformation causes three changes to the data
          * structure, and we don't want to count those. */
-        TransformCount newTformFootprint;
+        TransformCount newTformFootprint = 0;
         if (this->log) newTformFootprint = compute_transform_footprint(
             selA, selH, oldH) - 3;
 
