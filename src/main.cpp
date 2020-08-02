@@ -10,6 +10,9 @@ int main()
     /* Mouse mode - useful for runtime measurements. */
     bool mouseMode = false;
 
+    /* Whether or not to anneal in serial, or parallel. */
+    bool serial = false;
+
     /* Construct problem */
     Problem problem;
     problem_definition::define(problem);
@@ -61,35 +64,51 @@ int main()
         }
     }
 
+    /* Create the annealer and do the dirty. */
     if (!mouseMode)
     {
-        /* In parallel, taking intermediate fitness measurements... */
-        auto annealer = ParallelAnnealer<ExpDecayDisorder>(2, maxIteration,
-                                                           outDir);
-        annealer(problem, maxIteration / 20);
-
-        /* Or serially...
-        auto annealer = SerialAnnealer<ExpDecayDisorder>(maxIteration, outDir);
-        annealer(problem); */
+        /* Run noisily with much logging and outputting of files. */
+        if (serial)
+        {
+            SerialAnnealer<ExpDecayDisorder>(maxIteration, outDir)(problem);
+        }
+        else
+        {
+            /* Take intermediate fitness measurements. */
+            ParallelAnnealer<ExpDecayDisorder>(2, maxIteration, outDir)
+                (problem, maxIteration / 20);
+        }
     }
 
     else
     {
-        /* Or in parallel as quietly as possible, printing timing information
-         * only. */
-        auto timeAtStart = std::chrono::steady_clock::now();
-        auto annealer = ParallelAnnealer<ExpDecayDisorder>(2, maxIteration);
-        annealer(problem);
-        std::cout << std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::steady_clock::now() - timeAtStart).count()
-                  << std::endl;
+        /* Run as quietly as possible, printing timing information only. */
+        if (serial)
+        {
+            auto annealer = SerialAnnealer<ExpDecayDisorder>(maxIteration);
+            auto timeAtStart = std::chrono::steady_clock::now();
+            annealer(problem);
+            std::cout << std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - timeAtStart).count()
+                      << std::endl;
+        }
+        else
+        {
+            auto annealer = ParallelAnnealer<ExpDecayDisorder>(2,
+                                                               maxIteration);
+            auto timeAtStart = std::chrono::steady_clock::now();
+            annealer(problem);
+            std::cout << std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - timeAtStart).count()
+                      << std::endl;
+        }
     }
 
+    /* Write solved stuff */
     if (!mouseMode)
     {
         problem.log("Annealing complete.");
 
-        /* Write solved stuff */
         {
             std::stringstream message;
             message << "Final fitness: "
