@@ -19,7 +19,8 @@ if any([env["SYSTEM"] == system for system in ["Linux", "Darwin"]]):
                LINKFLAGS="-pthread")
 elif env["SYSTEM"] == "Windows":
     # MSVC
-    env.Append(CXXFLAGS="/std:c++17 /O2 /W4 /EHs /Za")
+    env.Append(CXXFLAGS="/std:c++17 /O2 /W4 /EHs /Za",
+               CPPDEFINES={"_CRT_SECURE_NO_WARNINGS": ""})
 
 sources = Glob("src/*.cpp", exclude="src/problem_definition.cpp")
 env.Program(target="psap-run", source=sources, CPPPATH="./include/")
