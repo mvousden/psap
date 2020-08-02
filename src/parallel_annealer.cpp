@@ -18,7 +18,8 @@ ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
  *
  * The recordEvery argument, if non-zero, causes the annealing to stop after
  * every "recordEvery" iterations to compute and record the fitness at that
- * time. */
+ * time if logging is enabled (i.e. if outDirArg is nonempty in the
+ * constructor). */
 template<class DisorderT>
 void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
                                          Iteration recordEvery)
@@ -108,9 +109,13 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
      * frequency is low. */
     do
     {
-        /* Compute next stopping point. */
+        /* Compute next stopping point. Don't stop if we're not logging
+         * (because there would be no point). */
         Iteration nextStop;
-        if (recordEvery == 0) nextStop = this->maxIteration;
+        if (recordEvery == 0 or (this->log == false))
+        {
+            nextStop = this->maxIteration;
+        }
         else nextStop = std::min(this->maxIteration, iteration + recordEvery);
 
         /* Measure wallclock time between now and when the threads are joined
