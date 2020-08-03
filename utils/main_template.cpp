@@ -123,12 +123,10 @@ int main()
         problem.write_a_to_h_map((outDir / "final_a_to_h_map.csv").u8string());
         problem.write_h_graph((outDir / "h_graph.csv").u8string());
         problem.write_h_nodes((outDir / "h_nodes.csv").u8string());
-        problem.write_integrity_check_errs(
-            (outDir / "integrity_after.err").u8string());
-
-        /* This one isn't needed, but makes creating histograms easier. */
         problem.write_h_node_loading(
             (outDir / "h_node_loading.csv").u8string());
+        problem.write_integrity_check_errs(
+            (outDir / "integrity_after.err").u8string());
     }
 
     return 0;
