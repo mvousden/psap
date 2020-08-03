@@ -11,12 +11,12 @@ set -x
 
 TEMPLATE_SOURCE="main_template.cpp"
 TEMPLATE_TARGET="src/main.cpp"
-ITERATIONS=5e8
+ITERATIONS=5e9
 
 # Mouse mode disables all logging and intermediate fitness computation, and
 # simply prints out the runtime of the placement job to a text file.
 MOUSE_MODE=1
-MOUSE_FILE="mouse_out.txt"
+MOUSE_FILE="mouse_out_${ITERATIONS}.txt"
 
 if [ ${MOUSE_MODE} -eq 1 ]; then
     > "${MOUSE_FILE}"
