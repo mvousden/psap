@@ -19,10 +19,13 @@ def doit(inputDir, outputDir="./"):
 
     postprocessing.draw_map(
         inputDir, os.path.join(outputDir, "initial_map.pdf"),
-        filePaths, initialState=True)
+        filePaths, state="initial")
     postprocessing.draw_map(
         inputDir, os.path.join(outputDir, "final_map.pdf"),
-        filePaths, initialState=False)
+        filePaths, state="final")
+    postprocessing.draw_map(
+        inputDir, os.path.join(outputDir, "hardware_map.pdf"),
+        filePaths, state=None)
 
     # Draw relaxation data
     fitnessData = pd.read_csv(os.path.join(inputDir, filePaths["fitness"]))

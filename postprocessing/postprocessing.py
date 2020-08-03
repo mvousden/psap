@@ -64,7 +64,7 @@ def colour_from_loadings(loadings, maxLoading=None, baseColor="#FF0000"):
             for loading in loadings]
 
 
-def draw_map(inputDir, outPath, filePaths, initialState=False,
+def draw_map(inputDir, outPath, filePaths, state="final",
              maxNodeHLoadArg=None):
     """Draws a map showing device placement on a hardware graph for a given
     state.
@@ -79,15 +79,15 @@ def draw_map(inputDir, outPath, filePaths, initialState=False,
      - filePaths: Dictionary (ala the top of this file) containing the name of
            various files of interest.
 
-     - initialState: Boolean denoting whether to draw the map for the initial
-           state, or for the final state (default).
+     - state: String denoting whether to draw the map for the "initial"
+           state, the "final" state (default), or no application data (via
+           None).
 
      - maxNodeHLoadArg: Integer or None, forcing a maximum node loading on the
-           map. If None (default), impose no maximum.
+           map. If None (default), impose no maximum. Not used if the
+           application map is ignored using state=None.
 
     Returns nothing."""
-
-    state = "initial" if initialState else "final"
 
     # Load hardware graph data
     hGraphData = pd.read_csv(os.path.join(inputDir, filePaths["h_graph"]))
@@ -95,45 +95,45 @@ def draw_map(inputDir, outPath, filePaths, initialState=False,
     # Load hardware node data
     hNodeData = pd.read_csv(os.path.join(inputDir, filePaths["h_nodes"]))
 
-    # Load initial application node mapping - defines application edges.
-    aToHGraphData = pd.read_csv(os.path.join(inputDir,
-                                       filePaths[state + "_a_h_graph"]))
-    # Load mapping data
-    aMapData = pd.read_csv(os.path.join(inputDir,
-                                        filePaths[state + "_a_to_h_map"]))
-
     # Load application node mapping - defines application edges.
-    aToHGraphData = pd.read_csv(os.path.join(inputDir,
-                                             filePaths[state + "_a_h_graph"]))
+    if state is not None:
+        aToHGraphData = pd.read_csv(
+            os.path.join(inputDir, filePaths[state + "_a_h_graph"]))
+
+    # Load mapping data
+    if state is not None:
+        aMapData = pd.read_csv(
+            os.path.join(inputDir, filePaths[state + "_a_to_h_map"]))
 
     # All hardware nodes
     nodeHs = hNodeData["Hardware node name"].values
 
-    # Hardware node loading - derive node colours from that loading.
-    nodeHLoad = [len(aMapData[aMapData["Hardware node name"] == nodeH])
-                 for nodeH in nodeHs]
-
-    # Compute maximum loading present in the graph.
-    if maxNodeHLoadArg is not None:
-        maxNodeHLoad = max(nodeHLoad)
-    else:
-        maxNodeHLoad = maxNodeHLoadArg
-
-    nodeColours = colour_from_loadings(nodeHLoad, maxNodeHLoad)
-
-    # Get hardware node positional data
+    # Hardware node positional data
     explicitPositions = not ((hNodeData["Horizontal position"] == -1).any() or
                              (hNodeData["Vertical position"] == -1).any())
 
-    # For each edge in the AH graph, store it in the edgeAHs array if it is not
-    # a duplicate.
-    edgeAHs = []
-    for index, edge in aToHGraphData.iterrows():  # Sorry Pandas purists
-        nodes = [edge["Hardware node name (first)"],
-                 edge["Hardware node name (second)"]]
-        primary = min(*nodes)
-        secondary = max(*nodes)
-        edgeAHs.append(nodes + [edge["Loading"]])
+    # Hardware node loading - derive node colours from that loading.
+    if state is not None:
+        nodeHLoad = [len(aMapData[aMapData["Hardware node name"] == nodeH])
+                     for nodeH in nodeHs]
+
+        # Compute maximum loading present in the graph.
+        if maxNodeHLoadArg is not None:
+            maxNodeHLoad = max(nodeHLoad)
+        else:
+            maxNodeHLoad = maxNodeHLoadArg
+
+        nodeColours = colour_from_loadings(nodeHLoad, maxNodeHLoad)
+
+        # For each edge in the AH graph, store it in the edgeAHs array if it is
+        # not a duplicate.
+        edgeAHs = []
+        for index, edge in aToHGraphData.iterrows():  # Sorry Pandas purists
+            nodes = [edge["Hardware node name (first)"],
+                     edge["Hardware node name (second)"]]
+            primary = min(*nodes)
+            secondary = max(*nodes)
+            edgeAHs.append(nodes + [edge["Loading"]])
 
     # Start drawing pretty picture.
     graph = gv.Graph("G", strict=True,
@@ -145,17 +145,25 @@ def draw_map(inputDir, outPath, filePaths, initialState=False,
     # Hardware nodes
     for nodeIndex in range(len(nodeHs)):
         nodePos = None if not explicitPositions else \
-            "{},{}!".format(hNodeData.iloc[nodeIndex]["Horizontal position"],
-                            hNodeData.iloc[nodeIndex]["Vertical position"])
-        graph.node(nodeHs[nodeIndex], fillcolor=nodeColours[nodeIndex],
-                   label=str(nodeHLoad[nodeIndex]), pos=nodePos)
+            "{},{}!".format(hNodeData.iloc[nodeIndex]["Horizontal position"] * 2,
+                            hNodeData.iloc[nodeIndex]["Vertical position"] * 2)
+        if state is not None:
+            fillcolor = nodeColours[nodeIndex]
+            label = str(nodeHLoad[nodeIndex])
+        else:
+            fillcolor = "#FFFFFF"
+            label = nodeHs[nodeIndex]
+
+        graph.node(nodeHs[nodeIndex], fillcolor=fillcolor, label=label,
+                   pos=nodePos)
 
     # Application-hardware edges
-    edgeAHColour = "#FF0000"
-    for edgeIndex in range(len(edgeAHs)):
-        graph.edge(*edgeAHs[edgeIndex][:2], color=edgeAHColour,
-                   label=str(edgeAHs[edgeIndex][2]), fontcolor=edgeAHColour,
-                   constraint="false")
+    if state is not None:
+        edgeAHColour = "#FF0000"
+        for edgeIndex in range(len(edgeAHs)):
+            graph.edge(*edgeAHs[edgeIndex][:2], color=edgeAHColour,
+                       label=str(edgeAHs[edgeIndex][2]),
+                       fontcolor=edgeAHColour, constraint="false")
 
     # All hardware edges (we don't care about weight)
     edgeHs = hGraphData.values.tolist()
