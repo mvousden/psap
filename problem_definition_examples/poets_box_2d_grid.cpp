@@ -1,34 +1,36 @@
 /* This file defines a problem with an application on two-dimensional grid
  * geometry (not toroidal, simple graph), and a hardware configuration similar
- * to that of one POETS box. Each hardware node represents a POETS mailbox. */
+ * to that of one POETS box. Each hardware node represents a POETS core. */
 
-problem.name = "grid_poets";
+problem.name = "poets_box_2d_grid";
 
 /* Problem sizes:
  * - Application: 1000 element square grid.
- * - Hardware: Six boards per box, sixteen mailboxes per board.
- * Be wary of changing numMailboxes - if you do, you will also need to change
- * the definitions used by hIndexGivenPos (later). */
+ * - Hardware: Six boards per box, sixteen mailboxes per board, four cores per
+ *       mailbox.
+ * Be wary of changing coreRange - if you do, you will also need to change
+ * the definitions used to define hardware node positions (posHoriz and
+ * posVerti, later). */
 constexpr decltype(problem.nodeAs)::size_type gridDiameter = 1000;
 constexpr decltype(problem.nodeHs)::size_type boardOuterRange = 3;
 constexpr decltype(boardOuterRange) boardInnerRange = 2;
 constexpr decltype(boardOuterRange) mboxOuterRange = 4;
 constexpr decltype(boardOuterRange) mboxInnerRange = 4;
-constexpr decltype(boardOuterRange) totMailboxes =
+constexpr decltype(boardOuterRange) coreRange = 4;
+constexpr decltype(boardOuterRange) totCores =
     boardOuterRange * boardInnerRange *
-    mboxOuterRange * mboxInnerRange;  // 3 * 2 * 4 * 4 = 96
+    mboxOuterRange * mboxInnerRange * coreRange;  // 3 * 2 * 4 * 4 * 4 = 384
 
 /* Define maximum number of application nodes permitted on a hardware node,
- * given four cores per mailbox, sixteen threads per core, and 256 application
- * nodes per thread. */
-problem.pMax = 4 * 16 * 256;  // 4 * 16 * 256 = 16384
+ * given sixteen threads per core, and 256 application nodes per thread. */
+problem.pMax = 16 * 256;  // 16 * 256 = 4096
 
 /* Vector sizing */
 problem.nodeAs.reserve(gridDiameter * gridDiameter);
-problem.nodeHs.reserve(totMailboxes);
+problem.nodeHs.reserve(totCores);
 
 /* Define directions for connectivity of application and hardware nodes. Beware
- * of code duplication! */
+ * of code duplication! (P=positive, N=negative). */
 enum class Dir {outerP, outerN, innerP, innerN};
 const std::array<Dir, 4> directions = {Dir::outerP, Dir::outerN,
                                        Dir::innerP, Dir::innerN};
@@ -110,9 +112,10 @@ for (aOuterIndex = 0; aOuterIndex < gridDiameter; aOuterIndex++)
  *  1. Board vertical (inner) co-ordinate
  *  2. Mailbox horizontal (outer) co-ordinate
  *  3. Mailbox vertical (inner) co-ordinate
+ *  4. Core co-ordinate
  * These "co-ordinates" (for lack of a better word) are the values in array
  * key. */
-std::map<std::array<decltype(boardOuterRange), 4>,
+std::map<std::array<decltype(boardOuterRange), 5>,
          decltype(problem.nodeHs)::size_type> hIndexGivenPos;
 
 /* Create hardware nodes */
@@ -123,41 +126,64 @@ for (decltype(problem.nodeHs)::size_type boardInnerIdx = 0;
 for (decltype(problem.nodeHs)::size_type mboxOuterIdx = 0;
      mboxOuterIdx < mboxOuterRange; mboxOuterIdx++){
 for (decltype(problem.nodeHs)::size_type mboxInnerIdx = 0;
-     mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
+     mboxInnerIdx < mboxInnerRange; mboxInnerIdx++){
+for (decltype(problem.nodeHs)::size_type coreIdx = 0;
+     coreIdx < coreRange; coreIdx++)
 {
-    /* Get index and determine position (outer = horizontal, inner =
-     * vertical) */
+    /* Get index and determine position of the mailbox (outer = horizontal,
+     * inner = vertical). Cores are arranged in a grid (best efforts), will
+     * break if more than four cores are used. */
     unsigned hIndex = static_cast<unsigned>(problem.nodeHs.size());
-    float posHoriz = static_cast<float>(boardOuterIdx * mboxOuterRange +
-                                        mboxOuterIdx);
-    float posVerti = static_cast<float>(boardInnerIdx * mboxInnerRange +
-                                        mboxInnerIdx);
+    float posHoriz = static_cast<float>(boardOuterIdx * mboxOuterRange * 2 +
+                                        mboxOuterIdx * 2 +
+                                        (coreIdx & 1));
+    float posVerti = static_cast<float>(boardInnerIdx * mboxInnerRange * 2 +
+                                        mboxInnerIdx * 2 +
+                                        (coreIdx >> 1 & 1 ));
     std::stringstream name;
     name << "H_" << boardOuterIdx
          << "_" << boardInnerIdx
          << "_" << mboxOuterIdx
-         << "_" << mboxInnerIdx;
+         << "_" << mboxInnerIdx
+         << "_" << coreIdx;
     problem.nodeHs.push_back(std::make_shared<NodeH>(name.str(), hIndex,
                                                      posHoriz, posVerti));
     hIndexGivenPos[{boardOuterIdx, boardInnerIdx,
-                    mboxOuterIdx, mboxInnerIdx}] = hIndex;
-}}}}
+                    mboxOuterIdx, mboxInnerIdx, coreIdx}] = hIndex;
+}}}}}
 
-/* Connect mailboxes within each board up appropriately. */
+/* Inter-mailbox connections and inter-board connections. */
 float interMboxWeight = 100;
-decltype(problem.nodeHs)::size_type boardOuterIdx, boardInnerIdx;
-decltype(problem.nodeHs)::size_type mboxOuterIdx, mboxInnerIdx;
+float interCoreWeight = 0.1;
+decltype(problem.nodeHs)::size_type boardOuterIdx, boardInnerIdx,
+    mboxOuterIdx, mboxInnerIdx, coreIdx;
 for (boardOuterIdx = 0; boardOuterIdx < boardOuterRange; boardOuterIdx++){
 for (boardInnerIdx = 0; boardInnerIdx < boardInnerRange; boardInnerIdx++){
 for (mboxOuterIdx = 0; mboxOuterIdx < mboxOuterRange; mboxOuterIdx++){
-for (mboxInnerIdx = 0; mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
+for (mboxInnerIdx = 0; mboxInnerIdx < mboxInnerRange; mboxInnerIdx++){
+for (coreIdx = 0; coreIdx < coreRange; coreIdx++)
 {
-    /* Lookup index of this mailbox, and get a weak pointer. */
+    /* Lookup index of this core, and get a weak pointer. */
     auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
-                                     mboxOuterIdx, mboxInnerIdx});
+                                     mboxOuterIdx, mboxInnerIdx, coreIdx});
     auto hPtr = std::weak_ptr(problem.nodeHs.at(hIndex));
 
-    /* Iterate over each direction in the topology. */
+    /* Iterate over fellow cores in this mailbox, connecting this core to each
+     * other neighbouring core. */
+    for (decltype(coreIdx) nCoreIdx = 0; nCoreIdx < coreRange; nCoreIdx++)
+    {
+        if (coreIdx == nCoreIdx) continue;
+
+        auto nIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
+                                         mboxOuterIdx, mboxInnerIdx,
+                                         nCoreIdx});
+        /* Connect */
+        problem.edgeHs.push_back(std::tuple(
+            static_cast<unsigned>(hIndex),
+            static_cast<unsigned>(nIndex), interCoreWeight));
+    }
+
+    /* Iterate over each direction in the mailbox topology. */
     for (const auto& direction : directions)
     {
         /* Bounds checking. */
@@ -166,68 +192,98 @@ for (mboxInnerIdx = 0; mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
             (direction == Dir::innerP and mboxInnerIdx == mboxInnerRange - 1) or
             (direction == Dir::innerN and mboxInnerIdx == 0)) continue;
 
-        /* Compute/lookup neighbour index. */
-        decltype(hIndex) nIndex;
+        /* Get neighbour positions. */
+        decltype(boardOuterIdx) nBoardOuterIdx =
+            std::numeric_limits<decltype(boardOuterIdx)>::max();
+        decltype(boardInnerIdx) nBoardInnerIdx = nBoardOuterIdx;
+        decltype(mboxOuterIdx) nMboxOuterIdx = nBoardOuterIdx;
+        decltype(mboxInnerIdx) nMboxInnerIdx = nBoardOuterIdx;
+
+        /* Compute/lookup neighbour mailbox index. */
         switch (direction)
         {
-            case Dir::outerP: nIndex = hIndexGivenPos.at(
-                                           {boardOuterIdx, boardInnerIdx,
-                                            mboxOuterIdx + 1, mboxInnerIdx});
-                                       break;
+            case Dir::outerP:
+                nBoardOuterIdx = boardOuterIdx;
+                nBoardInnerIdx = boardInnerIdx;
+                nMboxOuterIdx = mboxOuterIdx + 1;
+                nMboxInnerIdx = mboxInnerIdx;
+                break;
 
-            case Dir::outerN: nIndex = hIndexGivenPos.at(
-                                           {boardOuterIdx, boardInnerIdx,
-                                            mboxOuterIdx - 1, mboxInnerIdx});
-                                       break;
+            case Dir::outerN:
+                nBoardOuterIdx = boardOuterIdx;
+                nBoardInnerIdx = boardInnerIdx;
+                nMboxOuterIdx = mboxOuterIdx - 1;
+                nMboxInnerIdx = mboxInnerIdx;
+                break;
 
-            case Dir::innerP: nIndex = hIndexGivenPos.at(
-                                           {boardOuterIdx, boardInnerIdx,
-                                            mboxOuterIdx, mboxInnerIdx + 1});
-                                       break;
+            case Dir::innerP:
+                nBoardOuterIdx = boardOuterIdx;
+                nBoardInnerIdx = boardInnerIdx;
+                nMboxOuterIdx = mboxOuterIdx;
+                nMboxInnerIdx = mboxInnerIdx + 1;
+                break;
 
-            case Dir::innerN: nIndex = hIndexGivenPos.at(
-                                           {boardOuterIdx, boardInnerIdx,
-                                            mboxOuterIdx, mboxInnerIdx - 1});
-                                       break;
-
-            default: nIndex = std::numeric_limits<decltype(nIndex)>::max();
+            case Dir::innerN:
+                nBoardOuterIdx = boardOuterIdx;
+                nBoardInnerIdx = boardInnerIdx;
+                nMboxOuterIdx = mboxOuterIdx;
+                nMboxInnerIdx = mboxInnerIdx - 1;
+                break;
         }
 
-        /* Connect */
-        problem.edgeHs.push_back(std::tuple(
-            static_cast<unsigned>(hIndex),
-            static_cast<unsigned>(nIndex), interMboxWeight));
+        /* Connect this core to each core in the neighbouring mailbox. The cost
+         * is a little wonky. */
+        for (decltype(coreIdx) nCoreIdx = 0; nCoreIdx < coreRange; nCoreIdx++)
+        {
+            auto nIndex = hIndexGivenPos.at({nBoardOuterIdx, nBoardInnerIdx,
+                                             nMboxOuterIdx, nMboxInnerIdx,
+                                             nCoreIdx});
+            /* Connect */
+            problem.edgeHs.push_back(std::tuple(
+                static_cast<unsigned>(hIndex),
+                static_cast<unsigned>(nIndex), interMboxWeight));
+        }
     }
-}}}}
+}}}}}
 
-/* Connect mailboxes that cross boards appropriately. */
+/* Connect cores in mailboxes that cross boards. */
 float interBoardWeight = 800;
 for (boardOuterIdx = 0; boardOuterIdx < boardOuterRange; boardOuterIdx++){
 for (boardInnerIdx = 0; boardInnerIdx < boardInnerRange; boardInnerIdx++){
 
-    /* Attempt to make a connection for each direction in the topology. Unlike
-     * the previous loops, this one is unrolled because each iteration is
-     * considerably different. */
-    decltype(boardOuterIdx) neighbourOuterIdx, neighbourInnerIdx;
+    /* Attempt to make a connection for each direction in the board
+     * topology. Unlike with the previous connection setup, this one is
+     * unrolled because each iteration is considerably different. Sorry. */
+    decltype(boardOuterIdx) nBoardOuterIdx, nBoardInnerIdx,
+        nMboxOuterIdx, nMboxInnerIdx, mboxInnerIdx, mboxOuterIdx, nCoreIdx;
 
     /* Firstly, consider the outer+ direction. Bounds check: */
     if (boardOuterIdx != boardOuterRange - 1)
     {
         /* Compute neighbour index. */
-        neighbourOuterIdx = boardOuterIdx + 1;
-        neighbourInnerIdx = boardInnerIdx;
+        nBoardOuterIdx = boardOuterIdx + 1;
+        nBoardInnerIdx = boardInnerIdx;
 
         /* Connect together the mailboxes on the interface between these two
          * neighbouring boards. */
         for (mboxInnerIdx = 0; mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
         {
-            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
-                mboxOuterRange - 1, mboxInnerIdx});
-            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
-                neighbourInnerIdx, 0, mboxInnerIdx});
-            problem.edgeHs.push_back(std::tuple(
-                static_cast<unsigned>(hIndex),
-                static_cast<unsigned>(nIndex), interBoardWeight));
+            mboxOuterIdx = mboxOuterRange - 1;
+            nMboxOuterIdx = 0;
+            nMboxInnerIdx = mboxInnerIdx;
+            for (coreIdx = 0; coreIdx < coreRange; coreIdx++){
+            for (nCoreIdx = 0; nCoreIdx < coreRange; nCoreIdx++)
+            {
+                auto hIndex = hIndexGivenPos.at(
+                    {boardOuterIdx, boardInnerIdx, mboxOuterIdx,
+                     mboxInnerIdx, coreIdx});
+                auto nIndex = hIndexGivenPos.at(
+                    {nBoardOuterIdx, nBoardInnerIdx, nMboxOuterIdx,
+                     nMboxInnerIdx, nCoreIdx});
+                problem.edgeHs.push_back(std::tuple(
+                    static_cast<unsigned>(hIndex),
+                    static_cast<unsigned>(nIndex), interBoardWeight));
+            }}
         }
     }
 
@@ -235,20 +291,29 @@ for (boardInnerIdx = 0; boardInnerIdx < boardInnerRange; boardInnerIdx++){
     if (boardOuterIdx != 0)
     {
         /* Compute neighbour index. */
-        neighbourOuterIdx = boardOuterIdx - 1;
-        neighbourInnerIdx = boardInnerIdx;
+        nBoardOuterIdx = boardOuterIdx - 1;
+        nBoardInnerIdx = boardInnerIdx;
 
         /* Connect together the mailboxes on the interface between these two
          * neighbouring boards. */
         for (mboxInnerIdx = 0; mboxInnerIdx < mboxInnerRange; mboxInnerIdx++)
         {
-            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
-                0, mboxInnerIdx});
-            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
-                neighbourInnerIdx, mboxOuterRange - 1, mboxInnerIdx});
-            problem.edgeHs.push_back(std::tuple(
-                static_cast<unsigned>(hIndex),
-                static_cast<unsigned>(nIndex), interBoardWeight));
+            mboxOuterIdx = 0;
+            nMboxOuterIdx = mboxOuterRange - 1;
+            nMboxInnerIdx = mboxInnerIdx;
+            for (coreIdx = 0; coreIdx < coreRange; coreIdx++){
+            for (nCoreIdx = 0; nCoreIdx < coreRange; nCoreIdx++)
+            {
+                auto hIndex = hIndexGivenPos.at(
+                    {boardOuterIdx, boardInnerIdx, mboxOuterIdx,
+                     mboxInnerIdx, coreIdx});
+                auto nIndex = hIndexGivenPos.at(
+                    {nBoardOuterIdx, nBoardInnerIdx, nMboxOuterIdx,
+                     nMboxInnerIdx, nCoreIdx});
+                problem.edgeHs.push_back(std::tuple(
+                    static_cast<unsigned>(hIndex),
+                    static_cast<unsigned>(nIndex), interBoardWeight));
+            }}
         }
     }
 
@@ -256,41 +321,59 @@ for (boardInnerIdx = 0; boardInnerIdx < boardInnerRange; boardInnerIdx++){
     if (boardInnerIdx != boardInnerRange - 1)
     {
         /* Compute neighbour index. */
-        neighbourOuterIdx = boardOuterIdx;
-        neighbourInnerIdx = boardInnerIdx + 1;
+        nBoardOuterIdx = boardOuterIdx;
+        nBoardInnerIdx = boardInnerIdx + 1;
 
         /* Connect together the mailboxes on the interface between these two
          * neighbouring boards. */
         for (mboxOuterIdx = 0; mboxOuterIdx < mboxOuterRange; mboxOuterIdx++)
         {
-            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
-                mboxOuterIdx, mboxInnerRange - 1});
-            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
-                neighbourInnerIdx, mboxOuterIdx, 0});
-            problem.edgeHs.push_back(std::tuple(
-                static_cast<unsigned>(hIndex),
-                static_cast<unsigned>(nIndex), interBoardWeight));
+            mboxInnerIdx = mboxInnerRange - 1;
+            nMboxInnerIdx = 0;
+            nMboxOuterIdx = mboxOuterIdx;
+            for (coreIdx = 0; coreIdx < coreRange; coreIdx++){
+            for (nCoreIdx = 0; nCoreIdx < coreRange; nCoreIdx++)
+            {
+                auto hIndex = hIndexGivenPos.at(
+                    {boardOuterIdx, boardInnerIdx, mboxOuterIdx,
+                     mboxInnerIdx, coreIdx});
+                auto nIndex = hIndexGivenPos.at(
+                    {nBoardOuterIdx, nBoardInnerIdx, nMboxOuterIdx,
+                     nMboxInnerIdx, nCoreIdx});
+                problem.edgeHs.push_back(std::tuple(
+                    static_cast<unsigned>(hIndex),
+                    static_cast<unsigned>(nIndex), interBoardWeight));
+            }}
         }
     }
 
-    /* Inner+ direction. Bounds check: */
+    /* Inner- direction. Bounds check: */
     if (boardInnerIdx != 0)
     {
         /* Compute neighbour index. */
-        neighbourOuterIdx = boardOuterIdx;
-        neighbourInnerIdx = boardInnerIdx - 1;
+        nBoardOuterIdx = boardOuterIdx;
+        nBoardInnerIdx = boardInnerIdx - 1;
 
         /* Connect together the mailboxes on the interface between these two
          * neighbouring boards. */
         for (mboxOuterIdx = 0; mboxOuterIdx < mboxOuterRange; mboxOuterIdx++)
         {
-            auto hIndex = hIndexGivenPos.at({boardOuterIdx, boardInnerIdx,
-                mboxOuterIdx, 0});
-            auto nIndex = hIndexGivenPos.at({neighbourOuterIdx,
-                neighbourInnerIdx, mboxOuterIdx, mboxInnerRange - 1});
-            problem.edgeHs.push_back(std::tuple(
-                static_cast<unsigned>(hIndex),
-                static_cast<unsigned>(nIndex), interBoardWeight));
+            mboxInnerIdx = 0;
+            nMboxInnerIdx = mboxInnerRange - 1;
+            nMboxOuterIdx = mboxOuterIdx;
+            for (coreIdx = 0; coreIdx < coreRange; coreIdx++){
+            for (nCoreIdx = 0; nCoreIdx < coreRange; nCoreIdx++)
+            {
+                auto hIndex = hIndexGivenPos.at(
+                    {boardOuterIdx, boardInnerIdx, mboxOuterIdx,
+                     mboxInnerIdx, coreIdx});
+                auto nIndex = hIndexGivenPos.at(
+                    {nBoardOuterIdx, nBoardInnerIdx, nMboxOuterIdx,
+                     nMboxInnerIdx, nCoreIdx});
+                problem.edgeHs.push_back(std::tuple(
+                    static_cast<unsigned>(hIndex),
+                    static_cast<unsigned>(nIndex), interBoardWeight));
+            }}
         }
     }
 }}
