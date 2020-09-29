@@ -11,13 +11,17 @@ class ParallelAnnealer: public Annealer<DisorderT>
 public:
     ParallelAnnealer(unsigned numThreads=1, Iteration maxIteration=100,
                      const std::filesystem::path& outDirArg="");
-    void operator()(Problem& problem, Iteration recordEvery=0)
-        {anneal(problem, recordEvery);}
+    void operator()(Problem& problem, Iteration recordEvery=0,
+                    bool fullySynchronous=false)
+        {anneal(problem, recordEvery, fullySynchronous);}
 
     /* Parallel compute unit */
-    void co_anneal(Problem& problem, std::ofstream& csvOut,
-                   Iteration maxIteration, float oldClusteringFitness,
-                   float oldLocalityFitness);
+    void co_anneal_synchronous(
+        Problem& problem, std::ofstream& csvOut, Iteration maxIteration,
+        float oldClusteringFitness, float oldLocalityFitness);
+    void co_anneal_sasynchronous(
+        Problem& problem, std::ofstream& csvOut, Iteration maxIteration,
+        float oldClusteringFitness, float oldLocalityFitness);
 
     /* Transformation utilities */
     static TransformCount compute_transform_footprint(
@@ -37,8 +41,11 @@ private:
     /* Anneal methods. Note that I don't use optional arguments here because
      * Annealer has a pure virtual anneal(Problem) method, and I want to
      * encapsulate both call methods. */
-    void anneal(Problem& problem, Iteration recordEvery);
-    void anneal(Problem& problem){anneal(problem, 0);}
+    void anneal(Problem& problem, Iteration recordEvery, bool fullySynchronous);
+    void anneal(Problem& problem, bool fullySynchronous)
+        {anneal(problem, 0, fullySynchronous);}
+    void anneal(Problem& problem){anneal(problem, 0, false);}
+
 
     /* Output file names. If no output directory is provided, no output is
      * written. */

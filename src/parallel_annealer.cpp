@@ -19,10 +19,17 @@ ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
  * The recordEvery argument, if non-zero, causes the annealing to stop after
  * every "recordEvery" iterations to compute and record the fitness at that
  * time if logging is enabled (i.e. if outDirArg is nonempty in the
- * constructor). */
+ * constructor).
+ *
+ * The parallel annealer has two synchronising modes: "synchronous" and
+ * "semi-asynchronous". The former anneals, ensuring correct fitness
+ * computation. The latter anneals with stale fitness data (and is hopefully
+ * faster). The "synchronous" mode is used if `fullySynchronous` is true, and
+ * the "semi-asynchronous" mode is used otherwise. */
 template<class DisorderT>
 void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
-                                         Iteration recordEvery)
+                                         Iteration recordEvery,
+                                         bool fullySynchronous)
 {
     /* Set up logging.
      *
@@ -125,10 +132,22 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         /* Spawn slave threads to do the annealing. */
         std::vector<std::thread> threads;
         for (unsigned threadId = 0; threadId < numThreads; threadId++)
-            threads.emplace_back(&ParallelAnnealer<DisorderT>::co_anneal, this,
-                                 std::ref(problem),
-                                 std::ref(csvOuts.at(threadId)), nextStop,
-                                 clusteringFitness, localityFitness);
+        {
+            if (fullySynchronous)
+            {
+                threads.emplace_back(
+                    &ParallelAnnealer<DisorderT>::co_anneal_synchronous,
+                    this, std::ref(problem), std::ref(csvOuts.at(threadId)),
+                    nextStop, clusteringFitness, localityFitness);
+            }
+            else
+            {
+                threads.emplace_back
+                    (&ParallelAnnealer<DisorderT>::co_anneal_sasynchronous,
+                     this, std::ref(problem), std::ref(csvOuts.at(threadId)),
+                     nextStop, clusteringFitness, localityFitness);
+            }
+        }
 
         /* Join with slave threads. */
         for (auto& thread : threads) thread.join();
@@ -170,13 +189,12 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
     }
 }
 
-/* An individual hammer, to be wielded by a single thread. */
+/* An individual hammer, to be wielded by a single thread. Communicates with
+ * other threads semi-asynchronously. */
 template<class DisorderT>
-void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
-                                            std::ofstream& csvOut,
-                                            Iteration maxIteration,
-                                            float oldClusteringFitness,
-                                            float oldLocalityFitness)
+void ParallelAnnealer<DisorderT>::co_anneal_sasynchronous(
+    Problem& problem, std::ofstream& csvOut, Iteration maxIteration,
+    float oldClusteringFitness, float oldLocalityFitness)
 {
     auto selA = problem.nodeAs.begin();
     auto selH = problem.nodeHs.begin();
@@ -289,6 +307,138 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         {
             if (this->log) csvOut << 0 << '\n';
             locking_transform(problem, selA, oldH, selH);
+        }
+    }
+    while (iteration < maxIteration);  /* Termination condition */
+}
+
+/* An individual hammer, to be wielded by a single thread. Communicates with
+ * other threads synchronously.
+ *
+ * Shameless code duplication with the semi-asynchronous co-anneal method, but
+ * life is short. */
+template<class DisorderT>
+void ParallelAnnealer<DisorderT>::co_anneal_synchronous(
+    Problem& problem, std::ofstream& csvOut, Iteration maxIteration,
+    float oldClusteringFitness, float oldLocalityFitness)
+{
+    auto selA = problem.nodeAs.begin();
+    auto selH = problem.nodeHs.begin();
+    auto oldH = problem.nodeHs.begin();
+
+    /* Base fitness "used" from the start of each iteration. Note that the
+     * currently-stored fitness will drift from the total fitness. This is fine
+     * because determination only care about the fitness difference from an
+     * operation - not its absolute value or ratio. */
+    auto oldFitness = oldClusteringFitness + oldLocalityFitness;
+
+    /* Really, nobody cares about the initial fitness value, but it's
+     * interesting to watch it change. */
+    if (this->log) csvOut << "-1,-1,-1,0,"
+                          << oldFitness << ","
+                          << oldClusteringFitness << ","
+                          << oldLocalityFitness << ",1,1\n";
+
+    Iteration localIteration;
+    do
+    {
+        /* Get the iteration number. The variable "iteration" is shared between
+         * threads. */
+        localIteration = iteration++;
+        if (this->log) csvOut << localIteration << ",";
+
+        /* "Atomic" selection */
+        auto selectionCollisions = \
+            problem.select_parallel_synchronous(selA, selH, oldH);
+        if (this->log) csvOut << selA - problem.nodeAs.begin() << ","
+                              << selH - problem.nodeHs.begin() << ","
+                              << selectionCollisions << ",";
+
+        /* RAII locking - selected application node, selected hardware node,
+         * old hardware node, and neighbouring application nodes. We're just
+         * adopting the previously-locked nodes here. */
+        std::vector<std::unique_lock<decltype((*selA)->lock)>> appLocks;
+        appLocks.emplace_back((*selA)->lock, std::adopt_lock);
+        appLocks.emplace_back((*selH)->lock, std::adopt_lock);
+        appLocks.emplace_back((*oldH)->lock, std::adopt_lock);
+        for (auto neighbour : (*selA)->neighbours)
+            appLocks.emplace_back(neighbour.lock()->lock, std::adopt_lock);
+
+        /* Compute the transformation footprint. Only done when logging, and
+         * only done to demonstrate that there are no collisions when annealing
+         * synchonously. */
+        TransformCount oldTformFootprint = 0;
+        if (this->log) oldTformFootprint = compute_transform_footprint(
+            selA, selH, oldH);
+
+        /* Fitness of components before transformation. */
+        auto oldClusteringFitnessComponents =
+            problem.compute_hw_node_clustering_fitness(**selH) +
+            problem.compute_hw_node_clustering_fitness(**oldH);
+
+        auto oldLocalityFitnessComponents =
+            problem.compute_app_node_locality_fitness(**selA) * 2;
+
+        /* Transformation. Note it's not a locking transform, because we've
+         * already claimed our locks for this iteration. */
+        problem.transform(selA, selH, oldH);
+
+        /* Increment transformation counters, to be sporting. */
+        (*selA)->transformCount++;
+        (*selH)->transformCount++;
+        (*oldH)->transformCount++;
+
+        /* Fitness of components after transformation. */
+        auto newClusteringFitnessComponents =
+            problem.compute_hw_node_clustering_fitness(**selH) +
+            problem.compute_hw_node_clustering_fitness(**oldH);
+
+        auto newLocalityFitnessComponents =
+            problem.compute_app_node_locality_fitness(**selA) * 2;
+
+        /* Footprint after transformation. Note the minus three - this is
+         * because our move transformation causes three changes to the data
+         * structure, and we don't want to count those. */
+        TransformCount newTformFootprint = 0;
+        if (this->log) newTformFootprint = compute_transform_footprint(
+            selA, selH, oldH) - 3;
+
+        /* New fitness computation. */
+        auto newClusteringFitness = oldClusteringFitness -
+            oldClusteringFitnessComponents + newClusteringFitnessComponents;
+
+        auto newLocalityFitness = oldLocalityFitness -
+            oldLocalityFitnessComponents + newLocalityFitnessComponents;
+
+        auto newFitness = newLocalityFitness + newClusteringFitness;
+
+        /* Writing new fitness value to CSV, and whether or not the fitness
+         * computation this iteration is unreliable. */
+        if (this->log) csvOut << newFitness << ","
+                              << newClusteringFitness << ","
+                              << newLocalityFitness << ","
+                              << (oldTformFootprint == newTformFootprint)
+                              << ",";
+
+        /* Determination */
+        bool sufficientlyDetermined =
+            this->disorder.determine(oldFitness, newFitness, localIteration);
+
+        /* If the solution was sufficiently determined to be chosen, update the
+         * base fitness to support computation for the next
+         * iteration. Otherwise, revert the solution. */
+        if (sufficientlyDetermined)
+        {
+            if (this->log) csvOut << 1 << '\n';
+            oldFitness = newFitness;
+            oldClusteringFitness = newClusteringFitness;
+            oldLocalityFitness = newLocalityFitness;
+        }
+
+        else
+        {
+            if (this->log) csvOut << 0 << '\n';
+            problem.transform(selA, oldH, selH);
         }
     }
     while (iteration < maxIteration);  /* Termination condition */
