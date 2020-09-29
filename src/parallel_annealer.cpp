@@ -204,7 +204,8 @@ void ParallelAnnealer<DisorderT>::co_anneal(Problem& problem,
         if (this->log) csvOut << localIteration << ",";
 
         /* "Atomic" selection */
-        auto selectionCollisions = problem.select(selA, selH, oldH, true);
+        auto selectionCollisions = \
+            problem.select_parallel_sasynchronous(selA, selH, oldH);
         if (this->log) csvOut << selA - problem.nodeAs.begin() << ","
                               << selH - problem.nodeHs.begin() << ","
                               << selectionCollisions << ",";

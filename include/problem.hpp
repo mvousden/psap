@@ -40,9 +40,15 @@ public:
     void initial_condition_random();
 
     /* Neighbouring state selection. */
-    unsigned select(decltype(nodeAs)::iterator& selA,
-                    decltype(nodeHs)::iterator& selH,
-                    decltype(nodeHs)::iterator& oldH, bool atomic=false);
+    unsigned select_serial(decltype(nodeAs)::iterator& selA,
+                       decltype(nodeHs)::iterator& selH,
+                       decltype(nodeHs)::iterator& oldH);
+    unsigned select_parallel_sasynchronous(decltype(nodeAs)::iterator& selA,
+                                           decltype(nodeHs)::iterator& selH,
+                                           decltype(nodeHs)::iterator& oldH);
+    unsigned select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
+                                         decltype(nodeHs)::iterator& selH,
+                                         decltype(nodeHs)::iterator& oldH);
 
     /* Transformation from selection data. */
     void transform(decltype(nodeAs)::iterator& selA,
@@ -84,12 +90,17 @@ private:
     constexpr static auto logHandle = "log.txt";
 
     /* Granular selection */
-    void select_sela(decltype(nodeAs)::iterator& selA);
-    unsigned select_sela_atomic(decltype(nodeAs)::iterator& selA);
-    void select_get_oldh(decltype(nodeAs)::iterator& selA,
-                         decltype(nodeHs)::iterator& oldH);
-    void select_selh(decltype(nodeHs)::iterator& selH,
-                     decltype(nodeHs)::iterator& avoid);
+    void select_serial_sela(decltype(nodeAs)::iterator& selA);
+    void select_serial_oldh(decltype(nodeAs)::iterator& selA,
+                            decltype(nodeHs)::iterator& oldH);
+    void select_serial_selh(decltype(nodeHs)::iterator& selH,
+                            decltype(nodeHs)::iterator& avoid);
+    unsigned select_parallel_sasynchronous_sela(
+        decltype(nodeAs)::iterator& selA);
+    void select_parallel_sasynchronous_oldh(decltype(nodeAs)::iterator& selA,
+                                            decltype(nodeHs)::iterator& oldH);
+    void select_parallel_sasynchronous_selh(decltype(nodeHs)::iterator& selH,
+                                            decltype(nodeHs)::iterator& avoid);
 };
 
 #endif

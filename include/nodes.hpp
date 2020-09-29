@@ -13,18 +13,29 @@ typedef unsigned TransformCount;
 
 /* Nodes in general. All nodes are named.
  *
- * Note that the 'lock' mutex members are synchronisation objects for the
- * parallel execution case (and are optimised-out in the serial
- * case). Application nodes are locked on selection (responsibility of the
- * problem object), whereas hardware nodes are locked on transformation
- * (responsibility of the annealer).
+ * Locking and transformation behaviour is dependent on the properties of the
+ * annealer:
  *
- * The 'transformCount' atomic members are used to identify whether a node has
- * been transformed compared to a known starting point. It does not matter if
- * they wrap, as only a difference in counter value is checked for (and
- * wrapping all the way around in one iteration is nigh-on impossible with few
- * compute workers). These members are only used by parallel annealers, and are
- * ignored by serial annealers. */
+ * - Serial annealer: `lock` and `transformCount` are not used (and should be
+ *   optimised out during compilation). Synchronisation primitives are not
+ *   needed in the serial case.
+ *
+ * - Parallel synchronous annealer: The selected application node, the selected
+ *   hardware node, the hardware node origin of the selected application node,
+ *   and all neighbours of the application node are locked at selection
+ *   time. The atomic `transformCount` members are not used (and should be
+ *   optimised out during compilation).
+ *
+ * - Parallel semi-asynchronous annealer: Only the selected application node is
+ *   locked at selection time. Hardware nodes are locked on
+ *   transformation. This is the minimum amount of locking required to maintain
+ *   the data structure, and will result in computation with stale data. The
+ *   atomic `transformCount` members are used to identify whether a node has
+ *   been transformed compared to a known starting point. It does not matter if
+ *   they wrap, as only a difference in counter value is checked for (and
+ *   wrapping all the way around in one iteration is nigh-on impossible with
+ *   few compute workers). `transformCount` is only used while logging is
+ *   enabled, and so should be optimised out when logging is disabled. */
 class Node
 {
 public:

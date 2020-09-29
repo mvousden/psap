@@ -68,7 +68,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
         iteration++;
 
         /* Selection */
-        problem.select(selA, selH, oldH);
+        problem.select_serial(selA, selH, oldH);
         if (this->log) csvOut << selA - problem.nodeAs.begin() << ","
                               << selH - problem.nodeHs.begin() << ",";
 
