@@ -8,7 +8,12 @@
 #include <set>
 #include <vector>
 
-/* Note that the 'lock' mutex members are synchronisation objects for the
+class NodeH;  /* A circle necessary for reasonable performance. */
+typedef unsigned TransformCount;
+
+/* Nodes in general. All nodes are named.
+ *
+ * Note that the 'lock' mutex members are synchronisation objects for the
  * parallel execution case (and are optimised-out in the serial
  * case). Application nodes are locked on selection (responsibility of the
  * problem object), whereas hardware nodes are locked on transformation
@@ -20,36 +25,35 @@
  * wrapping all the way around in one iteration is nigh-on impossible with few
  * compute workers). These members are only used by parallel annealers, and are
  * ignored by serial annealers. */
-typedef unsigned TransformCount;
-
-class NodeH;
-
-/* Node in the application graph. */
-class NodeA
+class Node
 {
 public:
-    NodeA(std::string name): name(name){}
-    std::weak_ptr<NodeH> location;
+    Node(std::string name): name(name){}
     std::string name;
-    std::vector<std::weak_ptr<NodeA>> neighbours;
     std::mutex lock;
     std::atomic<TransformCount> transformCount = 0;
 };
 
-/* Node in the hardware graph. */
-class NodeH
+/* Node in the application graph. */
+class NodeA: public Node
 {
 public:
-    NodeH(std::string name, unsigned index): name(name), index(index){}
+    NodeA(std::string name): Node(name){}
+    std::weak_ptr<NodeH> location;
+    std::vector<std::weak_ptr<NodeA>> neighbours;
+};
+
+/* Node in the hardware graph. */
+class NodeH: public Node
+{
+public:
+    NodeH(std::string name, unsigned index): Node(name), index(index){}
     NodeH(std::string name, unsigned index, float posHoriz, float posVerti):
-        name(name), index(index), posHoriz(posHoriz), posVerti(posVerti){}
+        Node(name), index(index), posHoriz(posHoriz), posVerti(posVerti){}
     std::set<NodeA*> contents;
-    std::string name;
     unsigned index;
     float posHoriz = -1;
     float posVerti = -1;
-    std::mutex lock;
-    std::atomic<TransformCount> transformCount = 0;
 };
 
 #endif
