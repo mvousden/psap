@@ -5,6 +5,15 @@
 #include <iostream>
 #include <map>
 
+/* Define a path for dumping outputs. Pass in a directory path (will be
+ * cleared). */
+void Problem::define_output_path(const std::filesystem::path& outDirArg)
+{
+    std::filesystem::remove_all(outDirArg);
+    std::filesystem::create_directories(outDirArg);
+    outDir = outDirArg;
+}
+
 /* Initialise logging capability. Returns without setup if the output path has
  * not been defined. */
 void Problem::initialise_logging()

@@ -22,15 +22,6 @@ Problem::~Problem()
     }
 }
 
-/* Define a path for dumping outputs. Pass in a directory path (will be
- * cleared). */
-void Problem::define_output_path(const std::filesystem::path& outDirArg)
-{
-    std::filesystem::remove_all(outDirArg);
-    std::filesystem::create_directories(outDirArg);
-    outDir = outDirArg;
-}
-
 /* Reserve space in the edge cache as a function of the diameter, and define
  * default values as per the specification - zeroes on the diagonals, and a
  * huge number everywhere else. Also reads edgeHs to populate entries that
