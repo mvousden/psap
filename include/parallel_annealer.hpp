@@ -14,6 +14,8 @@ public:
     void operator()(Problem& problem, Iteration recordEvery=0,
                     bool fullySynchronous=false)
         {anneal(problem, recordEvery, fullySynchronous);}
+    void operator()(Problem& problem, bool fullySynchronous=false)
+        {anneal(problem, fullySynchronous);}
 
     /* Parallel compute unit */
     void co_anneal_synchronous(

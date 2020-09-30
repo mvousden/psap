@@ -18,6 +18,9 @@ ITERATIONS=5e9
 MOUSE_MODE=1
 MOUSE_FILE="mouse_out_${ITERATIONS}.txt"
 
+# See main.cpp.
+FULLY_SYNCHRONOUS=0
+
 if [ ${MOUSE_MODE} -eq 1 ]; then
     > "${MOUSE_FILE}"
 fi
@@ -34,6 +37,12 @@ for THREAD_COUNT in 0 1 $(seq 4 4 64); do
 	    sed -i "s|{{MOUSE_MODE}}|true|" "${TEMPLATE_TARGET}"
     else
 	    sed -i "s|{{MOUSE_MODE}}|false|" "${TEMPLATE_TARGET}"
+    fi
+
+    if [ ${FULLY_SYNCHRONOUS} -eq 1 ]; then
+	    sed -i "s|{{FULLY_SYNCHRONOUS}}|true|" "${TEMPLATE_TARGET}"
+    else
+	    sed -i "s|{{FULLY_SYNCHRONOUS}}|false|" "${TEMPLATE_TARGET}"
     fi
 
     if [ ${THREAD_COUNT} -eq 0 ]; then

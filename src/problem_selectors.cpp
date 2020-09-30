@@ -166,7 +166,7 @@ void Problem::select_parallel_sasynchronous_selh(
  * - Retrieves `oldH` given `selA` (for convenience), and locks it.
  *
  * Does not modify the state of the problem in any way. Returns the number of
- * collisions encountered. */
+ * collisions encountered due to locks owned by other threads. */
 unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
                                               decltype(nodeHs)::iterator& selH,
                                               decltype(nodeHs)::iterator& oldH)
@@ -178,12 +178,12 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
     std::uniform_int_distribution<decltype(nodeAs)::size_type>
         distributionSelA(0, nodeAs.size() - 1);
     decltype(nodeAs)::size_type roll;
-    auto attempt = Problem::selectionPatience;
+    auto appAttempt = Problem::selectionPatience;
 
     while (true)
     {
-        attempt--;
-        if (attempt == 0)
+        appAttempt--;
+        if (appAttempt == 0)
         {
             log("WARNING: Synchronous application node selection is taking a "
                 "while. Try spawning fewer threads.");
@@ -234,6 +234,7 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
         {
             nodeToUnlock->lock()->lock.unlock();
             locksMade--;
+            nodeToUnlock++;
         }
     }
 
@@ -244,13 +245,22 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
      * hardware node at random, we reselect if the hardware node is full, if it
      * already contains the hardware node, or has been locked (either by us
      * [oldH], or by another thread). */
+    auto hwOuterAttempt = Problem::selectionPatience;
     while (true)
     {
+        hwOuterAttempt--;
+        if (hwOuterAttempt == 0)
+        {
+            log("WARNING: Synchronous hardware node selection is taking a "
+                "while. Try spawning fewer threads.");
+        }
+
         /* Select a hardware node that has capacity and is otherwise valid. */
+        auto hwInnerAttempt = Problem::selectionPatience;
         do
         {
-            attempt--;
-            if (attempt == 0)
+            hwInnerAttempt--;
+            if (hwInnerAttempt == 0)
             {
                 log("WARNING: Hardware node selection is taking a while. Try "
                     "setting a larger value for pMax.");
@@ -266,5 +276,6 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
     }
 
     /* Phew. */
-    return static_cast<unsigned>(Problem::selectionPatience - attempt - 1);
+    return static_cast<unsigned>(Problem::selectionPatience -
+                                 appAttempt - hwOuterAttempt - 2);
 }

@@ -13,6 +13,11 @@ int main()
     /* Whether or not to anneal in serial, or parallel. */
     bool serial = false;
 
+    /* Synchronisity (serial=false only) - do we synchronise to ensure no
+     * computation with stale data (true), or do we only synchronise only to
+     * ensure data structure integrity (false)? */
+    bool fullySynchronous = false;
+
     /* Construct problem */
     Problem problem;
     problem_definition::define(problem);
@@ -76,7 +81,7 @@ int main()
         {
             /* Take intermediate fitness measurements. */
             ParallelAnnealer<ExpDecayDisorder>(2, maxIteration, outDir)
-                (problem, maxIteration / 20);
+                (problem, maxIteration / 20, fullySynchronous);
         }
     }
 
@@ -97,7 +102,7 @@ int main()
             auto annealer = ParallelAnnealer<ExpDecayDisorder>(2,
                                                                maxIteration);
             auto timeAtStart = std::chrono::steady_clock::now();
-            annealer(problem);
+            annealer(problem, fullySynchronous);
             std::cout << std::chrono::duration_cast<std::chrono::seconds>(
                 std::chrono::steady_clock::now() - timeAtStart).count()
                       << std::endl;
