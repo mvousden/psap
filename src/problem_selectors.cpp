@@ -200,7 +200,7 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
         nodesToLock.push_back((*selA)->location);
 
         /* Secondly, the selected application node. */
-        nodesToLock.push_back((*selA));
+        nodesToLock.push_back(std::weak_ptr<Node>(*selA));
 
         /* Lastly, each of its neighbours. */
         for (const auto& neighbour : (*selA)->neighbours)
@@ -245,37 +245,44 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
      * hardware node at random, we reselect if the hardware node is full, if it
      * already contains the hardware node, or has been locked (either by us
      * [oldH], or by another thread). */
-    auto hwOuterAttempt = Problem::selectionPatience;
+    auto hwSizeAttempt = Problem::selectionPatience;
+    decltype(hwSizeAttempt) hwLockTotalAttempts = 0;
     while (true)
     {
-        hwOuterAttempt--;
-        if (hwOuterAttempt == 0)
+        hwSizeAttempt--;
+        if (hwSizeAttempt == 0)
         {
             log("WARNING: Synchronous hardware node selection is taking a "
                 "while. Try spawning fewer threads.");
         }
 
-        /* Select a hardware node that has capacity and is otherwise valid. */
-        auto hwInnerAttempt = Problem::selectionPatience;
+        auto hwLockAttempt = Problem::selectionPatience;
         do
         {
-            hwInnerAttempt--;
-            if (hwInnerAttempt == 0)
+            hwLockAttempt--;
+            if (hwLockAttempt == 0)
             {
-                log("WARNING: Hardware node selection is taking a while. Try "
-                    "setting a larger value for pMax.");
+                log("WARNING: Synchronous hardware node selection is taking a "
+                    "while. Try spawning fewer threads.");
             }
+
+            /* Selection */
             selH = nodeHs.begin();
             std::uniform_int_distribution<decltype(nodeHs)::size_type>
                 distributionSelH(0, nodeHs.size() - 1);
             std::advance(selH, distributionSelH(rng));
-        } while ((*selH)->contents.size() >= pMax or selH == oldH);
+        }
+        /* Keep selecting until we find a node that's not in use. */
+        while (!(*selH)->lock.try_lock());
+        hwLockTotalAttempts += Problem::selectionPatience - hwLockAttempt;
 
-        /* Check it's not used by anyone else. If it is, we go around again. */
-        if ((*selH)->lock.try_lock()) break;
+        /* Try again if the node is invalid for another reason. */
+        if ((*selH)->contents.size() >= pMax or selH == oldH)
+            (*selH)->lock.unlock();
+        else break;
     }
 
     /* Phew. */
     return static_cast<unsigned>(Problem::selectionPatience -
-                                 appAttempt - hwOuterAttempt - 2);
+                                 appAttempt + hwLockTotalAttempts - 2);
 }
