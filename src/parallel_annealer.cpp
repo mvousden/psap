@@ -359,7 +359,7 @@ void ParallelAnnealer<DisorderT>::co_anneal_synchronous(
         appLocks.emplace_back((*selA)->lock, std::adopt_lock);
         appLocks.emplace_back((*selH)->lock, std::adopt_lock);
         appLocks.emplace_back((*oldH)->lock, std::adopt_lock);
-        for (auto neighbour : (*selA)->neighbours)
+        for (const auto& neighbour : (*selA)->neighbours)
             appLocks.emplace_back(neighbour.lock()->lock, std::adopt_lock);
 
         /* Compute the transformation footprint. Only done when logging, and

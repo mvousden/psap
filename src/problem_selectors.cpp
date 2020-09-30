@@ -203,7 +203,7 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
         nodesToLock.push_back((*selA));
 
         /* Lastly, each of its neighbours. */
-        for (auto neighbour : (*selA)->neighbours)
+        for (const auto& neighbour : (*selA)->neighbours)
             nodesToLock.push_back(neighbour);
 
         /* For each of these nodes, try to unlock them in turn. If any of them
@@ -215,7 +215,7 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
          * we're a little stuck, yo. */
         bool failure = false;
         unsigned locksMade = 0;
-        for (auto thisNode : nodesToLock)
+        for (const auto& thisNode : nodesToLock)
         {
             if (thisNode.lock()->lock.try_lock()) locksMade++;
             else
