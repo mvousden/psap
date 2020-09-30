@@ -34,8 +34,7 @@ void Annealer<DisorderT>::write_metadata()
 
 
         std::ofstream metadata;
-        metadata.open((outDir / metadataName).u8string().c_str(),
-                      std::ofstream::trunc);
+        metadata.open((outDir / metadataName), std::ofstream::trunc);
         metadata << "[anneal]" << std::endl
                  << "annealerType = " << handle << std::endl
                  << "disorderType = " << disorder.handle << std::endl

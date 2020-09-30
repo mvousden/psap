@@ -57,8 +57,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         {
             std::stringstream csvPath;
             csvPath << csvBaseName << "-" << csvOutIndex << ".csv";
-            csvOuts.at(csvOutIndex).open(
-                (this->outDir / csvPath.str()).u8string().c_str(),
+            csvOuts.at(csvOutIndex).open(this->outDir / csvPath.str(),
                 std::ofstream::trunc);
             csvOuts.at(csvOutIndex) << "Iteration,"
                                     << "Selected application node index,"
@@ -74,7 +73,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         /* Frequent serial fitness computation. */
         if (recordEvery != 0)
         {
-            csvOutMaster.open((this->outDir / fitnessPath).u8string().c_str(),
+            csvOutMaster.open(this->outDir / fitnessPath,
                               std::ofstream::trunc);
             csvOutMaster << "Iteration,"
                          << "Fitness,"
@@ -83,8 +82,7 @@ void ParallelAnnealer<DisorderT>::anneal(Problem& problem,
         }
 
         /* Wallclock measurement. */
-        clockOut.open((this->outDir / clockPath).u8string().c_str(),
-                      std::ofstream::trunc);
+        clockOut.open(this->outDir / clockPath, std::ofstream::trunc);
 
         /* Metadata */
         write_metadata();
@@ -515,8 +513,7 @@ void ParallelAnnealer<DisorderT>::write_metadata()
     if (this->log)
     {
         std::ofstream metadata;
-        metadata.open((this->outDir / this->metadataName).u8string().c_str(),
-                      std::ofstream::app);
+        metadata.open(this->outDir / this->metadataName, std::ofstream::app);
         metadata << "threadCount = " << numThreads;
         metadata.close();
     }

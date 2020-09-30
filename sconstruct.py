@@ -15,11 +15,11 @@ env.Append(CPPDEFINES={"GIT_REVISION": "{}".format(gitRev)})
 
 if any([env["SYSTEM"] == system for system in ["Linux", "Darwin"]]):
     # Clang, GCC
-    env.Append(CXXFLAGS="-std=c++17 -O3 -Wall -Wextra -pedantic",
+    env.Append(CXXFLAGS="-std=c++20 -O3 -Wall -Wextra -pedantic",
                LINKFLAGS="-pthread")
 elif env["SYSTEM"] == "Windows":
     # MSVC
-    env.Append(CXXFLAGS="/std:c++17 /O2 /W4 /EHs /Za",
+    env.Append(CXXFLAGS="/std:c++20 /O2 /W4 /EHs /Za",
                CPPDEFINES={"_CRT_SECURE_NO_WARNINGS": ""})
 
 sources = Glob("src/*.cpp", exclude="src/problem_definition.cpp")

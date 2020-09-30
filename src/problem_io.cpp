@@ -20,8 +20,7 @@ void Problem::initialise_logging()
 {
     if (!outDir.empty())
     {
-        logS = std::ofstream((outDir / logHandle).u8string(),
-                             std::ofstream::app);
+        logS = std::ofstream(outDir / logHandle, std::ofstream::app);
         log("Logging initialised.");
     }
 }

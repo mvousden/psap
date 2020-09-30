@@ -31,8 +31,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
     std::ofstream clockOut;
     if (this->log)
     {
-        csvOut.open((this->outDir / csvPath).u8string().c_str(),
-                    std::ofstream::trunc);
+        csvOut.open(this->outDir / csvPath, std::ofstream::trunc);
         csvOut << "Selected application node index,"
                << "Selected hardware node index,"
                << "Transformed Fitness,"
@@ -40,9 +39,7 @@ void SerialAnnealer<DisorderT>::anneal(Problem& problem)
                << "Transformed Locality Fitness,"
                << "Determination\n";
 
-        clockOut.open((this->outDir / clockPath).u8string().c_str(),
-                      std::ofstream::trunc);
-
+        clockOut.open(this->outDir / clockPath, std::ofstream::trunc);
         this->write_metadata();
     }
 
