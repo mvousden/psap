@@ -1,10 +1,10 @@
-/* This file defines a simple problem, with eight hardware nodes connected in a
- * ring with equal edge weights (each permitted to have at most three
- * application nodes associated with them), and with sixteen application nodes,
- * also connected in a ring in both directions.
+/* See the ring_small example for an explanation of what is going on here.
  *
- * The optimal solution to this problem has a clustering fitness of -32, and a
- * locality fitness of -32, giving a total fitness of -64. */
+ * The optimal solution to this problem has a clustering fitness of -1024, and
+ * a locality fitness of -1024, giving a total fitness of -2056. Note that,
+ * compared with ring small, the hardware graph weight is increased by a factor
+ * of 4 to combat the power-of-two used in the clustering fitness
+ * calculation.  */
 
 problem.name = "simple_ring_problem";
 
@@ -14,7 +14,11 @@ decltype(problem.nodeHs)::size_type nodeHSize = 64;
 problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
-/* Define maximum number of application nodes permitted on a hardware node. */
+/* Define hardware graph edge weighting (constant). */
+float weight = 8;
+
+/* Define maximum number of application nodes permitted on a hardware node. The
+ * optimal clustering here is four application nodes per hardware node. */
 problem.pMax = 7;
 
 /* Application nodes */
@@ -76,7 +80,6 @@ for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 
 /* Hardware neighbours. It's an undirected graph, so only neighbours in one
  * direction should be tracked. */
-float weight = 2;
 for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 {
     /* Identify forward neighbour and track. */

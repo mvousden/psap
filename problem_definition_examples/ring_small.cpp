@@ -14,7 +14,11 @@ decltype(problem.nodeHs)::size_type nodeHSize = 8;
 problem.nodeAs.reserve(nodeASize);
 problem.nodeHs.reserve(nodeHSize);
 
-/* Define maximum number of application nodes permitted on a hardware node. */
+/* Define hardware graph edge weighting (constant). */
+float weight = 2;
+
+/* Define maximum number of application nodes permitted on a hardware node. The
+ * optimal clustering here is two application nodes per hardware node. */
 problem.pMax = 3;
 
 /* Application nodes */
@@ -76,7 +80,6 @@ for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 
 /* Hardware neighbours. It's an undirected graph, so only neighbours in one
  * direction should be tracked. */
-float weight = 2;
 for (hIndex = 0; hIndex < nodeHSize; hIndex++)
 {
     /* Identify forward neighbour and track. */
