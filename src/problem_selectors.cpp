@@ -189,22 +189,29 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
                 "while. Try spawning fewer threads.");
         }
         roll = distributionSelA(rng);
-
-        /* Now we've selected the application node, collect all of the nodes we
-         * wish to lock. */
-        std::vector<std::weak_ptr<Node>> nodesToLock;
         selA = nodeAs.begin();
         std::advance(selA, roll);
 
-        /* Firstly, the old hardware node. */
-        nodesToLock.push_back((*selA)->location);
+        /* Locking is a little complicated. We need to lock the application
+         * node before we determine its location. Once determined, we then
+         * attempt to lock the location-hardware node, and the neighbours of
+         * the selected application node. If any of those locks are already
+         * claimed, we "undo" all of the locks, including the first. */
 
-        /* Secondly, the selected application node. */
-        nodesToLock.push_back(std::weak_ptr<Node>(*selA));
+        /* Give up if the selected application node is locked. */
+        if (!(*selA)->lock.try_lock()) continue;
 
-        /* Lastly, each of its neighbours. */
+        /* Now we've selected the application node, collect the other nodes we
+         * wish to lock. */
+        std::vector<std::weak_ptr<Node>> nodesToLock;
+
+        /* Firstly, each of the selected application node's neighbours. */
         for (const auto& neighbour : (*selA)->neighbours)
             nodesToLock.push_back(neighbour);
+
+        /* Secondly, the old hardware node. */
+        select_serial_oldh(selA, oldH);
+        nodesToLock.push_back((*oldH));
 
         /* For each of these nodes, try to unlock them in turn. If any of them
          * don't work when tried, unlock all of the ones that we managed to
@@ -236,15 +243,13 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
             locksMade--;
             nodeToUnlock++;
         }
+        (*selA)->lock.unlock();
     }
 
-    /* Define the old hardware node, given our selected application node. */
-    select_serial_oldh(selA, oldH);
-
-    /* Now we do a similar activity for the new hardware node. On selecting the
-     * hardware node at random, we reselect if the hardware node is full, if it
-     * already contains the hardware node, or has been locked (either by us
-     * [oldH], or by another thread). */
+    /* Now deal with hardware node selection. On selecting the hardware node at
+     * random, we reselect if the hardware node is full, if it already contains
+     * the hardware node, or has been locked (either by us [oldH], or by
+     * another thread). */
     auto hwSizeAttempt = Problem::selectionPatience;
     decltype(hwSizeAttempt) hwLockTotalAttempts = 0;
     while (true)
