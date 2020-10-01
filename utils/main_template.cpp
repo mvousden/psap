@@ -98,7 +98,7 @@ int main()
         {
             auto annealer = SerialAnnealer<ExpDecayDisorder>(maxIteration);
             auto timeAtStart = std::chrono::steady_clock::now();
-            annealer(problem, fullySynchronous);
+            annealer(problem);
             std::cout << std::chrono::duration_cast<std::chrono::seconds>(
                 std::chrono::steady_clock::now() - timeAtStart).count()
                       << std::endl;
