@@ -238,6 +238,61 @@ float Problem::compute_total_locality_fitness()
     return returnValue;
 }
 
+/* Checks the integrity of locks in the data structure.
+ *
+ * Specifically, this method returns true if no nodes are locked, and false
+ * otherwise.
+ *
+ * Note that this method is itself not thread safe. */
+bool Problem::check_lock_integrity(std::stringstream& errors)
+{
+    bool output = true;  /* Innocent until proven guilty. */
+    const unsigned patienceMax = 100;
+
+    for (const auto& nodeH : nodeHs)
+    {
+        /* Can the hardware node be locked? We attempt a finite number of times
+         * because spurious failures are permitted according to the
+         * standard. We want to be sure beyond reasonable doubt. */
+        unsigned patience = patienceMax;
+        while (!nodeH->lock.try_lock())
+        {
+            patience--;
+            if (patience == 0)
+            {
+                output = false;
+                errors << "The mutex belonging to hardware node '"
+                       << nodeH->name
+                       << "' cannot be locked."
+                       << std::endl;
+                break;
+            }
+        }
+        if (patience > 0) nodeH->lock.unlock();
+    }
+
+    /* And for application nodes. */
+    for (const auto& nodeA : nodeAs)
+    {
+        unsigned patience = patienceMax;
+        while (!nodeA->lock.try_lock())
+        {
+            patience--;
+            if (patience == 0)
+            {
+                output = false;
+                errors << "The mutex belonging to application node '"
+                       << nodeA->name
+                       << "' cannot be locked."
+                       << std::endl;
+                break;
+            }
+        }
+        if (patience > 0) nodeA->lock.unlock();
+    }
+    return output;
+}
+
 /* Checks the integrity of the data structures holding nodes.
  *
  * Specifically, this method returns true if integrity is not compromised, and
@@ -249,7 +304,7 @@ float Problem::compute_total_locality_fitness()
  *  - that each application node contained by each hardware node reciprocates
  *    that relationship (2).
  *
- * Note that this method is not thread safe */
+ * Note that this method is not thread safe. */
 bool Problem::check_node_integrity(std::stringstream& errors)
 {
     bool output = true;  /* Innocent until proven guilty. */

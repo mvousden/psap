@@ -38,12 +38,17 @@ int main()
     problem.populate_edge_cache();
     problem.initial_condition_random();
 
-    Iteration maxIteration = static_cast<Iteration>(1e5);
+    Iteration maxIteration = static_cast<Iteration>(1e6);
     if (!mouseMode)
     {
         /* Check/write integrity */
-        problem.write_integrity_check_errs(
-            (outDir / "integrity_before.err").string());
+        if (!serial)
+        {
+            problem.write_lock_integrity_check_errs(
+                (outDir / "integrity_locks_before.err").string());
+        }
+        problem.write_node_integrity_check_errs(
+            (outDir / "integrity_nodes_before.err").string());
 
         /* Compute starting fitness for logging */
         {
@@ -126,8 +131,13 @@ int main()
         problem.write_h_graph((outDir / "h_graph.csv").string());
         problem.write_h_nodes((outDir / "h_nodes.csv").string());
         problem.write_h_node_loading((outDir / "h_node_loading.csv").string());
-        problem.write_integrity_check_errs(
-            (outDir / "integrity_after.err").string());
+        if (!serial)
+        {
+            problem.write_lock_integrity_check_errs(
+                (outDir / "integrity_locks_after.err").string());
+        }
+        problem.write_node_integrity_check_errs(
+            (outDir / "integrity_nodes_after.err").string());
     }
 
     return 0;

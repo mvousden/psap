@@ -63,6 +63,7 @@ public:
     float compute_total_locality_fitness();
 
     /* Integrity checking */
+    bool check_lock_integrity(std::stringstream& errors);
     bool check_node_integrity(std::stringstream& errors);
 
     /* State dumps */
@@ -72,7 +73,8 @@ public:
     void write_h_graph(const std::string_view& path);
     void write_h_nodes(const std::string_view& path);
     void write_h_node_loading(const std::string_view& path);
-    void write_integrity_check_errs(const std::string_view& path);
+    void write_lock_integrity_check_errs(const std::string_view& path);
+    void write_node_integrity_check_errs(const std::string_view& path);
 
     /* Number of iterations a while loop goes through during selection, after
      * which a message is logged. */

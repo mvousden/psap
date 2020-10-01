@@ -42,8 +42,13 @@ int main()
     if (!mouseMode)
     {
         /* Check/write integrity */
-        problem.write_integrity_check_errs(
-            (outDir / "integrity_before.err").u8string());
+        if (!serial)
+        {
+            problem.write_lock_integrity_check_errs(
+                (outDir / "integrity_locks_before.err").string());
+        }
+        problem.write_node_integrity_check_errs(
+            (outDir / "integrity_nodes_before.err").string());
 
         /* Compute starting fitness for logging */
         {
@@ -108,7 +113,6 @@ int main()
                 std::chrono::steady_clock::now() - timeAtStart).count()
                       << std::endl;
         }
-
     }
 
     /* Write solved stuff */
@@ -128,10 +132,14 @@ int main()
         problem.write_a_to_h_map((outDir / "final_a_to_h_map.csv").u8string());
         problem.write_h_graph((outDir / "h_graph.csv").u8string());
         problem.write_h_nodes((outDir / "h_nodes.csv").u8string());
-        problem.write_h_node_loading(
-            (outDir / "h_node_loading.csv").u8string());
-        problem.write_integrity_check_errs(
-            (outDir / "integrity_after.err").u8string());
+        problem.write_h_node_loading((outDir / "h_node_loading.csv").string());
+        if (!serial)
+        {
+            problem.write_lock_integrity_check_errs(
+                (outDir / "integrity_locks_after.err").string());
+        }
+        problem.write_node_integrity_check_errs(
+            (outDir / "integrity_nodes_after.err").string());
     }
 
     return 0;

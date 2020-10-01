@@ -193,13 +193,34 @@ void Problem::write_h_node_loading(const std::string_view& path)
     out.close();
 }
 
-/* Checks data structure integrity, and writes errors to a file. Any existing
- * file is clobbered. Does not filesystem checking of any kind. If no errors
- * are found, the file is created with no content. */
-void Problem::write_integrity_check_errs(const std::string_view& path)
+/* Checks the integrity of locks in the data structure, and writes errors to a
+ * file. Any existing file is clobbered. Does not filesystem checking of any
+ * kind. If no errors are found, the file is created with no content. */
+void Problem::write_lock_integrity_check_errs(const std::string_view& path)
 {
     std::stringstream message;
-    message << "Performing integrity check, writing to file at '"
+    message << "Performing lock integrity check, writing to file at '"
+            << path.data() << "'.";
+    log(message.str());
+
+    std::ofstream out(path.data(), std::ofstream::trunc);
+    std::stringstream errorMsgs;
+    if (!check_lock_integrity(errorMsgs))
+    {
+        log("Lock integrity errors found.");
+        out << errorMsgs.rdbuf();
+    }
+    else log("No lock integrity errors found.");
+    out.close();
+}
+
+/* Checks node data structure integrity, and writes errors to a file. Any
+ * existing file is clobbered. Does not filesystem checking of any kind. If no
+ * errors are found, the file is created with no content. */
+void Problem::write_node_integrity_check_errs(const std::string_view& path)
+{
+    std::stringstream message;
+    message << "Performing node integrity check, writing to file at '"
             << path.data() << "'.";
     log(message.str());
 
@@ -207,9 +228,9 @@ void Problem::write_integrity_check_errs(const std::string_view& path)
     std::stringstream errorMsgs;
     if (!check_node_integrity(errorMsgs))
     {
-        log("Integrity errors found.");
+        log("Node integrity errors found.");
         out << errorMsgs.rdbuf();
     }
-    else log("No integrity errors found.");
+    else log("No node integrity errors found.");
     out.close();
 }
