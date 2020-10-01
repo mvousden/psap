@@ -34,15 +34,15 @@ for THREAD_COUNT in 0 1 $(seq 4 4 64); do
     sed -i "s|{{ITERATIONS}}|$ITERATIONS|" "${TEMPLATE_TARGET}"
 
     if [ ${MOUSE_MODE} -eq 1 ]; then
-	    sed -i "s|{{MOUSE_MODE}}|true|" "${TEMPLATE_TARGET}"
+        sed -i "s|{{MOUSE_MODE}}|true|" "${TEMPLATE_TARGET}"
     else
-	    sed -i "s|{{MOUSE_MODE}}|false|" "${TEMPLATE_TARGET}"
+        sed -i "s|{{MOUSE_MODE}}|false|" "${TEMPLATE_TARGET}"
     fi
 
     if [ ${FULLY_SYNCHRONOUS} -eq 1 ]; then
-	    sed -i "s|{{FULLY_SYNCHRONOUS}}|true|" "${TEMPLATE_TARGET}"
+        sed -i "s|{{FULLY_SYNCHRONOUS}}|true|" "${TEMPLATE_TARGET}"
     else
-	    sed -i "s|{{FULLY_SYNCHRONOUS}}|false|" "${TEMPLATE_TARGET}"
+        sed -i "s|{{FULLY_SYNCHRONOUS}}|false|" "${TEMPLATE_TARGET}"
     fi
 
     if [ ${THREAD_COUNT} -eq 0 ]; then
@@ -54,16 +54,16 @@ for THREAD_COUNT in 0 1 $(seq 4 4 64); do
     fi
 
     # Build
-	scons -j 4
+    scons -j 4
 
     # Run
     if [ ${MOUSE_MODE} -eq 1 ]; then
         # Pushing output to file.
-	    printf "${THREAD_COUNT}," >> ${MOUSE_FILE}
-	    ./psap-run >> ${MOUSE_FILE}
+        printf "${THREAD_COUNT}," >> ${MOUSE_FILE}
+        ./psap-run >> ${MOUSE_FILE}
     else
         # Log angrily, moving results afterwards.
-	    ./psap-run
-	    mv output/grid_poets output/grid_poets_${THREAD_COUNT}_$(date --iso-8601=date)_$(git rev-parse HEAD)
+        ./psap-run
+        mv output/grid_poets output/grid_poets_${THREAD_COUNT}_$(date --iso-8601=date)_$(git rev-parse HEAD)
     fi
 done
