@@ -59,11 +59,11 @@ int main()
         }
 
         /* Write initial condition data */
-        problem.write_a_degrees((outDir / "a_degrees.csv").u8string());
+        problem.write_a_degrees((outDir / "a_degrees.csv").string());
         problem.write_a_h_graph(
-            (outDir / "initial_a_h_graph.csv").u8string());
+            (outDir / "initial_a_h_graph.csv").string());
         problem.write_a_to_h_map(
-            (outDir / "initial_a_to_h_map.csv").u8string());
+            (outDir / "initial_a_to_h_map.csv").string());
 
         /* Begin to solve the problem. */
         {
@@ -128,10 +128,10 @@ int main()
             problem.log(message.str());
         }
 
-        problem.write_a_h_graph((outDir / "final_a_h_graph.csv").u8string());
-        problem.write_a_to_h_map((outDir / "final_a_to_h_map.csv").u8string());
-        problem.write_h_graph((outDir / "h_graph.csv").u8string());
-        problem.write_h_nodes((outDir / "h_nodes.csv").u8string());
+        problem.write_a_h_graph((outDir / "final_a_h_graph.csv").string());
+        problem.write_a_to_h_map((outDir / "final_a_to_h_map.csv").string());
+        problem.write_h_graph((outDir / "h_graph.csv").string());
+        problem.write_h_nodes((outDir / "h_nodes.csv").string());
         problem.write_h_node_loading((outDir / "h_node_loading.csv").string());
         if (!serial)
         {
