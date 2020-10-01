@@ -27,7 +27,7 @@ fi
 
 # Run one serial placement job (THREAD_COUNT = 0), and one parallel placement
 # job for different numbers of compute workers.
-for THREAD_COUNT in 0 1 $(seq 4 4 64); do
+for THREAD_COUNT in 0 1 4 $(seq 8 8 64); do
 
     # Deploy template, and provision.
     cp "${TEMPLATE_SOURCE}" "${TEMPLATE_TARGET}"
