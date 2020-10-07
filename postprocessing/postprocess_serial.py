@@ -40,7 +40,7 @@ def doit(inputDir, outputDir="./"):
     # Draw determination data
     figure, axes = postprocessing.plot_determination_histogram(
         opsData[opsData["Determination"] == 0].index, opsData.index.max())
-    figure.savefig(os.path.join(outputData, "determination.pdf"))
+    figure.savefig(os.path.join(outputDir, "determination.pdf"))
 
     # Draw hardware node loading data
     loadingData = pd.read_csv(os.path.join(inputDir,
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     rc = postprocessing.check_expected_files(sys.argv[1], filePaths.values())
     if (not rc):
         sys.exit(1)
-    doit(sys.argv[1])
+    doit(sys.argv[1], os.path.basename(sys.argv[1]))
