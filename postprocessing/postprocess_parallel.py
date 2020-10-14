@@ -51,18 +51,18 @@ def doit(inputDir, outputDir="./"):
             break
 
         # Otherwise, grab metrics.
-        annealOps = pd.read_csv(annealOpsPath)
-        iterationsPerThread.append(annealOps.shape[0])
-        selectionCollisionsPerThread.append(
-            annealOps["Number of selection collisions"].sum())
-        reliableFitnessPerThread.append(
-            annealOps["Fitness computation is reliable"].sum())
-        insufficientlyDeterminedOps = insufficientlyDeterminedOps + \
-            list(annealOps[annealOps["Determination"] == 0]["Iteration"])
-        maxIteration = max(maxIteration, annealOps["Iteration"].max())
-
-        # Make life simpler for later
-        del annealOps
+        iterationsPerThread.append(0)
+        selectionCollisionsPerThread.append(0)
+        reliableFitnessPerThread.append(0)
+        for chunk in pd.read_csv(annealOpsPath, chunksize=1e4):
+            iterationsPerThread[-1] += chunk.shape[0]
+            selectionCollisionsPerThread[-1] += \
+                chunk["Number of selection collisions"].sum()
+            reliableFitnessPerThread[-1] += \
+                chunk["Fitness computation is reliable"].sum()
+            insufficientlyDeterminedOps = insufficientlyDeterminedOps + \
+                list(chunk[chunk["Determination"] == 0]["Iteration"])
+            maxIteration = max(maxIteration, chunk["Iteration"].max())
 
         threadIndex += 1
 
@@ -81,7 +81,6 @@ def doit(inputDir, outputDir="./"):
             "w") as collisionsFile:
         collisionsFile.write(
             "[postprocessing]\n"
-            "fully_synchronous = {}\n"
             "compute_threads = {}\n"
             "hardware_nodes = {}\n"
             "application_nodes = {}\n"
@@ -89,7 +88,6 @@ def doit(inputDir, outputDir="./"):
             "selection_collision_rate = {:2.3f}%\n"
             "reliable_fitness_computation_rate = {:2.3f}%\n"
             .format(
-                selectionCollisionPercent == 0,
                 threadIndex,
                 pd.read_csv(os.path.join(inputDir,
                                          filePaths["h_nodes"])).shape[0],
