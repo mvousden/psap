@@ -202,16 +202,20 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
         if (!(*selA)->lock.try_lock()) continue;
 
         /* Now we've selected the application node, collect the other nodes we
-         * wish to lock. */
-        std::vector<std::weak_ptr<Node>> nodesToLock;
+         * wish to lock. Note that we store raw pointers to nodes here because
+         * we need the uniqueness provided by sets, and so meaningful
+         * comparison is needed. There's a better way of doing this (by
+         * defining the comparison operator for the set), but not one I can do
+         * quickly. */
+        std::set<Node*> nodesToLock;
 
         /* Firstly, each of the selected application node's neighbours. */
         for (const auto& neighbour : (*selA)->neighbours)
-            nodesToLock.push_back(neighbour);
+            nodesToLock.insert(neighbour.lock().get());
 
         /* Secondly, the old hardware node. */
         select_serial_oldh(selA, oldH);
-        nodesToLock.push_back((*oldH));
+        nodesToLock.insert(oldH->get());
 
         /* For each of these nodes, try to unlock them in turn. If any of them
          * don't work when tried, unlock all of the ones that we managed to
@@ -224,7 +228,7 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
         unsigned locksMade = 0;
         for (const auto& thisNode : nodesToLock)
         {
-            if (thisNode.lock()->lock.try_lock()) locksMade++;
+            if (thisNode->lock.try_lock()) locksMade++;
             else
             {
                 failure = true;
@@ -239,7 +243,7 @@ unsigned Problem::select_parallel_synchronous(decltype(nodeAs)::iterator& selA,
         decltype(nodesToLock)::iterator nodeToUnlock = nodesToLock.begin();
         while (locksMade > 0)
         {
-            nodeToUnlock->lock()->lock.unlock();
+            (*nodeToUnlock)->lock.unlock();
             locksMade--;
             nodeToUnlock++;
         }
