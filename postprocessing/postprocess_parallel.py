@@ -50,19 +50,21 @@ def doit(inputDir, outputDir="./"):
         if not os.path.exists(annealOpsPath):
             break
 
-        # Otherwise, grab metrics.
-        annealOps = pd.read_csv(annealOpsPath)
-        iterationsPerThread.append(annealOps.shape[0])
-        selectionCollisionsPerThread.append(
-            annealOps["Number of selection collisions"].sum())
-        reliableFitnessPerThread.append(
-            annealOps["Fitness computation is reliable"].sum())
-        insufficientlyDeterminedOps = insufficientlyDeterminedOps + \
-            list(annealOps[annealOps["Determination"] == 0]["Iteration"])
-        maxIteration = max(maxIteration, annealOps["Iteration"].max())
-
-        # Make life simpler for later
-        del annealOps
+        # Otherwise, grab metrics. Do so in chunks - 1e9 uses about 120GB,
+        # though note that insufficientlyDeterminedOps takes a reasonable
+        # amount of memory.
+        iterationsPerThread.append(0)
+        selectionCollisionsPerThread.append(0)
+        reliableFitnessPerThread.append(0)
+        for chunk in pd.read_csv(annealOpsPath, chunksize=1e9):
+            iterationsPerThread[-1] += chunk.shape[0]
+            selectionCollisionsPerThread[-1] += \
+                chunk["Number of selection collisions"].sum()
+            reliableFitnessPerThread[-1] += \
+                chunk["Fitness computation is reliable"].sum()
+            insufficientlyDeterminedOps = insufficientlyDeterminedOps + \
+                list(chunk[chunk["Determination"] == 0]["Iteration"])
+            maxIteration = max(maxIteration, chunk["Iteration"].max())
 
         threadIndex += 1
 
