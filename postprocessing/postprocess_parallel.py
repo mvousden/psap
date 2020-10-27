@@ -83,7 +83,6 @@ def doit(inputDir, outputDir="./"):
             "w") as collisionsFile:
         collisionsFile.write(
             "[postprocessing]\n"
-            "fully_synchronous = {}\n"
             "compute_threads = {}\n"
             "hardware_nodes = {}\n"
             "application_nodes = {}\n"
@@ -91,7 +90,6 @@ def doit(inputDir, outputDir="./"):
             "selection_collision_rate = {:2.3f}%\n"
             "reliable_fitness_computation_rate = {:2.3f}%\n"
             .format(
-                selectionCollisionPercent == 0,
                 threadIndex,
                 pd.read_csv(os.path.join(inputDir,
                                          filePaths["h_nodes"])).shape[0],

@@ -13,6 +13,9 @@ int main()
     /* Whether or not to anneal in serial, or parallel. */
     bool serial = false;
 
+    /* If parallel, number of workers to use. */
+    unsigned numWorkers = 1;
+
     /* Synchronisity (serial=false only) - do we synchronise to ensure no
      * computation with stale data (true), or do we only synchronise only to
      * ensure data structure integrity (false)? */
@@ -30,6 +33,18 @@ int main()
         outDir = outRootDir / problem.name;
         problem.define_output_path(outDir);
         problem.initialise_logging();
+    }
+
+    /* Write annealer properties. */
+    if (serial) problem.log("Using serial annealer.");
+    else
+    {
+        std::stringstream message;
+        message << "Using ";
+        if (fullySynchronous) message << "fully-synchronous ";
+        else message << "semi-asynchronous ";
+        message << "parallel annealer with " << numWorkers << " workers.";
+        problem.log(message.str());
     }
 
     /* Prepare problem for annealing */
@@ -85,7 +100,8 @@ int main()
         else
         {
             /* Take intermediate fitness measurements. */
-            ParallelAnnealer<ExpDecayDisorder>(2, maxIteration, outDir)
+            ParallelAnnealer<ExpDecayDisorder>(numWorkers, maxIteration,
+                                               outDir)
                 (problem, maxIteration / 20, fullySynchronous);
         }
     }
@@ -104,7 +120,7 @@ int main()
         }
         else
         {
-            auto annealer = ParallelAnnealer<ExpDecayDisorder>(2,
+            auto annealer = ParallelAnnealer<ExpDecayDisorder>(numWorkers,
                                                                maxIteration);
             auto timeAtStart = std::chrono::steady_clock::now();
             annealer(problem, fullySynchronous);
