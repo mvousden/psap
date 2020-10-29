@@ -64,6 +64,6 @@ for THREAD_COUNT in 0 1 4 $(seq 8 8 64); do
     else
         # Log angrily, moving results afterwards.
         ./psap-run
-        mv output/grid_poets output/grid_poets_${THREAD_COUNT}_$(date --iso-8601=date)_$(git rev-parse HEAD)
+        mv --verbose output/poets_box_2d_grid /mnt/external/mlv/poets_box_2d_grid_${THREAD_COUNT}_$(date --iso-8601=date)_$(git rev-parse HEAD)
     fi
 done
