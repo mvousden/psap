@@ -4,6 +4,7 @@
 # appropriate output directory (it will search for the appropriate files).
 
 import os
+import math
 import numpy as np
 import pandas as pd
 import sys
@@ -30,10 +31,12 @@ def doit(inputDir, outputDir="./"):
     # Draw relaxation data
     opsData = pd.read_csv(os.path.join(inputDir, filePaths["anneal_ops"]))
     determinedData = opsData[opsData["Determination"] == 1]
+    numberOfPoints = 100
+    sliceStep = math.ceil((len(determinedData) - 1) / (numberOfPoints - 1))
     figure, axes = postprocessing.plot_fitness(
-        list(determinedData.index),
-        list(determinedData["Transformed Clustering Fitness"]),
-        list(determinedData["Transformed Locality Fitness"]))
+        list(determinedData[::sliceStep].index),
+        list(determinedData[::sliceStep]["Transformed Clustering Fitness"]),
+        list(determinedData[::sliceStep]["Transformed Locality Fitness"]))
     del determinedData
     figure.savefig(os.path.join(outputDir, "fitness.pdf"))
 
