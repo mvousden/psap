@@ -16,7 +16,7 @@ NoDisorder::NoDisorder(Iteration maxIteration):
 ExpDecayDisorder::ExpDecayDisorder(Iteration maxIteration):
     Disorder::Disorder(maxIteration)
 {
-    disorderDecay = std::log(0.5) / (maxIteration / 3.0);
+    disorderDecay = std::log(0.5) / (maxIteration / 2.0);
 }
 
 LinearDecayDisorder::LinearDecayDisorder(Iteration maxIteration):
