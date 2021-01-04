@@ -18,8 +18,7 @@ import time
 seed = 48  # RNG seed. Set to None if a seed is to be chosed based on the
            # clock.
 nh = 384  # Number of hardware nodes in the problem definition.
-na = int(1e3 * 1e3)  # Number of application nodes in the problem
-                     # definition. Must be a square number.
+naEdge = int(1e3)  # Number of application nodes along the edge of the square.
 nit = int(1e5)  # Number of annealing iterations to simulate. As far as your
                 # inner statistician is concerned, this is a count of the
                 # number of samples, and offers diminishing returns with the
@@ -31,7 +30,6 @@ nw = 64  # Number of parallel compute workers. Does not need to divide evenly
 # And here we go.
 if seed is not None:
     random.seed(seed)
-naEdge = int(na ** 0.5)
 
 # Iterate until nit iterations (or more) have been processed.
 appErrors = 0  # Total number of iterations that have an erroneous fitness
