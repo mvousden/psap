@@ -442,10 +442,10 @@ void ParallelAnnealer<DisorderT>::co_anneal_synchronous(
     while (iteration < maxIteration);  /* Termination condition */
 }
 
-/* Computes the transformation footprint from the set of notes that are used
+/* Computes the transformation footprint from the set of nodes that are used
  * for a transformation.
  *
- * This footprint will be incremented by the number of notes affected by the
+ * This footprint will be incremented by the number of nodes affected by the
  * transformation after the transformation has been taken place. Footprints are
  * used to determine whether or not nodes concerned in a transformation have
  * been affected by other threads - if the footprint is different, then the
