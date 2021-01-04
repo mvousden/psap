@@ -15,10 +15,18 @@ import random
 import time
 
 # Properties (all are integers)
+problem = "small"
+if problem == "small":
+    nh = 384  # Number of hardware nodes in the problem definition.
+    naEdge = 1000  # Number of application nodes along the edge of the square.
+elif problem == "large":
+    nh = 384 * 2  # Number of hardware nodes in the problem definition.
+    naEdge = 1414  # Number of application nodes along the edge of the square.
+else:
+    raise RuntimeError("Invalid problem type '" + problem + "'.")
+
 seed = 48  # RNG seed. Set to None if a seed is to be chosed based on the
            # clock.
-nh = 384  # Number of hardware nodes in the problem definition.
-naEdge = int(1e3)  # Number of application nodes along the edge of the square.
 nit = int(1e5)  # Number of annealing iterations to simulate. As far as your
                 # inner statistician is concerned, this is a count of the
                 # number of samples, and offers diminishing returns with the
