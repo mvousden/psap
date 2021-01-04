@@ -44,8 +44,11 @@ it = 0
 startTime = time.time()
 while it < nit:
 
-    # Select hardware nodes for each worker.
-    hNodes = [random.randint(1, nh) for _ in range(nw)]
+    # Select hardware nodes for each worker. Note that here a worker can select
+    # the same hardware node to be old and new, but we don't care because
+    # workers are never compared against themselves.
+    hNodesOld = [random.randint(1, nh) for _ in range(nw)]
+    hNodesNew = [random.randint(1, nh) for _ in range(nw)]
 
     # Select application nodes for each worker.
     aNodes = [(random.randint(1, naEdge), random.randint(1, naEdge))
@@ -84,7 +87,10 @@ while it < nit:
 
                 # A hardware error has occured in this worker's iteration only
                 # if another worker has selected the same hardware node.
-                if hNodes[outerIdx] == hNodes[innerIdx]:
+                if (hNodesNew[outerIdx] == hNodesNew[innerIdx] or
+                    hNodesOld[outerIdx] == hNodesNew[innerIdx] or
+                    hNodesNew[outerIdx] == hNodesOld[innerIdx] or
+                    hNodesOld[outerIdx] == hNodesOld[innerIdx]):
                     hwError = True
                     hwErrors += 1
 
