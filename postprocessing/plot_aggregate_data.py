@@ -11,10 +11,18 @@
 #  - Reliable Fitness Rate: Fraction of fitness computations that are
 #        reliable (float64).
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sys
+
+matplotlib.rc("axes", linewidth=1)
+matplotlib.rc("figure", dpi=400, figsize=(4.8, 3.6))
+matplotlib.rc("font", size=12)
+matplotlib.rc("legend", frameon=False)
+matplotlib.rc("xtick.major", width=1)
+matplotlib.rc("ytick.major", width=1)
 
 # Load data
 if len(sys.argv) < 2:
@@ -30,37 +38,33 @@ for synchronisation in df["Synchronisation"].unique():
                   (df["Problem Size"] == "Small")]
     serialTime = subFrame[subFrame["Number of Compute Workers"] == 0]\
         ["Runtime"].values[0]
-    # Points
-    axes.plot(subFrame["Number of Compute Workers"],
-              serialTime / subFrame["Runtime"], "kx", label=None)
-    # Line
-    axes.plot(subFrame["Number of Compute Workers"],
-              serialTime / subFrame["Runtime"],
-              "k-" if synchronisation == "Asynchronous" else "k--",
-              alpha=0.7,
-              label=synchronisation)
+
+    # Points (the 1: slice removes n=0)
+    axes.plot(subFrame["Number of Compute Workers"][1:],
+              serialTime / subFrame["Runtime"][1:],
+              "k." if synchronisation == "Asynchronous" else "k1",
+              label=synchronisation + " Annealer")
 
 # Draw linear speedup line
 maxHoriz = df["Number of Compute Workers"].max()
-axes.plot([1, maxHoriz], [1, maxHoriz], alpha=0.2, color="k", linestyle="--")
+# axes.plot([1, maxHoriz], [1, maxHoriz], alpha=0.2, color="k", linestyle="--")
 
 # Other stuff for speedup graph
 axisBuffer = 1
 axes.set_xlim(1 - axisBuffer, maxHoriz + axisBuffer)
-axes.set_ylim(1 - axisBuffer, maxHoriz + axisBuffer)
+axes.set_ylim(0, 10 + axisBuffer)
 axes.set_xlabel("Number of Compute Workers ($n$)")
-axes.set_ylabel("Relative Speedup ($t_0/t_n$)")
+axes.set_ylabel("Serial-Relative Speedup ($t_0/t_n$)")
 axes.spines["top"].set_visible(False)
 axes.spines["right"].set_visible(False)
 axes.xaxis.set_ticks_position("bottom")
 axes.yaxis.set_ticks_position("left")
-labels = [2**power for power in [0, 2, 4, 5, 6]]
+labels = [2**power for power in [0, 4, 5, 6]]
 axes.xaxis.set_ticks(labels)
-axes.xaxis.set_ticklabels(["1", "4", "16", "32\n(physical core limit)", "64"])
-axes.yaxis.set_ticks(labels)
-axes.set_title("Runtime Scaling with Number of Compute Workers\n"
-               "for the Small problem.")
-plt.legend(title="Algorithm")
+axes.xaxis.set_ticklabels(["1", "16", "32", "64"])
+axes.yaxis.set_ticks([0, 2, 4, 6, 8, 10])
+axes.set_title("Runtime Scaling (Small Problem)")
+plt.legend(handletextpad=0)
 figure.tight_layout()
 figure.savefig("speedup.pdf")
 
@@ -68,34 +72,29 @@ figure.savefig("speedup.pdf")
 figure, axes = plt.subplots()
 for problemSize in df["Problem Size"].unique():
     subFrame = df[(df["Synchronisation"] == "Asynchronous") &
-                  (df["Problem Size"] == problemSize)]
+                  (df["Problem Size"] == problemSize) &
+                  (df["Number of Compute Workers"] != 0)]
     # Points
     axes.plot(subFrame["Number of Compute Workers"],
               (1 - subFrame["Reliable Fitness Rate"]) * 100,
-              "kx", label=None)
-    # Line
-    axes.plot(subFrame["Number of Compute Workers"],
-              (1 - subFrame["Reliable Fitness Rate"]) * 100,
-              "k-" if problemSize == "Large" else "k--",
-              alpha=0.7,
-              label=problemSize)
+              "kx" if problemSize == "Large" else "k+",
+              label=problemSize + " Problem")
 
 # Other stuff for fitness error rate graph
 horizAxisBuffer = 1
 axes.set_xlim(1 - horizAxisBuffer, maxHoriz + horizAxisBuffer)
-axes.set_ylim(-2, 100)
-axes.set_xlabel("Number of Compute Workers ($n$)")
-axes.set_ylabel("Collision Rate (percentage of fitness\ncalculations made with"
-                "unreliable data)")
+axes.set_ylim(-2, 60)
+axes.set_xlabel("Number of Compute Workers")
+axes.set_ylabel("Collision Rate (percentage of\nunreliable fitness "
+                "calculations)")
 axes.spines["top"].set_visible(False)
 axes.spines["right"].set_visible(False)
 axes.xaxis.set_ticks_position("bottom")
 axes.yaxis.set_ticks_position("left")
-axes.xaxis.set_ticks([2**power for power in [0, 2, 4, 5, 6]])
-axes.xaxis.set_ticklabels(["1", "4", "16", "32\n(physical core limit)", "64"])
-axes.yaxis.set_ticks([0, 50, 100])
-axes.set_title("Collision Rate against Number of\n"
-               "Compute Workers (Asynchronous Algorithm)")
-plt.legend(title="Problem Size")
+axes.xaxis.set_ticks([2**power for power in [0, 4, 5, 6]])
+axes.xaxis.set_ticklabels(["1", "16", "32", "64"])
+axes.yaxis.set_ticks([0, 50])
+axes.set_title("Asynchronous Annealing Collision Rate")
+plt.legend(handletextpad=0)
 figure.tight_layout()
 figure.savefig("error_rate.pdf")
