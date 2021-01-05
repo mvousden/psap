@@ -68,7 +68,7 @@ plt.legend(handletextpad=0)
 figure.tight_layout()
 figure.savefig("speedup.pdf")
 
-# Draw fitness error rate data
+# Draw fitness collision rate data
 figure, axes = plt.subplots()
 for problemSize in df["Problem Size"].unique():
     subFrame = df[(df["Synchronisation"] == "Asynchronous") &
@@ -80,7 +80,7 @@ for problemSize in df["Problem Size"].unique():
               "kx" if problemSize == "Large" else "k+",
               label=problemSize + " Problem")
 
-# Other stuff for fitness error rate graph
+# Other stuff for fitness collision rate graph
 horizAxisBuffer = 1
 axes.set_xlim(1 - horizAxisBuffer, maxHoriz + horizAxisBuffer)
 axes.set_ylim(-2, 60)
@@ -97,4 +97,4 @@ axes.yaxis.set_ticks([0, 50])
 axes.set_title("Asynchronous Annealing Collision Rate")
 plt.legend(handletextpad=0)
 figure.tight_layout()
-figure.savefig("error_rate.pdf")
+figure.savefig("collision_rate.pdf")
