@@ -15,8 +15,8 @@ import pandas as pd
 import sys
 
 matplotlib.rc("axes", linewidth=1)
-matplotlib.rc("figure", dpi=400, figsize=(4.8, 3.6))
-matplotlib.rc("font", size=12)
+matplotlib.rc("figure", figsize=(4.0, 3.3))
+matplotlib.rc("font", family="serif", size=10)
 matplotlib.rc("legend", frameon=False)
 matplotlib.rc("xtick.major", width=1)
 matplotlib.rc("ytick.major", width=1)
