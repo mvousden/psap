@@ -64,18 +64,21 @@ axes.plot(subFrame["Iteration"][::25],
           subFrame["Locality Fitness"][::25], 'k1',
           label="Synchronous Parallel: Total Fitness")
 
-
 # Other stuff
-axes.ticklabel_format(axis="x", scilimits=(0, 0), style="sci")
-axes.set_xlim(0, 5e9)
+axes.set_xlim(0, 5.05e9)
 axes.set_ylim(-5e10, 0)
-axes.set_xlabel("Iteration")
-axes.set_ylabel("Fitness")
+axes.set_xlabel(r"Iteration $\left(\times10^9\right)$")
+axes.set_ylabel(r"Fitness $\left(\times10^{10}\right)$")
 axes.set_title("Relaxation (Large Problem)")
 axes.spines["right"].set_visible(False)
 axes.spines["top"].set_visible(False)
 axes.yaxis.set_ticks_position("left")
 axes.xaxis.set_ticks_position("bottom")
+axes.xaxis.set_ticks([0, 1e9, 2e9, 3e9, 4e9, 5e9])
+axes.xaxis.set_ticklabels(["0", "1", "2", "3", "4", "5"])
+axes.yaxis.set_ticks([0, -1e10, -2e10, -3e10, -4e10, -5e10])
+axes.yaxis.set_ticklabels(["0", "-1", "-2", "-3", "-4", "-5"])
+
 plt.legend()
 figure.tight_layout()
 figure.savefig("fitness.pdf")
