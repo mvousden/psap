@@ -15,8 +15,8 @@ import pandas as pd
 import sys
 
 matplotlib.rc("axes", linewidth=1)
-matplotlib.rc("figure", figsize=(4.0, 3.3))
-matplotlib.rc("font", family="serif", size=10)
+matplotlib.rc("figure", figsize=(2.7, 2.7))
+matplotlib.rc("font", family="serif", size=7)
 matplotlib.rc("legend", frameon=False)
 matplotlib.rc("xtick.major", width=1)
 matplotlib.rc("ytick.major", width=1)
@@ -28,9 +28,11 @@ edgeColour = "#000044"
 
 # Load data
 if len(sys.argv) < 2:
-    fPath = "fitness_data.csv"
+    fPath = "fitness_data_large.csv"
 else:
     fPath = sys.argv[1]
+problem = "Small" if "small" in fPath else "Large"
+
 df = pd.read_csv(fPath).sort_values(
     by=["Number of Compute Workers", "Iteration"])
 
@@ -59,26 +61,34 @@ axes.plot(subFrame["Iteration"],
 
 # Draw fitness data for the synchronous parallel solver using points.
 subFrame = df[df["Number of Compute Workers"] == 0]
-axes.plot(subFrame["Iteration"][::25],
-          subFrame["Clustering Fitness"][::25] +
-          subFrame["Locality Fitness"][::25], 'k1',
+spacing = 25 if problem == "Large" else 5
+axes.plot(subFrame["Iteration"][::spacing],
+          subFrame["Clustering Fitness"][::spacing] +
+          subFrame["Locality Fitness"][::spacing], 'k1',
           label="Synchronous Parallel: Total Fitness")
 
 # Other stuff
-axes.set_xlim(0, 5.05e9)
-axes.set_ylim(-5e10, 0)
+axes.set_xlim(0, 5.1e9)
+axes.set_ylim(-5e10 if problem == "Large" else -2e10, 0)
 axes.set_xlabel(r"Iteration $\left(\times10^9\right)$")
-axes.set_ylabel(r"Fitness $\left(\times10^{10}\right)$")
-axes.set_title("Relaxation (Large Problem)")
+if problem == "Large":
+    axes.set_ylabel(r"Fitness $\left(\times10^{10}\right)$")
+axes.set_title("Relaxation ({} Problem)".format(problem))
 axes.spines["right"].set_visible(False)
 axes.spines["top"].set_visible(False)
 axes.yaxis.set_ticks_position("left")
 axes.xaxis.set_ticks_position("bottom")
 axes.xaxis.set_ticks([0, 1e9, 2e9, 3e9, 4e9, 5e9])
 axes.xaxis.set_ticklabels(["0", "1", "2", "3", "4", "5"])
-axes.yaxis.set_ticks([0, -1e10, -2e10, -3e10, -4e10, -5e10])
-axes.yaxis.set_ticklabels(["0", "-1", "-2", "-3", "-4", "-5"])
+if problem == "Large":
+    axes.yaxis.set_ticks([0, -1e10, -2e10, -3e10, -4e10, -5e10])
+    axes.yaxis.set_ticklabels(["0", "-1", "-2", "-3", "-4", "-5"])
+else:
+    axes.yaxis.set_ticks([0, -5e9, -1e10, -1.5e10, -2e10])
+    axes.yaxis.set_ticklabels(["0", "-0.5", "-1", "-1.5", "-2"])
 
-plt.legend()
+if problem == "Large":
+    plt.legend()
 figure.tight_layout()
-figure.savefig("fitness.pdf")
+figure.savefig("".join(fPath.split(".")[:-1]) + ".pdf",
+               bbox_inches="tight", pad_inches=1e-2)
