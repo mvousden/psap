@@ -30,5 +30,16 @@ Large,Asynchronous,24,2705,0.86
 Large,Asynchronous,32,2547,0.85
 Large,Asynchronous,40,2526,0.80
 Large,Asynchronous,48,2384,0.77
-Large,Asynchronous,56,3597,0.75
+Large,Asynchronous,56,2496,0.75
 Large,Asynchronous,64,2560,0.72
+Large,Synchronous,0,21486,1
+Large,Synchronous,1,25657,1
+Large,Synchronous,4,9043,1
+Large,Synchronous,8,5079,1
+Large,Synchronous,16,2991,1
+Large,Synchronous,24,2737,1
+Large,Synchronous,32,2794,1
+Large,Synchronous,40,3471,1
+Large,Synchronous,48,4161,1
+Large,Synchronous,56,3402,1
+Large,Synchronous,64,3249,1
