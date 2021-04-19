@@ -1,4 +1,4 @@
-PSA source code, documentation, and build artefacts are licensed by the
+PSAP source code, documentation, and build artefacts are licensed by the
 3-Clause BSD License as follows:
 
 Copyright (c) 2020, Mark Vousden, University of Southampton. All rights
