@@ -19,51 +19,61 @@ MOUSE_MODE=0
 
 # See main.cpp.
 FULLY_SYNCHRONOUS=0
-
-if [ ${MOUSE_MODE} -eq 1 ]; then
-    MOUSE_FILE="mouse_out_${ITERATIONS}.txt"
-    > "${MOUSE_FILE}"
+if [ ${FULLY_SYNCHRONOUS} -eq 0 ]; then
+    SYNC_TEXT="async"
+else
+    SYNC_TEXT="sync"
 fi
 
-# Run one serial placement job (THREAD_COUNT = 0), and one parallel placement
-# job for different numbers of compute workers.
-for THREAD_COUNT in 0 1 4 $(seq 8 8 64); do
-
-    # Deploy template, and provision.
-    cp "${TEMPLATE_SOURCE}" "${TEMPLATE_TARGET}"
-    sed -i "s|{{ITERATIONS}}|$ITERATIONS|" "${TEMPLATE_TARGET}"
+# Repeats
+REPEAT_COUNTS=10
+for REPEAT in $(seq 1 ${REPEAT_COUNTS}); do
 
     if [ ${MOUSE_MODE} -eq 1 ]; then
-        sed -i "s|{{MOUSE_MODE}}|true|" "${TEMPLATE_TARGET}"
-    else
-        sed -i "s|{{MOUSE_MODE}}|false|" "${TEMPLATE_TARGET}"
+	MOUSE_FILE=$(printf "mouse_out_${ITERATIONS}_${SYNC_TEXT}_%02d.txt" ${REPEAT})
+	> "${MOUSE_FILE}"
     fi
 
-    if [ ${FULLY_SYNCHRONOUS} -eq 1 ]; then
-        sed -i "s|{{FULLY_SYNCHRONOUS}}|true|" "${TEMPLATE_TARGET}"
-    else
-        sed -i "s|{{FULLY_SYNCHRONOUS}}|false|" "${TEMPLATE_TARGET}"
-    fi
+    # Run one serial placement job (THREAD_COUNT = 0), and one
+    # parallel placement job for different numbers of compute workers.
+    for THREAD_COUNT in 0 1 4 $(seq 8 8 64); do
 
-    if [ ${THREAD_COUNT} -eq 0 ]; then
-        sed -i "s|{{SERIAL_MODE}}|true|" "${TEMPLATE_TARGET}"
-        sed -i "s|{{NUM_THREADS}}|1|" "${TEMPLATE_TARGET}"
-    else
-        sed -i "s|{{SERIAL_MODE}}|false|" "${TEMPLATE_TARGET}"
-        sed -i "s|{{NUM_THREADS}}|$THREAD_COUNT|" "${TEMPLATE_TARGET}"
-    fi
+	# Deploy template, and provision.
+	cp "${TEMPLATE_SOURCE}" "${TEMPLATE_TARGET}"
+	sed -i "s|{{ITERATIONS}}|$ITERATIONS|" "${TEMPLATE_TARGET}"
 
-    # Build
-    scons -j 4
+	if [ ${MOUSE_MODE} -eq 1 ]; then
+            sed -i "s|{{MOUSE_MODE}}|true|" "${TEMPLATE_TARGET}"
+	else
+            sed -i "s|{{MOUSE_MODE}}|false|" "${TEMPLATE_TARGET}"
+	fi
 
-    # Run
-    if [ ${MOUSE_MODE} -eq 1 ]; then
-        # Pushing output to file.
-        printf "${THREAD_COUNT}," >> ${MOUSE_FILE}
-        ./psap-run >> ${MOUSE_FILE}
-    else
-        # Log angrily, moving results afterwards.
-        ./psap-run
-        mv --verbose output/poets_box_2d_grid /mnt/external/mlv/poets_box_2d_grid_${THREAD_COUNT}_$(date --iso-8601=date)_$(git rev-parse HEAD)
-    fi
+	if [ ${FULLY_SYNCHRONOUS} -eq 1 ]; then
+            sed -i "s|{{FULLY_SYNCHRONOUS}}|true|" "${TEMPLATE_TARGET}"
+	else
+            sed -i "s|{{FULLY_SYNCHRONOUS}}|false|" "${TEMPLATE_TARGET}"
+	fi
+
+	if [ ${THREAD_COUNT} -eq 0 ]; then
+            sed -i "s|{{SERIAL_MODE}}|true|" "${TEMPLATE_TARGET}"
+            sed -i "s|{{NUM_THREADS}}|1|" "${TEMPLATE_TARGET}"
+	else
+            sed -i "s|{{SERIAL_MODE}}|false|" "${TEMPLATE_TARGET}"
+            sed -i "s|{{NUM_THREADS}}|$THREAD_COUNT|" "${TEMPLATE_TARGET}"
+	fi
+
+	# Build
+	scons -j 4
+
+	# Run
+	if [ ${MOUSE_MODE} -eq 1 ]; then
+            # Pushing output to file.
+            printf "${THREAD_COUNT}," >> ${MOUSE_FILE}
+            ./psap-run >> ${MOUSE_FILE}
+	else
+            # Log angrily, moving results afterwards.
+            ./psap-run
+            mv --verbose output/poets_box_2d_grid /mnt/external/mlv/poets_box_2d_grid_${THREAD_COUNT}_$(date --iso-8601=date)_$(git rev-parse HEAD)
+	fi
+    done
 done
