@@ -135,6 +135,7 @@ int main()
     {
         problem.log("Annealing complete.");
 
+        /* Write solved stuff */
         {
             std::stringstream message;
             message << "Final fitness: "
