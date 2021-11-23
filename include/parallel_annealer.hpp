@@ -10,7 +10,8 @@ class ParallelAnnealer: public Annealer<DisorderT>
 {
 public:
     ParallelAnnealer(unsigned numThreads=1, Iteration maxIteration=100,
-                     const std::filesystem::path& outDirArg="");
+                     const std::filesystem::path& outDirArg="",
+                     Seed disorderSeed=kSeedSkip);
     void operator()(Problem& problem, Iteration recordEvery=0,
                     bool fullySynchronous=false)
         {anneal(problem, recordEvery, fullySynchronous);}

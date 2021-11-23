@@ -1,24 +1,25 @@
 #ifndef DISORDER_SCHEDULES_HPP
 #define DISORDER_SCHEDULES_HPP
 
-#include <random>
+#include "seed.hpp"
+
 #include <string>
 
-/* Overflow is a real possibility, believe me. Better to incur a small
- * memory than to check for overflow every iteration. */
+/* Overflow is a real possibility, believe me. Better to incur a small memory
+ * penalty than to check for overflow every iteration. */
 typedef unsigned long long Iteration;
 
 class Disorder
 {
 public:
-    Disorder(Iteration maxIteration);
+    Disorder(Iteration maxIteration, Seed seed=kSeedSkip);
     virtual bool determine(float, float, Iteration) = 0;
 
 protected:
     Iteration maxIteration;
 
     /* Randomness source and distribution for disorder. */
-    std::mt19937 rng;
+    Prng rng;
     std::uniform_real_distribution<> distribution{0, 1};
 };
 
@@ -26,7 +27,7 @@ protected:
 class AbsoluteZero
 {
 public:
-    AbsoluteZero(Iteration){};
+    AbsoluteZero(Iteration, Seed){};
     bool determine(float, float, Iteration){return false;}
     const char* handle = "AbsoluteZero";
 };
@@ -35,7 +36,7 @@ public:
 class ExpDecayDisorder: public Disorder
 {
 public:
-    ExpDecayDisorder(Iteration maxIteration);
+    ExpDecayDisorder(Iteration maxIteration, Seed seed=kSeedSkip);
     bool determine(float, float, Iteration);
     const char* handle = "ExpDecayDisorder";
 
@@ -47,7 +48,7 @@ private:
 class LinearDecayDisorder: public Disorder
 {
 public:
-    LinearDecayDisorder(Iteration maxIteration);
+    LinearDecayDisorder(Iteration maxIteration, Seed seed=kSeedSkip);
     bool determine(float, float, Iteration);
     const char* handle = "LinearDecayDisorder";
 
@@ -60,7 +61,7 @@ private:
 class NoDisorder: public Disorder
 {
 public:
-    NoDisorder(Iteration maxIteration);
+    NoDisorder(Iteration maxIteration, Seed seed=kSeedSkip);
     bool determine(float, float, Iteration);
     const char* handle = "NoDisorder";
 };

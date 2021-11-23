@@ -10,7 +10,8 @@ class SerialAnnealer: public Annealer<DisorderT>
 {
 public:
     SerialAnnealer(Iteration maxIterationArg=100,
-                   const std::filesystem::path& outDirArg="");
+                   const std::filesystem::path& outDirArg="",
+                   Seed disorderSeed=kSeedSkip);
     void operator()(Problem& problem){anneal(problem);}
 
 private:

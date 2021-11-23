@@ -7,10 +7,13 @@
 #include <utility>
 
 template<class DisorderT>
-ParallelAnnealer<DisorderT>::ParallelAnnealer(unsigned numThreadsArg,
-                                              Iteration maxIterationArg,
-                                              const std::filesystem::path& outDirArg):
-    Annealer<DisorderT>(maxIterationArg, outDirArg, "ParallelAnnealer"),
+ParallelAnnealer<DisorderT>::ParallelAnnealer(
+    unsigned numThreadsArg,
+    Iteration maxIterationArg,
+    const std::filesystem::path& outDirArg,
+    Seed disorderSeed):
+    Annealer<DisorderT>(maxIterationArg, outDirArg, "ParallelAnnealer",
+                        disorderSeed),
     numThreads(numThreadsArg){}
 
 /* Hits the solution repeatedly with many hammers at the same time while

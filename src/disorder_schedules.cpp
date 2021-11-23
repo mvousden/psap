@@ -2,25 +2,26 @@
 
 #include <cmath>
 
-Disorder::Disorder(Iteration maxIteration):maxIteration(maxIteration)
+Disorder::Disorder(Iteration maxIteration, Seed seed):
+    maxIteration(maxIteration)
 {
     /* Define our random number generator. */
-    rng = std::mt19937(std::random_device{}());
+    rng = Prng(determine_seed(seed));
 }
 
 /* Constructors for non-virtual classes define fields that are effectively
  * constant for the lifetime of the object. */
-NoDisorder::NoDisorder(Iteration maxIteration):
-    Disorder::Disorder(maxIteration){}
+NoDisorder::NoDisorder(Iteration maxIteration, Seed seed):
+    Disorder::Disorder(maxIteration, seed){}
 
-ExpDecayDisorder::ExpDecayDisorder(Iteration maxIteration):
-    Disorder::Disorder(maxIteration)
+ExpDecayDisorder::ExpDecayDisorder(Iteration maxIteration, Seed seed):
+    Disorder::Disorder(maxIteration, seed)
 {
     disorderDecay = std::log(0.5) / (maxIteration / 2.5);
 }
 
-LinearDecayDisorder::LinearDecayDisorder(Iteration maxIteration):
-    Disorder::Disorder(maxIteration)
+LinearDecayDisorder::LinearDecayDisorder(Iteration maxIteration, Seed seed):
+    Disorder::Disorder(maxIteration, seed)
 {
     gradient = -0.5 / maxIteration;
     intercept = 0.5;

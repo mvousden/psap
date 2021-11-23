@@ -2,13 +2,13 @@
 #define PROBLEM_HPP
 
 #include "nodes.hpp"
+#include "seed.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <limits>
 #include <memory>
 #include <mutex>
-#include <random>
 #include <string>
 #include <sstream>
 #include <tuple>
@@ -25,6 +25,9 @@ public:
 
     Problem();
     ~Problem();
+
+    /* Set up PRNG */
+    void set_seed(Seed seed=kSeedSkip);
 
     /* Logging and pathing */
     void define_output_path(const std::filesystem::path& outDirArg);
@@ -82,7 +85,7 @@ public:
 
 private:
     std::vector<std::vector<float>> edgeCacheH;
-    std::mt19937 rng;
+    Prng rng;
 
     /* Logging and pathing */
     std::filesystem::path outDir;

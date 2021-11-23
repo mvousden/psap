@@ -12,7 +12,9 @@ class Annealer
 {
 public:
     Annealer(Iteration maxIterationArg=100,
-             std::filesystem::path outDirArg="", const char* handleArg="");
+             std::filesystem::path outDirArg="",
+             const char* handleArg="",
+             Seed disorderSeed=kSeedSkip);
     void operator()(Problem& problem){anneal(problem);}
 
 protected:

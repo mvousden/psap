@@ -5,9 +5,6 @@
 
 Problem::Problem()
 {
-    /* Define our random number generator. */
-    rng = std::mt19937(std::random_device{}());
-
     /* Explicitly initialise contents of output path. */
     outDir.clear();
 }
@@ -20,6 +17,12 @@ Problem::~Problem()
         log("Problem destructor called. Closing log.");
         logS.close();
     }
+}
+
+/* Sets the seed for the psuedo random number generator, and resets it. */
+void Problem::set_seed(Seed seed)
+{
+    rng = Prng(determine_seed(seed));
 }
 
 /* Reserve space in the edge cache as a function of the diameter, and define

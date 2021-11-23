@@ -6,9 +6,12 @@
 #include <utility>
 
 template<class DisorderT>
-SerialAnnealer<DisorderT>::SerialAnnealer(Iteration maxIterationArg,
-                                          const std::filesystem::path& outDirArg):
-    Annealer<DisorderT>(maxIterationArg, outDirArg, "SerialAnnealer"){}
+SerialAnnealer<DisorderT>::SerialAnnealer(
+    Iteration maxIterationArg,
+    const std::filesystem::path& outDirArg,
+    Seed disorderSeed):
+    Annealer<DisorderT>(maxIterationArg, outDirArg, "SerialAnnealer",
+                        disorderSeed){}
 
 /* Hits the solution repeatedly with a hammer and cools it. Hopefully improves
  * it (history has shown that it probably will work). */

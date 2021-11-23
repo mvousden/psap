@@ -9,9 +9,10 @@
 template<class DisorderT>
 Annealer<DisorderT>::Annealer(Iteration maxIterationArg,
                               std::filesystem::path outDirArg,
-                              const char* handleArg):
+                              const char* handleArg,
+                              Seed disorderSeed):
     maxIteration(maxIterationArg),
-    disorder(maxIterationArg),
+    disorder(maxIterationArg, disorderSeed),
     handle(handleArg),
     outDir(std::move(outDirArg))
 {
