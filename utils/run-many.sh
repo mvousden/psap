@@ -9,8 +9,8 @@
 set -e
 set -x
 
-TEMPLATE_SOURCE="main_template.cpp"
-TEMPLATE_TARGET="src/main.cpp"
+TEMPLATE_SOURCE="main_config_template.hpp"
+TEMPLATE_TARGET="include/main_config.hpp"
 ITERATIONS=5e9
 
 # Mouse mode disables all logging and intermediate fitness computation, and
