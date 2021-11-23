@@ -17,6 +17,10 @@ ITERATIONS=5e9
 # simply prints out the runtime of the placement job to a text file.
 MOUSE_MODE=0
 
+# Use a specific seed for random number generators?
+USE_SEED=1
+SEED=1
+
 # See main.cpp.
 FULLY_SYNCHRONOUS=0
 if [ ${FULLY_SYNCHRONOUS} -eq 0 ]; then
@@ -61,6 +65,13 @@ for REPEAT in $(seq 1 ${REPEAT_COUNTS}); do
             sed -i "s|{{SERIAL_MODE}}|false|" "${TEMPLATE_TARGET}"
             sed -i "s|{{NUM_THREADS}}|$THREAD_COUNT|" "${TEMPLATE_TARGET}"
 	fi
+
+    if [ ${USE_SEED} -eq 0 ]; then
+            sed -i "s|{{USE_SEED}}|false|" "${TEMPLATE_TARGET}"
+    else
+            sed -i "s|{{USE_SEED}}|true|" "${TEMPLATE_TARGET}"
+    fi
+    sed -i "s|{{SEED}}|$SEED|" "${TEMPLATE_TARGET}"
 
 	# Build
 	scons -j 4

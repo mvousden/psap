@@ -15,8 +15,8 @@ unsigned numWorkers = {{NUM_THREADS}};
 bool fullySynchronous = {{FULLY_SYNCHRONOUS}};
 
 /* Seed, if any. */
-bool useSeed = false;
-Seed seed = 1;
+bool useSeed = {{USE_SEED}};
+Seed seed = {{SEED}};
 
 /* How many iterations? */
 Iteration maxIteration = static_cast<Iteration>({{ITERATIONS}});
