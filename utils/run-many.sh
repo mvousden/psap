@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script runs a series of placement jobs. It, along with
-# main_template.cpp, need to be deployed to the root directory of the
+# main_config_template.hpp, need to be deployed to the root directory of the
 # repository. This script must also be called from that directory (I'm too lazy
 # to write the chdir logic).
 #
