@@ -21,8 +21,13 @@ int main()
      * ensure data structure integrity (false)? */
     bool fullySynchronous = false;
 
-    /* Construct problem */
+    /* Seed, if any. */
+    bool useSeed = false;
+    Seed seed = 1;
+
+    /* Problem? */
     Problem problem;
+    if (useSeed) problem.set_seed(seed);
     problem_definition::define(problem);
 
     /* Directory to write to - clear it. */
@@ -95,14 +100,32 @@ int main()
         /* Run noisily with much logging and outputting of files. */
         if (serial)
         {
-            SerialAnnealer<ExpDecayDisorder>(maxIteration, outDir)(problem);
+            if (useSeed)
+            {
+                SerialAnnealer<ExpDecayDisorder>
+                    (maxIteration, outDir, seed)(problem);
+            }
+            else
+            {
+                SerialAnnealer<ExpDecayDisorder>
+                    (maxIteration, outDir)(problem);
+            }
         }
         else
         {
             /* Take intermediate fitness measurements. */
-            ParallelAnnealer<ExpDecayDisorder>(numWorkers, maxIteration,
-                                               outDir)
-                (problem, maxIteration / 20, fullySynchronous);
+            if (useSeed)
+            {
+                ParallelAnnealer<ExpDecayDisorder>(numWorkers, maxIteration,
+                                                   outDir, seed)
+                    (problem, maxIteration / 20, fullySynchronous);
+            }
+            else
+            {
+                ParallelAnnealer<ExpDecayDisorder>(numWorkers, maxIteration,
+                                                   outDir)
+                    (problem, maxIteration / 20, fullySynchronous);
+            }
         }
     }
 
@@ -111,22 +134,48 @@ int main()
         /* Run as quietly as possible, printing timing information only. */
         if (serial)
         {
-            auto annealer = SerialAnnealer<ExpDecayDisorder>(maxIteration);
-            auto timeAtStart = std::chrono::steady_clock::now();
-            annealer(problem);
-            std::cout << std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::steady_clock::now() - timeAtStart).count()
-                      << std::endl;
+            if (useSeed)
+            {
+                auto annealer = SerialAnnealer<ExpDecayDisorder>(
+                    maxIteration, "", seed);
+                auto timeAtStart = std::chrono::steady_clock::now();
+                annealer(problem);
+                std::cout << std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::steady_clock::now() - timeAtStart).count()
+                          << std::endl;
+            }
+            else
+            {
+                auto annealer = SerialAnnealer<ExpDecayDisorder>(maxIteration);
+                auto timeAtStart = std::chrono::steady_clock::now();
+                annealer(problem);
+                std::cout << std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::steady_clock::now() - timeAtStart).count()
+                          << std::endl;
+            }
         }
         else
         {
-            auto annealer = ParallelAnnealer<ExpDecayDisorder>(numWorkers,
-                                                               maxIteration);
-            auto timeAtStart = std::chrono::steady_clock::now();
-            annealer(problem, fullySynchronous);
-            std::cout << std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::steady_clock::now() - timeAtStart).count()
-                      << std::endl;
+            if (useSeed)
+            {
+                auto annealer = ParallelAnnealer<ExpDecayDisorder>(
+                    numWorkers, maxIteration, "", seed);
+                auto timeAtStart = std::chrono::steady_clock::now();
+                annealer(problem, fullySynchronous);
+                std::cout << std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::steady_clock::now() - timeAtStart).count()
+                          << std::endl;
+            }
+            else
+            {
+                auto annealer = ParallelAnnealer<ExpDecayDisorder>(
+                    numWorkers, maxIteration);
+                auto timeAtStart = std::chrono::steady_clock::now();
+                annealer(problem, fullySynchronous);
+                std::cout << std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::steady_clock::now() - timeAtStart).count()
+                          << std::endl;
+            }
         }
     }
 
