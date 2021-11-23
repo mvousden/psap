@@ -21,6 +21,12 @@ MOUSE_MODE=0
 USE_SEED=1
 SEED=1
 
+# Oh what a tangled web we weave
+REPEAT_COUNTS=10
+
+# Numbers of threads to use (REPEAT_COUNTS runs for each thread count).
+THREAD_COUNTS="0 1 4 $(seq 8 8 64)"
+
 # See main.cpp.
 FULLY_SYNCHRONOUS=0
 if [ ${FULLY_SYNCHRONOUS} -eq 0 ]; then
@@ -29,8 +35,7 @@ else
     SYNC_TEXT="sync"
 fi
 
-# Repeats
-REPEAT_COUNTS=10
+# Gogogo
 for REPEAT in $(seq 1 ${REPEAT_COUNTS}); do
 
     if [ ${MOUSE_MODE} -eq 1 ]; then
@@ -40,7 +45,7 @@ for REPEAT in $(seq 1 ${REPEAT_COUNTS}); do
 
     # Run one serial placement job (THREAD_COUNT = 0), and one
     # parallel placement job for different numbers of compute workers.
-    for THREAD_COUNT in 0 1 4 $(seq 8 8 64); do
+    for THREAD_COUNT in $THREAD_COUNTS; do
 
 	    # Deploy template, and provision.
 	    cp "${TEMPLATE_SOURCE}" "${TEMPLATE_TARGET}"
