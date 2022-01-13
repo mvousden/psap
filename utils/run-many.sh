@@ -89,7 +89,7 @@ for REPEAT in $(seq 1 ${REPEAT_COUNTS}); do
 	    else
             # Log angrily, moving results afterwards.
             ./psap-run
-            mv --verbose output/poets_box_2d_grid /mnt/external/mlv/poets_box_2d_grid_${THREAD_COUNT}_$(date --iso-8601=date)_$(git rev-parse HEAD)
+            mv --verbose output/poets_box_2d_grid "/mnt/external/mlv/poets_box_2d_grid_${THREAD_COUNT}_$(date --iso-8601=second)_$(git rev-parse HEAD)"
 	    fi
     done
 done
