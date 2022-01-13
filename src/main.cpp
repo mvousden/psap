@@ -115,7 +115,8 @@ int main()
 
     else
     {
-        /* Run as quietly as possible, printing timing information only. */
+        /* Run as quietly as possible, printing timing (and collision, in
+         * parallel) information only. */
         if (serial)
         {
             if (useSeed)
@@ -148,6 +149,8 @@ int main()
                 annealer(problem, fullySynchronous);
                 std::cout << std::chrono::duration_cast<std::chrono::seconds>(
                     std::chrono::steady_clock::now() - timeAtStart).count()
+                          << ","
+                          << annealer.reliableIterations / maxIteration
                           << std::endl;
             }
             else
@@ -158,6 +161,8 @@ int main()
                 annealer(problem, fullySynchronous);
                 std::cout << std::chrono::duration_cast<std::chrono::seconds>(
                     std::chrono::steady_clock::now() - timeAtStart).count()
+                          << ","
+                          << annealer.reliableIterations / maxIteration
                           << std::endl;
             }
         }

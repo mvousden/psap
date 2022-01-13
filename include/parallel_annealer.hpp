@@ -37,6 +37,10 @@ public:
                                   decltype(Problem::nodeHs)::iterator& selH,
                                   decltype(Problem::nodeHs)::iterator& oldH);
 
+    /* Tracking the number of iterations with reliable fitness computation
+     * (matching transformation footprints). */
+    std::atomic<unsigned long long> reliableIterations = 0;
+
 private:
     unsigned numThreads;
     std::atomic<Iteration> iteration = 0;

@@ -365,11 +365,8 @@ void ParallelAnnealer<DisorderT>::co_anneal_synchronous(
         for (const auto& neighbour : (*selA)->neighbours)
             appLocks.emplace_back(neighbour.lock()->lock, std::adopt_lock);
 
-        /* Compute the transformation footprint. Only done when logging, and
-         * only done to demonstrate that there are no collisions when annealing
-         * synchonously. */
-        TransformCount oldTformFootprint = 0;
-        if (this->log) oldTformFootprint = compute_transform_footprint(
+        /* Compute the transformation footprint. */
+        TransformCount oldTformFootprint = compute_transform_footprint(
             selA, selH, oldH);
 
         /* Fitness of components before transformation. */
@@ -400,8 +397,7 @@ void ParallelAnnealer<DisorderT>::co_anneal_synchronous(
         /* Footprint after transformation. Note the minus three - this is
          * because our move transformation causes three changes to the data
          * structure, and we don't want to count those. */
-        TransformCount newTformFootprint = 0;
-        if (this->log) newTformFootprint = compute_transform_footprint(
+        TransformCount newTformFootprint = compute_transform_footprint(
             selA, selH, oldH) - 3;
 
         /* New fitness computation. */
@@ -420,6 +416,9 @@ void ParallelAnnealer<DisorderT>::co_anneal_synchronous(
                               << newLocalityFitness << ","
                               << (oldTformFootprint == newTformFootprint)
                               << ",";
+
+        /* Track reliable fitness computation. */
+        if (oldTformFootprint == newTformFootprint) reliableIterations++;
 
         /* Determination */
         bool sufficientlyDetermined =
