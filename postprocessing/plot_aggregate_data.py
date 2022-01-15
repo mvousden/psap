@@ -3,9 +3,10 @@
 # Postprocessing for data aggregated from many individual annealing
 # procedures. The input CSV file should have these headings:
 #
-#  - Problem Size: String
-#  - Synchronisation: String
+#  - Problem Size: String, either "Small" or "Large.
+#  - Synchronisation: String, either "Asynchronous" or "Synchronous".
 #  - Number of Compute Workers: Degree of parallelism (int64).
+#  - Repeat: Repeat number, beginning from 1 (int64).
 #  - Runtime: Execution time in units of your choice - it's all
 #        normalised (int64).
 #  - Reliable Fitness Rate: Fraction of fitness computations that are
@@ -18,7 +19,7 @@ import pandas as pd
 import sys
 
 matplotlib.rc("axes", linewidth=1)
-matplotlib.rc("figure", figsize=(2.7, 2.7))
+matplotlib.rc("figure", figsize=(2.7, 2.7), dpi=10)
 matplotlib.rc("font", family="serif", size=7)
 matplotlib.rc("legend", frameon=False)
 matplotlib.rc("xtick.major", width=1)
@@ -32,29 +33,57 @@ else:
 df = pd.read_csv(fPath).sort_values(by="Number of Compute Workers")
 
 # Draw speedup data for the small and large problems separately
-for problem in ["Small", "Large"]:
+for problem in df["Problem Size"].unique():
     figure, axes = plt.subplots()
     for synchronisation in df["Synchronisation"].unique():
+
+        # Get data for this problem size, and for this synchronisation.
         subFrame = df[(df["Synchronisation"] == synchronisation) &
                       (df["Problem Size"] == problem)]
-        serialTime = subFrame[subFrame["Number of Compute Workers"] == 0]\
-            ["Runtime"].values[0]
 
-        # Points (the 1: slice removes n=0)
-        axes.plot(subFrame["Number of Compute Workers"][1:],
-                  serialTime / subFrame["Runtime"][1:],
+        # Get mean serial time
+        serialFrame = subFrame[subFrame["Number of Compute Workers"] == 0]
+        serialTime = serialFrame["Runtime"].values.mean()
+
+        # Make the pandas people unhappy
+        parallelFrame = subFrame[subFrame["Number of Compute Workers"] > 0]
+        workers = pd.unique(parallelFrame["Number of Compute Workers"].values)
+        means = []
+        maxes = []
+        mins = []
+        for worker in workers:
+            workerFrame = parallelFrame[
+                parallelFrame["Number of Compute Workers"] == worker]["Runtime"]
+            means.append(serialTime / workerFrame.mean())
+            maxes.append(serialTime / workerFrame.max())
+            mins.append(serialTime / workerFrame.min())
+
+        # Points
+        axes.plot(workers, means,
                   "k." if synchronisation == "Asynchronous" else "k1",
                   label=synchronisation + " Annealer")
 
-    # Draw linear speedup line
-    maxHoriz = df["Number of Compute Workers"].max()
-    # axes.plot([1, maxHoriz], [1, maxHoriz], alpha=0.2, color="k",
-    #           linestyle="--")
+        # Range, plotted as a line with some flanges, or not
+        # flangeLen = 1
+        # flangeWidth = 0.5
+        # # Different whisker styles for visibility
+        # linestyle = "b-" if synchronisation == "Asynchronous" else "g-"
+        # for index in range(len(workers)):
+        #     axes.plot([workers[index], workers[index]],
+        #               [mins[index], maxes[index]], linestyle, label=None,
+        #               linewidth=flangeWidth)
+        #     axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
+        #               [mins[index], mins[index]], linestyle, label=None,
+        #               linewidth=flangeWidth)
+        #     axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
+        #               [maxes[index], maxes[index]], linestyle, label=None,
+        #               linewidth=flangeWidth)
 
     # Other stuff for speedup graph
     axisBuffer = 1
+    maxHoriz = df["Number of Compute Workers"].max()
     axes.set_xlim(1 - axisBuffer, maxHoriz + axisBuffer)
-    axes.set_ylim(0, 10)
+    axes.set_ylim(0, 8)
     axes.set_xlabel("Number of Compute Workers")
     if problem == "Large":
         axes.set_ylabel("Serial-Relative Speedup ($t_0/t_n$)")
@@ -65,10 +94,10 @@ for problem in ["Small", "Large"]:
     labels = [2**power for power in [0, 4, 5, 6]]
     axes.xaxis.set_ticks(labels)
     axes.xaxis.set_ticklabels(["1", "16", "32", "64"])
-    axes.yaxis.set_ticks([0, 1, 2, 4, 6, 8, 10])
+    axes.yaxis.set_ticks([0, 1, 2, 4, 6, 8])
     axes.set_title("Runtime Scaling ({} Problem)".format(problem))
     if problem == "Large":
-        plt.legend(handletextpad=0)
+        plt.legend(loc=4, handletextpad=0)
     figure.tight_layout()
     figure.savefig("speedup_{}.pdf".format(problem.lower()))
     plt.close()
@@ -142,6 +171,8 @@ largeProbs = np.array([0.0,
               0.2640071985602879,
               0.2722736635801852,
               0.2778510876519514]) * 100
+
+crash
 
 # Draw fitness collision rate data
 figure, axes = plt.subplots()
