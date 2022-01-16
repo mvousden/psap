@@ -221,41 +221,56 @@ void ParallelAnnealer<DisorderT>::co_anneal_sasynchronous(
          * threads. */
         localIteration = iteration++;
         if (this->log) csvOut << localIteration << ",";
+        unsigned selectionCollisions = 0;
+        TransformCount oldTformFootprint;
+        float oldClusteringFitnessComponents;
+        float oldLocalityFitnessComponents;
+        bool goAroundAgain;
 
-        /* "Atomic" selection */
-        auto selectionCollisions = \
-            problem.select_parallel_sasynchronous(selA, selH, oldH);
-        if (this->log) csvOut << selA - problem.nodeAs.begin() << ","
-                              << selH - problem.nodeHs.begin() << ","
-                              << selectionCollisions << ",";
+        do
+        {
+            /* "Atomic" selection */
+            selectionCollisions +=
+                problem.select_parallel_sasynchronous(selA, selH, oldH);
+
+            /* Compute the transformation footprint, so that we can identify
+             * whether or not the fitness computation is reliable (it is
+             * unreliable if another thread changes a relevant bit of the
+             * datastructure. We don't do anything different if it is
+             * unreliable outside of logging the occurence in the output).
+             *
+             * Since the only use of transform footprints are logging-related
+             * (behaviour doesn't change if we detect an unreliable fitness
+             * computation), we only do this if we're logging. */
+            if (this->log) oldTformFootprint = compute_transform_footprint(
+                selA, selH, oldH);
+
+            /* Fitness of components before transformation. */
+            oldClusteringFitnessComponents =
+                problem.compute_hw_node_clustering_fitness(**selH) +
+                problem.compute_hw_node_clustering_fitness(**oldH);
+
+            oldLocalityFitnessComponents =
+                problem.compute_app_node_locality_fitness(**selA) * 2;
+
+            /* Transformation. If it's now invalid, go to the next one. */
+            if(!locking_transform(problem, selA, selH, oldH))
+            {
+                (*selA)->lock.unlock();
+                selectionCollisions++;
+                goAroundAgain = true;
+            }
+            else goAroundAgain = false;
+        }
+        while(goAroundAgain);
 
         /* RAII locking */
         std::lock_guard<decltype((*selA)->lock)> appLock((*selA)->lock,
                                                          std::adopt_lock);
 
-        /* Compute the transformation footprint, so that we can identify
-         * whether or not the fitness computation is reliable (it is unreliable
-         * if another thread changes a relevant bit of the datastructure. We
-         * don't do anything different if it is unreliable outside of
-         * logging the occurence in the output).
-         *
-         * Since the only use of transform footprints are logging-related
-         * (behaviour doesn't change if we detect an unreliable fitness
-         * computation), we only do this if we're logging. */
-        TransformCount oldTformFootprint = 0;
-        if (this->log) oldTformFootprint = compute_transform_footprint(
-            selA, selH, oldH);
-
-        /* Fitness of components before transformation. */
-        auto oldClusteringFitnessComponents =
-            problem.compute_hw_node_clustering_fitness(**selH) +
-            problem.compute_hw_node_clustering_fitness(**oldH);
-
-        auto oldLocalityFitnessComponents =
-            problem.compute_app_node_locality_fitness(**selA) * 2;
-
-        /* Transformation */
-        locking_transform(problem, selA, selH, oldH);
+        if (this->log) csvOut << selA - problem.nodeAs.begin() << ","
+                              << selH - problem.nodeHs.begin() << ","
+                              << selectionCollisions << ",";
 
         /* Fitness of components after transformation. */
         auto newClusteringFitnessComponents =
@@ -477,9 +492,11 @@ TransformCount ParallelAnnealer<DisorderT>::compute_transform_footprint(
 
 /* Performs a transform that simultaneously locks hardware nodes during the
  * transformation to avoid data races. This is a wrapper around
- * problem.transform. */
+ * problem.transform. Rejects the transformation outright if the target
+ * hardware node is now full - if the transformation is rejected in this way,
+ * false is returned (as opposed to true). */
 template<class DisorderT>
-void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
+bool ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
     decltype(Problem::nodeAs)::iterator& selA,
     decltype(Problem::nodeHs)::iterator& selH,
     decltype(Problem::nodeHs)::iterator& oldH)
@@ -491,10 +508,16 @@ void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
     /* Lock them simultaneously. */
     std::lock(selHLock, oldHLock);
 
-    /* Unlock them together (non-simultaneously) at the end of the
-     * transformation. */
+    /* Unlock them together (non-simultaneously) at end of scope. */
     std::lock_guard<decltype(selHLock)> selHGuard(selHLock, std::adopt_lock);
     std::lock_guard<decltype(oldHLock)> oldHGuard(oldHLock, std::adopt_lock);
+
+    /* Check hardware node fullness. */
+    if ((*selH)->contents.size() >= problem.pMax)
+    {
+        printf("Oh no\n");
+        return false;
+    }
 
     /* Increment transformation counters. */
     (*selA)->transformCount++;
@@ -503,6 +526,7 @@ void ParallelAnnealer<DisorderT>::locking_transform(Problem& problem,
 
     /* Perform the transformation. */
     problem.transform(selA, selH, oldH);
+    return true;
 }
 
 /* Uses the annealer to write metadata, then appends the number of threads to

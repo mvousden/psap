@@ -32,7 +32,7 @@ public:
         const decltype(Problem::nodeHs)::iterator& selH,
         const decltype(Problem::nodeHs)::iterator& oldH);
 
-    static void locking_transform(Problem& problem,
+    static bool locking_transform(Problem& problem,
                                   decltype(Problem::nodeAs)::iterator& selA,
                                   decltype(Problem::nodeHs)::iterator& selH,
                                   decltype(Problem::nodeHs)::iterator& oldH);
