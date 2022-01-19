@@ -55,8 +55,21 @@ axes.fill_between(subFrame["Iteration"], subFrame["Clustering Fitness"],
 
 # Draw fitness data for the asynchronous parallel solver using points.
 subFrame = df[df["Number of Compute Workers"] == 64]
-axes.plot(subFrame["Iteration"],
-          subFrame["Clustering Fitness"] + subFrame["Locality Fitness"], 'k.',
+iterations = []
+fitnesses = []
+totFitnessMaxDev = -np.inf
+for iteration in set(subFrame["Iteration"]):
+    iterations.append(iteration)
+    subFrameThisIt = subFrame[subFrame["Iteration"] == iteration]
+    subFrameAvg = subFrameThisIt.mean()
+    fitnesses.append(subFrameAvg["Clustering Fitness"] +
+                     subFrameAvg["Locality Fitness"])
+    subFrameTotFitnesses = (subFrameThisIt["Clustering Fitness"] +
+                            subFrameThisIt["Locality Fitness"])
+    dev = subFrameTotFitnesses.max() - subFrameTotFitnesses.min()
+    totFitnessMaxDev = max(dev, totFitnessMaxDev)
+
+axes.plot(iterations, fitnesses, 'k.',
           label="Asynchronous Parallel: Total Fitness")
 
 # Draw fitness data for the synchronous parallel solver using points.
@@ -92,3 +105,6 @@ if problem == "Large":
 figure.tight_layout()
 figure.savefig("".join(fPath.split(".")[:-1]) + ".pdf",
                bbox_inches="tight", pad_inches=1e-2)
+plt.close()
+
+print("Maximum fitness deviation: {:e}".format(totFitnessMaxDev))
