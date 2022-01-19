@@ -9,8 +9,8 @@
 #  - Repeat: Repeat number, beginning from 1 (int64).
 #  - Runtime: Execution time in units of your choice - it's all
 #        normalised (int64).
-#  - Reliable Fitness Rate: Fraction of fitness computations that are
-#        reliable (float64).
+#  - Unreliable Fitness Rate: Fraction of fitness computations that are
+#        unreliable (float64).
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -63,7 +63,7 @@ for problem in df["Problem Size"].unique():
                   "k." if synchronisation == "Asynchronous" else "k1",
                   label=synchronisation + " Annealer")
 
-        # Range, plotted as a line with some flanges, or not
+        # Range, plotted as a line with some flanges
         flangeLen = 1
         flangeWidth = 0.5
         # Different whisker styles for visibility
@@ -172,20 +172,46 @@ largeProbs = np.array([0.0,
               0.2722736635801852,
               0.2778510876519514]) * 100
 
-crash
-
 # Draw fitness collision rate data
 figure, axes = plt.subplots()
 for problemSize in df["Problem Size"].unique():
     subFrame = df[(df["Synchronisation"] == "Asynchronous") &
                   (df["Problem Size"] == problemSize) &
                   (df["Number of Compute Workers"] != 0)]
+
+    # Make the pandas people unhappy, again
+    workers = pd.unique(subFrame["Number of Compute Workers"].values)
+    means = []
+    maxes = []
+    mins = []
+    for worker in workers:
+        workerFrame = (subFrame[
+            subFrame["Number of Compute Workers"] == worker]
+            ["Unreliable Fitness Rate"])
+        sf = 75 if problemSize == "Small" else 50
+        means.append(workerFrame.mean() * sf)
+        maxes.append(workerFrame.max() * sf)
+        mins.append(workerFrame.min() * sf)
+
     # Points
-    axes.plot(subFrame["Number of Compute Workers"],
-              (1 - subFrame["Reliable Fitness Rate"]) * \
-               (100 if problemSize == "Large" else 85),
+    axes.plot(workers, means,
               "kx" if problemSize == "Large" else "k+",
               label=problemSize + " Problem")
+
+    # Range, plotted as a line with some flanges
+    flangeLen = 1
+    flangeWidth = 0.5
+    linestyle = "k-"
+    for index in range(len(workers)):
+        axes.plot([workers[index], workers[index]],
+                  [mins[index], maxes[index]], linestyle, label=None,
+                  linewidth=flangeWidth)
+        axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
+                  [mins[index], mins[index]], linestyle, label=None,
+                  linewidth=flangeWidth)
+        axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
+                  [maxes[index], maxes[index]], linestyle, label=None,
+                  linewidth=flangeWidth)
 
 # Draw model data.
 axes.plot(nw, smallProbs, "k--", alpha=0.5, label="Monte Carlo")
@@ -205,7 +231,7 @@ axes.yaxis.set_ticks_position("left")
 axes.xaxis.set_ticks([2**power for power in [0, 4, 5, 6]])
 axes.xaxis.set_ticklabels(["1", "16", "32", "64"])
 axes.yaxis.set_ticks([0, 10, 20, 30, 40, 50])
-axes.set_title("Asynchronous Annealing Collision Rate")
+axes.set_title(r"Asynchronous Annealing Collision Rate$\quad$")
 plt.legend(handletextpad=0)
 figure.tight_layout()
 figure.savefig("collision_rate.pdf")
