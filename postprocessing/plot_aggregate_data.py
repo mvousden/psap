@@ -64,20 +64,20 @@ for problem in df["Problem Size"].unique():
                   label=synchronisation + " Annealer")
 
         # Range, plotted as a line with some flanges, or not
-        # flangeLen = 1
-        # flangeWidth = 0.5
-        # # Different whisker styles for visibility
-        # linestyle = "b-" if synchronisation == "Asynchronous" else "g-"
-        # for index in range(len(workers)):
-        #     axes.plot([workers[index], workers[index]],
-        #               [mins[index], maxes[index]], linestyle, label=None,
-        #               linewidth=flangeWidth)
-        #     axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
-        #               [mins[index], mins[index]], linestyle, label=None,
-        #               linewidth=flangeWidth)
-        #     axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
-        #               [maxes[index], maxes[index]], linestyle, label=None,
-        #               linewidth=flangeWidth)
+        flangeLen = 1
+        flangeWidth = 0.5
+        # Different whisker styles for visibility
+        linestyle = "k--" if synchronisation == "Asynchronous" else "k:"
+        for index in range(len(workers)):
+            axes.plot([workers[index], workers[index]],
+                      [mins[index], maxes[index]], linestyle, label=None,
+                      linewidth=flangeWidth)
+            axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
+                      [mins[index], mins[index]], linestyle, label=None,
+                      linewidth=flangeWidth)
+            axes.plot([workers[index] - flangeLen, workers[index] + flangeLen],
+                      [maxes[index], maxes[index]], linestyle, label=None,
+                      linewidth=flangeWidth)
 
     # Other stuff for speedup graph
     axisBuffer = 1
