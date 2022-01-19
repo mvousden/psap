@@ -5,6 +5,7 @@
 #
 #  - Number of Compute Workers: 0 (if serial), 64 (if parallel, with 64 workers).
 #  - Iteration: (int64).
+#  - Repeat: Repeat number, beginning from 1. Serial data should be 1 (int64).
 #  - Clustering Fitness: (float64).
 #  - Locality Fitness: (float64).
 
@@ -15,7 +16,7 @@ import pandas as pd
 import sys
 
 matplotlib.rc("axes", linewidth=1)
-matplotlib.rc("figure", figsize=(2.7, 2.7))
+matplotlib.rc("figure", figsize=(2.7, 2.7), dpi=1)
 matplotlib.rc("font", family="serif", size=7)
 matplotlib.rc("legend", frameon=False)
 matplotlib.rc("xtick.major", width=1)
@@ -34,7 +35,7 @@ else:
 problem = "Small" if "small" in fPath else "Large"
 
 df = pd.read_csv(fPath).sort_values(
-    by=["Number of Compute Workers", "Iteration"])
+    by=["Number of Compute Workers", "Repeat", "Iteration"])
 
 # Draw fitness data for the serial solver using lines.
 figure, axes = plt.subplots()
@@ -55,8 +56,14 @@ axes.fill_between(subFrame["Iteration"], subFrame["Clustering Fitness"],
 
 # Draw fitness data for the asynchronous parallel solver using points.
 subFrame = df[df["Number of Compute Workers"] == 64]
-axes.plot(subFrame["Iteration"],
-          subFrame["Clustering Fitness"] + subFrame["Locality Fitness"], 'k.',
+iterations = []
+fitnesses = []
+for iteration in set(subFrame["Iteration"]):
+    iterations.append(iteration)
+    subFrameAvg = subFrame[subFrame["Iteration"] == iteration].mean()
+    fitnesses.append(subFrameAvg["Clustering Fitness"] +
+                     subFrameAvg["Locality Fitness"])
+axes.plot(iterations, fitnesses, 'k.',
           label="Asynchronous Parallel: Total Fitness")
 
 # Draw fitness data for the synchronous parallel solver using points.
@@ -92,3 +99,4 @@ if problem == "Large":
 figure.tight_layout()
 figure.savefig("".join(fPath.split(".")[:-1]) + ".pdf",
                bbox_inches="tight", pad_inches=1e-2)
+plt.close()
