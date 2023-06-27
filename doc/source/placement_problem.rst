@@ -90,13 +90,13 @@ The optimal solution for the placement problem:
     multiple nodes in the application graph :math:`n_A` to one node in the
     hardware graph :math:`n_H` means that the compute unit represented by
     :math:`n_H` has to divide its time between the computation for each of the
-    :math:`n_A`s loaded onto it. If the solution consists of two hardware nodes
-    :math:`n_{H,0}` and :math:`n_{H,1}`, where :math:`n_{H,0}` is mapped with
-    one application node, and :math:`n_{H,1}` is mapped with ten application
-    nodes, then application nodes on :math:`n_{H,1}` will execute considerably
-    more slowly than nodes on :math:`n_{H,0}`. For most applications, the
-    slowest-executing node bottlenecks the runtime of the application, so an
-    even loading is preferred.
+    :math:`n_A` -s loaded onto it. If the solution consists of two hardware
+    nodes :math:`n_{H,0}` and :math:`n_{H,1}`, where :math:`n_{H,0}` is mapped
+    with one application node, and :math:`n_{H,1}` is mapped with ten
+    application nodes, then application nodes on :math:`n_{H,1}` will execute
+    considerably more slowly than nodes on :math:`n_{H,0}`. For most
+    applications, the slowest-executing node bottlenecks the runtime of the
+    application, so an even loading is preferred.
 
 Let the functional :math:`F[s]:S\to\mathbb{R}` define the fitness of solution
 :math:`s`, where a high fitness corresponds to a desirable solution, and a low
