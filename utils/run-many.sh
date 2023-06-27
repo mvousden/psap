@@ -40,7 +40,7 @@ for REPEAT in $(seq 1 ${REPEAT_COUNTS}); do
 
     if [ ${MOUSE_MODE} -eq 1 ]; then
 	    MOUSE_FILE=$(printf "mouse_out_${ITERATIONS}_${SYNC_TEXT}_%02d.txt" ${REPEAT})
-	    > "${MOUSE_FILE}"
+	    echo "threads,runtime,reliable_fitness_rate" > "${MOUSE_FILE}"
     fi
 
     # Run one serial placement job (THREAD_COUNT = 0), and one

@@ -115,7 +115,8 @@ int main()
 
     else
     {
-        /* Run as quietly as possible, printing timing information only. */
+        /* Run as quietly as possible, printing timing (and collision, in
+         * parallel) information only. */
         if (serial)
         {
             if (useSeed)
@@ -144,21 +145,21 @@ int main()
             {
                 auto annealer = ParallelAnnealer<ExpDecayDisorder>(
                     numWorkers, maxIteration, "", seed);
-                auto timeAtStart = std::chrono::steady_clock::now();
                 annealer(problem, fullySynchronous);
-                std::cout << std::chrono::duration_cast<std::chrono::seconds>(
-                    std::chrono::steady_clock::now() - timeAtStart).count()
-                          << std::endl;
+		float unreliableRatio =
+		    1 - (double(annealer.reliableIterations) /
+			 maxIteration);
+                std::cout << unreliableRatio << std::endl;
             }
             else
             {
                 auto annealer = ParallelAnnealer<ExpDecayDisorder>(
                     numWorkers, maxIteration);
-                auto timeAtStart = std::chrono::steady_clock::now();
                 annealer(problem, fullySynchronous);
-                std::cout << std::chrono::duration_cast<std::chrono::seconds>(
-                    std::chrono::steady_clock::now() - timeAtStart).count()
-                          << std::endl;
+		float unreliableRatio =
+		    1 - (double(annealer.reliableIterations) /
+			 maxIteration);
+                std::cout << unreliableRatio << std::endl;
             }
         }
     }
